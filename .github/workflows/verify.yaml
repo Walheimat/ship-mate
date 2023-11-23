@@ -1,0 +1,42 @@
+name: Verify
+on:
+  push:
+    branches:
+      - trunk
+    paths-ignore:
+      - '.gitignore'
+      - 'CHANGELOG.md'
+      - 'README.org'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set environment to allow unsecure commands
+        run: echo "ACTIONS_ALLOW_UNSECURE_COMMANDS=true" >> $GITHUB_ENV
+
+      - name: Get Emacs
+        uses: purcell/setup-emacs@master
+        with:
+          version: release-snapshot
+
+      - name: Get Cask
+        uses: conao3/setup-cask@master
+        with:
+          version: snapshot
+
+      - name: Check out the repository
+        uses: actions/checkout@v3
+        with:
+          submodules:  true
+
+      - name: Tangle and install dependencies with Cask
+        run: make
+
+      - name: Run tests
+        run: make test
+
+      - name: Submit coverage
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}

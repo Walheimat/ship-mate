@@ -1,0 +1,3 @@
+[submodule "dinghy"]
+	path = dinghy
+	url = git@github.com:Walheimat/dinghy.git

@@ -1,0 +1,39 @@
+* ship-mate
+
+#+BEGIN_HTML
+<a href='https://coveralls.io/github/Walheimat/ship-mate?branch=trunk'>
+    <img
+        src='https://coveralls.io/repos/github/Walheimat/ship-mate/badge.svg?branch=trunk'
+        alt='Coverage Status'
+    />
+</a>
+#+END_HTML
+
+=ship-mate= provides functionality for project-scoped compilation.
+
+Create commands using =ship-mate-create-command=.
+
+#+begin_src emacs-lisp
+(ship-mate-create-command test)
+(ship-mate-create-command bundle :default "make bundle"
+(ship-mate-create-command compile :key "x" :default ("make -k" "make all"))
+#+end_src
+
+Each such command will have a per-project history. Invoking them will
+only ask you to save buffers within the project.
+
+You should consider also activating =ship-mate-mode= to advise all
+functions in =ship-mate-compilation-functions= to be project-scoped
+and to make sure that a =recompile= will behave predictably.
+
+You can also use =ship-mate-with-project-bounded-compilation= to
+advise functions yourself using combinator =:around=.
+
+** Installation
+
+If you use =straight= or =quelpa=, you know what to do.
+
+If you're on Emacs >29, I recommend using =package-vc-install=.
+
+Alternatively, provided you have Cask, you can install the package
+with =make package-install= after initializing the submodule =dinghy=.
