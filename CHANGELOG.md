@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Variable `ship-mate-environment` that can be set to prefill
   `compilation-environment`.
+- Compilation buffers are now named using the current project.
 
 ## [v0.1.0]
 

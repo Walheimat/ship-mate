@@ -36,10 +36,12 @@
       (should (ship-mate-with-bounded-compilation fun)))))
 
 (ert-deftest ship-mate-command--buffer-name ()
-  (let ((ship-mate--current-command "test"))
-    (should (string-equal (ship-mate-command--buffer-name nil) "*ship-mate-test*")))
+  (let* ((ship-mate--current-command "test")
+         (fun (ship-mate-command--buffer-name-function "test")))
+    (should (string-equal (funcall fun 'test-mode) "*ship-mate-test-test*")))
 
-  (should (string-equal (ship-mate-command--buffer-name nil) "*ship-mate-compile*")))
+  (let ((fun (ship-mate-command--buffer-name-function "test")))
+    (should (string-equal (funcall fun 'test-mode) "*ship-mate-compile-test*"))))
 
 (ert-deftest ship-mate-command ()
   (defvar ship-mate-test-default-cmd nil)

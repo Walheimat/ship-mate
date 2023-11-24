@@ -88,11 +88,12 @@ Optionally the PROJECT may be passed directly."
 
 ;;; -- Commands
 
-(defun ship-mate-command--buffer-name (_major-mode)
-  "Get the buffer name for the current command."
-  (if ship-mate--current-command
-      (concat "*" "ship-mate-" ship-mate--current-command "*")
-    "*ship-mate-compile*"))
+(defun ship-mate-command--buffer-name-function (project)
+  "Return a function to name the compilation buffer for PROJECT."
+  (let* ((cmd (or ship-mate--current-command "compile"))
+         (name (format "*ship-mate-%s-%s*" cmd project)))
+
+    (lambda (_major-mode) name)))
 
 (defun ship-mate-command (cmd &optional arg)
   "Run CMD for the current project.
@@ -133,7 +134,9 @@ instead of `compile-mode'."
                       (read-shell-command prompt initial 'ship-mate-command-history)))
 
          (default-directory (project-root current))
-         (compilation-buffer-name-function 'ship-mate-command--buffer-name))
+
+         (lowercase (downcase name))
+         (compilation-buffer-name-function (ship-mate-command--buffer-name-function lowercase)))
 
     (setq ship-mate--last-command-category cmd)
 
