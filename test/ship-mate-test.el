@@ -14,6 +14,11 @@
 (ert-deftest ship-mate--plist-keys--extracts-keys ()
   (should (equal '(:test :this :function) (ship-mate--plist-keys '(:test "whether" :this "hacky" :function "works")))))
 
+(ert-deftest ship-mate--valid-env-p ()
+  (should-not (ship-mate--valid-env-p '("hello" "world")))
+  (should-not (ship-mate--valid-env-p "hello=world"))
+  (should-not (ship-mate--valid-env-p '("hello=world" "test")))
+  (should (ship-mate--valid-env-p '("hello=world" "test=ing"))))
 
 (ert-deftest ship-mate-with-bounded-compilation ()
   (bydi ((:always project-current)
@@ -129,7 +134,7 @@ p           (:mock project-root :return "/tmp/cmd")
       (should (equal (ring-elements fake-history)
                      '("make test" "make test FLAG=t"))))))
 
-(ert-deftest ship-mate-command--select-category ()
+(ert-deftest ship-mate-command--rehydrate ()
   (let ((compile-history '("make test"))
         (compile-command "make best")
         (ship-mate--last-command-category nil)
@@ -142,14 +147,14 @@ p           (:mock project-root :return "/tmp/cmd")
 
       (ring-insert history "make history")
 
-      (ship-mate-command--select-category #'ignore)
+      (ship-mate-command--rehydrate #'ignore)
 
       (bydi-was-not-set compile-history)
 
       (setq ship-mate--last-command-category 'test
             matches t)
 
-      (ship-mate-command--select-category #'ignore)
+      (ship-mate-command--rehydrate #'ignore)
 
       (bydi-was-set-to compile-history '("make history")))))
 

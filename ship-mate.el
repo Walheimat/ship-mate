@@ -19,6 +19,7 @@
 
 (defvar compilation-save-buffers-predicate)
 (defvar compile-history)
+(defvar compilation-environment)
 
 (defgroup ship-mate nil
   "Project-scoped compilation ."
@@ -49,6 +50,9 @@
 
 (defvar ship-mate-command-map (make-sparse-keymap))
 
+(defvar ship-mate-environment nil)
+(put 'ship-mate-environment 'safe-local-variable #'ship-mate--valid-env-p)
+
 ;;; -- Utility
 
 (defun ship-mate--plist-keys (plist)
@@ -75,6 +79,13 @@ Optionally the PROJECT may be passed directly."
 
     (project--value-in-dir symbol root)))
 
+(defun ship-mate--valid-env-p (value)
+  "Check if VALUE is a valid environment."
+  (and (listp value)
+       (seq-every-p
+        (lambda (it) (eq 2 (length (string-split it "="))))
+        value)))
+
 ;;; -- Commands
 
 (defun ship-mate-command--buffer-name (_major-mode)
@@ -90,6 +101,9 @@ Each command will be stored in a per-project history. If the
 history is non-empty, the user will not be prompted unless called
 with a prefix argument ARG.
 
+The `compilation-environment' is set from the project's
+`ship-mate-environment'.
+
 If the prefix argument ARG is 0, `comint-mode' will be used
 instead of `compile-mode'."
   (defvar project-vc-name)
@@ -98,6 +112,8 @@ instead of `compile-mode'."
          (current (project-current t))
          (root (project-root current))
          (name (project-name current))
+
+         (compilation-environment (ship-mate--local-value 'ship-mate-environment))
 
          (table (plist-get ship-mate-commands cmd))
 
@@ -154,8 +170,11 @@ add it to the history."
 
     (ring-remove+insert+extend history command)))
 
-(defun ship-mate-command--select-category (recompile &optional edit)
-  "Call RECOMPILE while selecting categorical history.
+(defun ship-mate-command--rehydrate (recompile &optional edit)
+  "Call RECOMPILE after re-hydrating.
+
+This will set `compile-history' when `compile-command' matches a
+command in the history of the last category.
 
 EDIT is passed as-is to RECOMPILE."
   (defvar compile-history)
@@ -213,7 +232,7 @@ is the default."
 (defun ship-mate-mode--setup ()
   "Setup `ship-mate-mode'."
   (advice-add 'compilation-start :after #'ship-mate-command--update-history)
-  (advice-add 'recompile :around #'ship-mate-command--select-category)
+  (advice-add 'recompile :around #'ship-mate-command--rehydrate)
 
   (dolist (fun (append ship-mate-compile-functions '(ship-mate-command)))
     (advice-add fun :around 'ship-mate-with-bounded-compilation)))
@@ -221,7 +240,7 @@ is the default."
 (defun ship-mate-mode--teardown ()
   "Tear down `ship-mate-mode'."
   (advice-remove 'compilation-start #'ship-mate-command--update-history)
-  (advice-remove 'recompile #'ship-mate-command--select-category)
+  (advice-remove 'recompile #'ship-mate-command--rehydrate)
 
   (dolist (fun (append ship-mate-compile-functions '(ship-mate-command)))
     (advice-remove fun 'ship-mate-with-bounded-compilation)))
