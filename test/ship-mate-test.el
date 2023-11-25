@@ -15,12 +15,16 @@
   (should (equal '(:test :this :function) (ship-mate--plist-keys '(:test "whether" :this "hacky" :function "works")))))
 
 (ert-deftest ship-mate--valid-env-p ()
+  :tags '(user-facing)
+
   (should-not (ship-mate--valid-env-p '("hello" "world")))
   (should-not (ship-mate--valid-env-p "hello=world"))
   (should-not (ship-mate--valid-env-p '("hello=world" "test")))
   (should (ship-mate--valid-env-p '("hello=world" "test=ing"))))
 
 (ert-deftest ship-mate-with-bounded-compilation ()
+  :tags '(bounded-comp)
+
   (bydi ((:always project-current)
          (:mock project-buffers :with buffer-list))
 
@@ -29,6 +33,8 @@
       (should (ship-mate-with-bounded-compilation fun)))))
 
 (ert-deftest ship-mate-with-bounded-compilation--ignored-outside-project ()
+  :tags '(bounded-comp)
+
   (bydi ((:ignore project-current))
 
     (let ((fun #'always))
@@ -36,6 +42,8 @@
       (should (ship-mate-with-bounded-compilation fun)))))
 
 (ert-deftest ship-mate-command--buffer-name ()
+  :tags '(command)
+
   (let* ((ship-mate--current-command "test")
          (fun (ship-mate-command--buffer-name-function "test")))
     (should (string-equal (funcall fun 'test-mode) "*ship-mate-test-test*")))
@@ -44,6 +52,8 @@
     (should (string-equal (funcall fun 'test-mode) "*ship-mate-compile-test*"))))
 
 (ert-deftest ship-mate-command ()
+  :tags '(command)
+
   (defvar ship-mate-test-default-cmd nil)
 
   (let ((ship-mate-commands (list 'test (make-hash-table :test 'equal)))
@@ -72,6 +82,8 @@
       (should (string-equal "best" (ring-ref (gethash "/tmp/cmd" (plist-get ship-mate-commands 'test)) 0))))))
 
 (ert-deftest ship-mate-command--only-inserted-once ()
+  :tags '(command)
+
   (let ((ship-mate-commands (list 'test (make-hash-table :test 'equal)))
         (ship-mate-command-history nil)
         (entered-command "test"))
@@ -89,6 +101,8 @@ p           (:mock project-root :return "/tmp/cmd")
       (should (eq 1 (ring-length (gethash "/tmp/cmd" (plist-get ship-mate-commands 'test))))))))
 
 (ert-deftest project-command--history--inserts-multiple ()
+  :tags '(command)
+
   (let ((ship-mate-commands (list 'test (make-hash-table :test 'equal)))
         (ship-mate-command-history nil)
         (ship-mate-test-default-cmd '("make test" "test make")))
@@ -109,6 +123,8 @@ p           (:mock project-root :return "/tmp/cmd")
   (should-not (ship-mate-command--valid-default-p '("test" make))))
 
 (ert-deftest ship-mate-command--update-history ()
+  :tags '(command)
+
   (let ((fake-history (make-ring 3))
         (ship-mate--last-command-category 'test))
 
@@ -137,6 +153,8 @@ p           (:mock project-root :return "/tmp/cmd")
                      '("make test" "make test FLAG=t"))))))
 
 (ert-deftest ship-mate-command--rehydrate ()
+  :tags '(command)
+
   (let ((compile-history '("make test"))
         (compile-command "make best")
         (ship-mate--last-command-category nil)
@@ -161,6 +179,8 @@ p           (:mock project-root :return "/tmp/cmd")
       (bydi-was-set-to compile-history '("make history")))))
 
 (ert-deftest ship-mate-create-command ()
+  :tags '(user-facing command)
+
   (bydi ((:mock make-hash-table :return 'hash-table))
     (bydi-match-expansion
      (ship-mate-create-command test)
@@ -184,6 +204,8 @@ p           (:mock project-root :return "/tmp/cmd")
         (put 'ship-mate-test-default-cmd 'safe-local-variable #'ship-mate-command--valid-default-p)))))
 
 (ert-deftest ship-mate-select-command ()
+  :tags '(user-facing command)
+
   (bydi ((:mock completing-read :return "test")
          ship-mate-command)
     (call-interactively 'ship-mate-select-command)
@@ -201,17 +223,19 @@ p           (:mock project-root :return "/tmp/cmd")
 
 (ert-deftest ship-mate-mode--setup ()
   (let ((ship-mate-compile-functions '(recompile)))
-    (bydi ((:always advice-add))
+    (bydi ((:risky-mock advice-add :with always))
       (ship-mate-mode--setup)
       (bydi-was-called-n-times advice-add 4))))
 
 (ert-deftest ship-mate-mode--teardown()
   (let ((ship-mate-compile-functions '(recompile)))
-    (bydi ((:always advice-remove))
+    (bydi ((:risky-mock advice-remove :with always))
       (ship-mate-mode--teardown)
       (bydi-was-called-n-times advice-remove 4))))
 
 (ert-deftest ship-mate-mode ()
+  :tags '(user-facing)
+
   (bydi (ship-mate-mode--setup
          ship-mate-mode--teardown)
 
@@ -226,21 +250,25 @@ p           (:mock project-root :return "/tmp/cmd")
 ;;; -- Env editing
 
 (ert-deftest ship-mate-env--edit--errors-for-non-comp ()
+  :tags '(user-facing env)
+
   (should-error (ship-mate-env--edit)))
 
 (ert-deftest ship-mate-env--creates-buffer ()
+  :tags '(user-facing env)
+
   (ert-with-test-buffer (:name "env-test")
     (setq major-mode 'compilation-mode)
 
     (setq compilation-environment '("TES=TING" "MOC=KING"))
-
-
 
     (with-current-buffer (ship-mate-env--edit)
 
       (should (string= "TES=TING\nMOC=KING" (buffer-string))))))
 
 (ert-deftest ship-mate-env--listify ()
+  :tags '(env)
+
   (ert-with-test-buffer (:name "listify")
 
     (insert "TES=TING\nMOC=KING")
@@ -250,6 +278,8 @@ p           (:mock project-root :return "/tmp/cmd")
       (should (equal '("TES=TING" "MOC=KING") (ship-mate-env--listify))))))
 
 (ert-deftest ship-mate-env--validate ()
+  :tags '(env)
+
   (let ((list '("TES=TING" "MOC=KING")))
 
     (bydi ((:mock ship-mate-env--listify :return list))
@@ -261,10 +291,14 @@ p           (:mock project-root :return "/tmp/cmd")
       (should (equal '("Invalid assignments") (ship-mate-env--validate))))))
 
 (ert-deftest ship-mate-env-apply--errors-if-validation-fails ()
+  :tags '(user-facing env)
+
   (bydi ((:mock ship-mate-env--validate :return '("Test error a" "Test error b")))
     (should-error (ship-mate-env-apply) :type 'user-error)))
 
 (ert-deftest ship-mate-env-apply ()
+  :tags '(user-facing env)
+
   (bydi ((:ignore ship-mate-env--validate)
          (:mock ship-mate-env--listify :return '("TES=TING"))
          (:ignore ship-mate-env--quit)
@@ -280,6 +314,8 @@ p           (:mock project-root :return "/tmp/cmd")
       (bydi-was-called ship-mate-env--quit))))
 
 (ert-deftest ship-mate-env--quit ()
+  :tags '(user-facing env)
+
   (ert-with-test-buffer (:name "quit")
     (let ((ship-mate-env--buffer-name (buffer-name))
           (ship-mate-env--target-buffer (current-buffer)))
@@ -293,6 +329,8 @@ p           (:mock project-root :return "/tmp/cmd")
         (bydi-was-set-to ship-mate-env--target-buffer nil)))))
 
 (ert-deftest ship-mate-env-abort ()
+  :tags '(user-facing env)
+
   (bydi (ship-mate-env--quit)
 
     (ship-mate-env-abort)
@@ -300,6 +338,8 @@ p           (:mock project-root :return "/tmp/cmd")
     (bydi-was-called ship-mate-env--quit)))
 
 (ert-deftest ship-mate-env-clear ()
+  :tags '(user-facing env)
+
   (ert-with-test-buffer (:name "clear")
     (setq-local compilation-environment '("TES=TING"))
 
@@ -312,6 +352,8 @@ p           (:mock project-root :return "/tmp/cmd")
       (bydi-was-called ship-mate-env--quit))))
 
 (ert-deftest ship-mate-edit-environment ()
+  :tags '(user-facing env)
+
   (bydi (ship-mate-env--edit)
     (ship-mate-edit-environment)
 
