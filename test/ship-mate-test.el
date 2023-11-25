@@ -223,6 +223,100 @@ p           (:mock project-root :return "/tmp/cmd")
       (ship-mate-mode -1)
       (bydi-was-called ship-mate-mode--teardown))))
 
+;;; -- Env editing
+
+(ert-deftest ship-mate-env--edit--errors-for-non-comp ()
+  (should-error (ship-mate-env--edit)))
+
+(ert-deftest ship-mate-env--creates-buffer ()
+  (ert-with-test-buffer (:name "env-test")
+    (setq major-mode 'compilation-mode)
+
+    (setq compilation-environment '("TES=TING" "MOC=KING"))
+
+
+
+    (with-current-buffer (ship-mate-env--edit)
+
+      (should (string= "TES=TING\nMOC=KING" (buffer-string))))))
+
+(ert-deftest ship-mate-env--listify ()
+  (ert-with-test-buffer (:name "listify")
+
+    (insert "TES=TING\nMOC=KING")
+
+    (let ((ship-mate-env--buffer-name (buffer-name)))
+
+      (should (equal '("TES=TING" "MOC=KING") (ship-mate-env--listify))))))
+
+(ert-deftest ship-mate-env--validate ()
+  (let ((list '("TES=TING" "MOC=KING")))
+
+    (bydi ((:mock ship-mate-env--listify :return list))
+
+      (should-not (ship-mate-env--validate))
+
+      (setq list '("TESTING" "MOC=KING"))
+
+      (should (equal '("Invalid assignments") (ship-mate-env--validate))))))
+
+(ert-deftest ship-mate-env-apply--errors-if-validation-fails ()
+  (bydi ((:mock ship-mate-env--validate :return '("Test error a" "Test error b")))
+    (should-error (ship-mate-env-apply) :type 'user-error)))
+
+(ert-deftest ship-mate-env-apply ()
+  (bydi ((:ignore ship-mate-env--validate)
+         (:mock ship-mate-env--listify :return '("TES=TING"))
+         (:ignore ship-mate-env--quit)
+         (:watch compilation-environment))
+
+    (ert-with-test-buffer (:name "apply")
+      (setq ship-mate-env--target-buffer (current-buffer))
+
+      (ship-mate-env-apply)
+
+      (bydi-was-set-to compilation-environment '("TES=TING"))
+
+      (bydi-was-called ship-mate-env--quit))))
+
+(ert-deftest ship-mate-env--quit ()
+  (ert-with-test-buffer (:name "quit")
+    (let ((ship-mate-env--buffer-name (buffer-name))
+          (ship-mate-env--target-buffer (current-buffer)))
+
+      (bydi ((:spy quit-window)
+             (:watch ship-mate-env--target-buffer))
+
+        (ship-mate-env--quit)
+
+        (bydi-was-called quit-window)
+        (bydi-was-set-to ship-mate-env--target-buffer nil)))))
+
+(ert-deftest ship-mate-env-abort ()
+  (bydi (ship-mate-env--quit)
+
+    (ship-mate-env-abort)
+
+    (bydi-was-called ship-mate-env--quit)))
+
+(ert-deftest ship-mate-env-clear ()
+  (ert-with-test-buffer (:name "clear")
+    (setq-local compilation-environment '("TES=TING"))
+
+    (setq ship-mate-env--target-buffer (current-buffer))
+
+    (bydi (ship-mate-env--quit)
+      (ship-mate-env-clear)
+
+      (should-not compilation-environment)
+      (bydi-was-called ship-mate-env--quit))))
+
+(ert-deftest ship-mate-edit-environment ()
+  (bydi (ship-mate-env--edit)
+    (ship-mate-edit-environment)
+
+    (bydi-was-called ship-mate-env--edit)))
+
 ;;; ship-mate-test.el ends here
 
 ;; Local Variables:
