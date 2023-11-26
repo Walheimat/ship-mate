@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The history size can be customize using
   `ship-mate-command-history-size`.
+- The function used to fuzzy-match commands against histories can now
+  be customized using `ship-mate-command-fuzzy-match-function`.
 
 ## [v0.2.0]
 

@@ -39,6 +39,14 @@
   :group 'ship-mate
   :type 'integer)
 
+(defcustom ship-mate-command-fuzzy-match-function #'ship-mate-command--fuzzy-match-p
+  "Function to match a command against history entries.
+
+The function will be called with two arguments: the command to
+match against and the history of the last command category."
+  :group 'ship-mate
+  :type 'function)
+
 ;;; -- Variables
 
 (defvar ship-mate-commands nil
@@ -147,7 +155,7 @@ If COMMAND matches other commands of the last command category,
 add it to the history."
   (and-let* (ship-mate-command--last-category
              (history (ship-mate-command--history ship-mate-command--last-category))
-             (index (ship-mate-command--fuzzy-match-p command history)))
+             (index (funcall ship-mate-command-fuzzy-match-function command history)))
 
     (ring-remove+insert+extend history command)))
 
@@ -163,7 +171,7 @@ EDIT is passed as-is to RECOMPILE."
   (if-let* ((command compile-command)
             (history (and ship-mate-command--last-category
                           (ship-mate-command--history ship-mate-command--last-category)))
-            (matches (ship-mate-command--fuzzy-match-p command history)))
+            (matches (funcall ship-mate-command-fuzzy-match-function command history)))
 
       (let ((compile-history (ring-elements history)))
 
