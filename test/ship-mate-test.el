@@ -66,8 +66,9 @@
            (:mock project-root :return "/tmp/cmd")
            (:mock project-name :return "Test Project")
            (:mock project--value-in-dir :return ship-mate-test-default-cmd)
-           compile
-           (:mock read-shell-command :return entered-command))
+           (:mock compile :return (current-buffer))
+           (:mock read-shell-command :return entered-command)
+           ship-mate-dinghy-mode)
 
       (setq entered-command "test")
 
@@ -90,11 +91,12 @@
         (entered-command "test"))
 
     (bydi ((:always project-current)
-p           (:mock project-root :return "/tmp/cmd")
+           (:mock project-root :return "/tmp/cmd")
            (:mock project-name :return "Test Project")
            (:mock project--value-in-dir :return ship-mate-test-default-cmd)
-           compile
-           (:mock read-shell-command :return entered-command))
+           (:mock compile :return (current-buffer))
+           (:mock read-shell-command :return entered-command)
+           ship-mate-dinghy-mode)
 
       (ship-mate-command 'test)
       (should (eq 1 (ring-length (gethash "/tmp/cmd" (plist-get ship-mate-commands 'test)))))
@@ -224,15 +226,19 @@ p           (:mock project-root :return "/tmp/cmd")
 
 (ert-deftest ship-mate-mode--setup ()
   (let ((ship-mate-compile-functions '(recompile)))
-    (bydi ((:risky-mock advice-add :with always))
+    (bydi ((:risky-mock advice-add :with always)
+           (:risky-mock add-hook :with always))
       (ship-mate-mode--setup)
-      (bydi-was-called-n-times advice-add 4))))
+      (bydi-was-called-n-times advice-add 4)
+      (bydi-was-called-n-times add-hook 1))))
 
 (ert-deftest ship-mate-mode--teardown()
   (let ((ship-mate-compile-functions '(recompile)))
-    (bydi ((:risky-mock advice-remove :with always))
+    (bydi ((:risky-mock advice-remove :with always)
+           (:risky-mock remove-hook :with always))
       (ship-mate-mode--teardown)
-      (bydi-was-called-n-times advice-remove 4))))
+      (bydi-was-called-n-times advice-remove 4)
+      (bydi-was-called-n-times remove-hook 1))))
 
 (ert-deftest ship-mate-mode ()
   :tags '(user-facing)
@@ -359,6 +365,61 @@ p           (:mock project-root :return "/tmp/cmd")
     (ship-mate-edit-environment)
 
     (bydi-was-called ship-mate-environment--edit)))
+
+;;; -- Dinghy
+
+(ert-deftest ship-mate-dinghy-mode ()
+  (bydi (ship-mate-dinghy--reset-header-line-format)
+
+    (ert-with-test-buffer (:name "dinghy")
+      (should-error (ship-mate-dinghy-mode))
+
+      (setq major-mode 'compilation-mode)
+
+      (ship-mate-dinghy-mode)
+
+      (bydi-was-called ship-mate-dinghy--reset-header-line-format))))
+
+(ert-deftest ship-mate-dinghy--maybe-enable ()
+  (bydi (ship-mate-dinghy-mode)
+
+    (let ((ship-mate-dinghy-enable nil))
+
+      (ship-mate-dinghy--maybe-enable)
+
+      (bydi-was-not-called ship-mate-dinghy-mode)
+
+      (setq ship-mate-dinghy-enable t)
+
+      (ship-mate-dinghy--maybe-enable)
+
+      (bydi-was-called ship-mate-dinghy-mode))))
+
+(ert-deftest ship-mate-dinghy--print-variables ()
+  (let ((compilation-environment nil))
+
+    (should (string= "none" (ship-mate-dinghy--print-variables)))
+
+    (setq compilation-environment '("TES=TING" "MOC=KING"))
+
+    (should (string= "TES MOC" (ship-mate-dinghy--print-variables)))
+
+    (setq compilation-environment '("TES=TING" "MOC=KING" "TRY=ING" "MY=BEST"))
+
+    (should (string= "active" (ship-mate-dinghy--print-variables)))))
+
+(ert-deftest ship-mate-dinghy--reset-header-line-format ()
+  (bydi ((:mock ship-mate-dinghy--print-variables :return "test"))
+    (ert-with-test-buffer (:name "header")
+      (setq-local ship-mate-dinghy-mode t)
+
+      (ship-mate-dinghy--reset-header-line-format)
+
+      (should (string= header-line-format "env[test]"))
+
+      (ship-mate-dinghy--reset-header-line-format (current-buffer))
+
+      (should (string= header-line-format "env[test]")))))
 
 ;;; ship-mate-test.el ends here
 

@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   be customized using `ship-mate-command-fuzzy-match-function`.
 - The generator used to generate a buffer-name function can now be
   customized using `ship-mate-command-buffer-name-function-generator`.
+- Minor-mode `ship-mate-dinghy-mode` is enabled in all `compilation`
+  buffers unless `ship-mate-dinghy-enable` is `nil`. It displays the
+  current `compilation-environment` and binds
+  `ship-mate-edit-environment`.
 
 ### Fixed
 

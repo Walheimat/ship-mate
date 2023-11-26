@@ -57,6 +57,11 @@ can be set to."
   :group 'ship-mate
   :type 'function)
 
+(defcustom ship-mate-dinghy-enable t
+  "Whether to enable `ship-mate-dinghy-mode' in buffers."
+  :group 'ship-mate
+  :type 'boolean)
+
 ;;; -- Variables
 
 (defvar ship-mate-command-map (make-sparse-keymap)
@@ -230,12 +235,14 @@ is the default."
       (and (listp val)
            (cl-every #'stringp val))))
 
-;;; -- Minor mode
+;;; -- Global minor mode
 
 (defun ship-mate-mode--setup ()
   "Setup `ship-mate-mode'."
   (advice-add 'compilation-start :after #'ship-mate-command--update-history)
   (advice-add 'recompile :around #'ship-mate-command--rehydrate)
+
+  (add-hook 'compilation-start-hook 'ship-mate-dinghy--maybe-enable)
 
   (dolist (fun (append ship-mate-compile-functions '(ship-mate-command)))
     (advice-add fun :around 'ship-mate-with-bounded-compilation)))
@@ -245,8 +252,60 @@ is the default."
   (advice-remove 'compilation-start #'ship-mate-command--update-history)
   (advice-remove 'recompile #'ship-mate-command--rehydrate)
 
+  (remove-hook 'compilation-start-hook 'ship-mate-dinghy--maybe-enable)
+
   (dolist (fun (append ship-mate-compile-functions '(ship-mate-command)))
     (advice-remove fun 'ship-mate-with-bounded-compilation)))
+
+;;; -- Dinghy mode
+
+(defvar ship-mate-dinghy-mode-map
+  (let ((map (make-sparse-keymap)))
+
+    (define-key map "\C-c\C-e" #'ship-mate-edit-environment)
+
+    map)
+  "Map used in buffers that enable `ship-mate-dinghy-mode'.")
+
+(define-minor-mode ship-mate-dinghy-mode
+  "Minor mode to provide contextual information and bindings."
+  :lighter " smd"
+
+  (unless (derived-mode-p 'compilation-mode)
+    (user-error "Can only be enabled in compilation buffers"))
+
+  (ship-mate-dinghy--reset-header-line-format))
+
+(defun ship-mate-dinghy--maybe-enable (&optional _process)
+  "Enable `ship-mate-dinghy-mode' if not disabled."
+  (when ship-mate-dinghy-enable
+    (ship-mate-dinghy-mode)))
+
+(defun ship-mate-dinghy--print-variables ()
+  "Pretty-print environment variables."
+  (if compilation-environment
+      (if (> (length compilation-environment) 3)
+          (propertize "active"
+                      'face 'mode-line-emphasis
+                      'help-echo (string-join compilation-environment "; "))
+        (propertize (mapconcat
+                     (lambda (it)
+                       (let ((parts (split-string it "=")))
+                         (propertize (nth 0 parts) 'help-echo (format "Variable set to: %s" (nth 1 parts)))))
+                     compilation-environment
+                     " ")
+                    'face 'mode-line-emphasis))
+    (propertize "none" 'face 'mode-line-inactive)))
+
+(defun ship-mate-dinghy--reset-header-line-format (&rest _args)
+  "Set header line format.
+
+If BUFFER is non-nil, reset in buffer."
+  (when ship-mate-dinghy-mode
+    (setq-local header-line-format
+                (format "%s[%s]"
+                        (propertize "env" 'face 'mode-line)
+                        (ship-mate-dinghy--print-variables)))))
 
 ;;; -- Editing the environment
 
@@ -467,7 +526,9 @@ Enabling this mode will (1) advise `compilation-start' to update
 project-local histories, (2) advise `recompile' to read this
 scoped history as well as make all functions in
 `ship-mate-compile-functions' bounded to the current
-project (will only ask you save buffers in that project)."
+project (will only ask you save buffers in that project) and (3)
+adds a hook `compilation-start-hook' to maybe enable
+`ship-mate-dinghy-mode'."
   :lighter ship-mate-lighter
   :global t
   (if ship-mate-mode
