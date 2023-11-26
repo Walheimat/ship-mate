@@ -19,7 +19,7 @@
 (require 'compile)
 
 (defgroup ship-mate nil
-  "Project-scoped compilation ."
+  "Project-scoped compilation."
   :group 'ship-mate)
 
 ;;; -- Customization
@@ -59,6 +59,13 @@ can be set to."
 
 ;;; -- Variables
 
+(defvar ship-mate-command-map (make-sparse-keymap)
+  "Command map for `ship-mate' commands.
+
+Each command created by `ship-mate-create-command' will be
+automatically bound in here using either the provided key or the
+initial of the command's name.")
+
 (defvar ship-mate-commands nil
   "List of commands and their per-project histories.
 
@@ -67,11 +74,13 @@ Each command created by `ship-mate-create-command' will
 history. The general structure is ([COMMAND-SYMBOL] .
 HASH-MAP<PROJECT-ROOT, HISTORY>).")
 
-(defvar ship-mate-command-history nil)
-(defvar ship-mate-command-map (make-sparse-keymap))
+(defvar ship-mate-command-history nil
+  "The history of the currently executed command.")
 
-(defvar ship-mate-command--current-command nil)
-(defvar ship-mate-command--last-category nil)
+(defvar ship-mate-command--current-command-name nil
+  "The symbol name of the currently executed command.")
+(defvar ship-mate-command--last-command nil
+  "The symbol of the last executed command.")
 
 (defvar ship-mate-environment nil
   "The project environment.
@@ -96,38 +105,35 @@ The `compilation-environment' is set from the project's
 
 If the prefix argument ARG is 0, `comint-mode' will be used
 instead of `compile-mode'."
-  (defvar project-vc-name)
-
   (let* ((project-vc-name nil)
          (current (project-current t))
          (root (project-root current))
          (name (project-name current))
+         (lowercase (downcase name))
 
-         (compilation-environment (ship-mate--local-value 'ship-mate-environment))
-
+         ;; History.
          (table (plist-get ship-mate-commands cmd))
-
          (history (ship-mate-command--history cmd))
          (ship-mate-command-history (ring-elements history))
 
+         ;; Reading user input.
          (initial (unless (ring-empty-p history)
                     (ring-ref history 0)))
-         (ship-mate-command--current-command (symbol-name cmd))
-
+         (ship-mate-command--current-command-name (symbol-name cmd))
          (comint (zerop (prefix-numeric-value arg)))
          (prompt (format "%s project (%s)%s"
-                         (capitalize ship-mate-command--current-command)
+                         (capitalize ship-mate-command--current-command-name)
                          name
                          (if comint " interactively: " ": ")))
          (command (or (and (not arg) initial)
                       (read-shell-command prompt initial 'ship-mate-command-history)))
 
+         ;; Binding external variables.
          (default-directory (project-root current))
-
-         (lowercase (downcase name))
+         (compilation-environment (ship-mate--local-value 'ship-mate-environment))
          (compilation-buffer-name-function (funcall ship-mate-command-buffer-name-function-generator lowercase)))
 
-    (setq ship-mate-command--last-category cmd)
+    (setq ship-mate-command--last-command cmd)
 
     (ring-remove+insert+extend history command)
 
@@ -153,7 +159,7 @@ instead of `compile-mode'."
 
 (defun ship-mate-command--buffer-name-function (project)
   "Return a function to name the compilation buffer for PROJECT."
-  (let* ((cmd (or ship-mate-command--current-command "compile"))
+  (let* ((cmd (or ship-mate-command--current-command-name "compile"))
          (name (format "*ship-mate-%s-%s*" cmd project)))
 
     (lambda (_major-mode) name)))
@@ -163,8 +169,8 @@ instead of `compile-mode'."
 
 If COMMAND matches other commands of the last command category,
 add it to the history."
-  (and-let* (ship-mate-command--last-category
-             (history (ship-mate-command--history ship-mate-command--last-category))
+  (and-let* (ship-mate-command--last-command
+             (history (ship-mate-command--history ship-mate-command--last-command))
              (index (funcall ship-mate-command-fuzzy-match-function command history)))
 
     (ring-remove+insert+extend history command)))
@@ -176,11 +182,9 @@ This will set `compile-history' when `compile-command' matches a
 command in the history of the last category.
 
 EDIT is passed as-is to RECOMPILE."
-  (defvar compile-history)
-
   (if-let* ((command compile-command)
-            (history (and ship-mate-command--last-category
-                          (ship-mate-command--history ship-mate-command--last-category)))
+            (history (and ship-mate-command--last-command
+                          (ship-mate-command--history ship-mate-command--last-command)))
             (matches (funcall ship-mate-command-fuzzy-match-function command history)))
 
       (let ((compile-history (ring-elements history)))
@@ -246,8 +250,10 @@ is the default."
 
 ;;; -- Editing the environment
 
-(defvar ship-mate-environment--buffer-name "*ship-mate-edit-env*")
-(defvar ship-mate-environment--target-buffer nil)
+(defvar ship-mate-environment--buffer-name "*ship-mate-edit-env*"
+  "The name of the buffer used for `ship-mate-edit-environment'.")
+(defvar ship-mate-environment--target-buffer nil
+  "The buffer `ship-mate-edit-environment' was called from.")
 
 (defvar ship-mate-environment-mode-map
   (let ((map (make-sparse-keymap)))
@@ -255,7 +261,8 @@ is the default."
     (define-key map "\C-c\C-c" #'ship-mate-environment-apply)
     (define-key map "\C-c\C-q" #'ship-mate-environment-clear)
     (define-key map "\C-c\C-k" #'ship-mate-environment-abort)
-    map))
+    map)
+  "Map used in buffer created by `ship-mate-edit-environment'.")
 
 (define-minor-mode ship-mate-environment-mode
   "Minor mode to edit the environment."

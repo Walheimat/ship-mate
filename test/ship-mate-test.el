@@ -44,7 +44,7 @@
 (ert-deftest ship-mate-command--buffer-name ()
   :tags '(command)
 
-  (let* ((ship-mate-command--current-command "test")
+  (let* ((ship-mate-command--current-command-name "test")
          (fun (ship-mate-command--buffer-name-function "test")))
     (should (string-equal (funcall fun 'test-mode) "*ship-mate-test-test*")))
 
@@ -126,7 +126,7 @@ p           (:mock project-root :return "/tmp/cmd")
   :tags '(command)
 
   (let ((fake-history (make-ring 3))
-        (ship-mate-command--last-category 'test))
+        (ship-mate-command--last-command 'test))
 
     (ring-insert fake-history "make test")
 
@@ -157,7 +157,7 @@ p           (:mock project-root :return "/tmp/cmd")
 
   (let ((compile-history '("make test"))
         (compile-command "make best")
-        (ship-mate-command--last-category nil)
+        (ship-mate-command--last-command nil)
         (history (make-ring 2))
         (matches nil))
 
@@ -171,7 +171,7 @@ p           (:mock project-root :return "/tmp/cmd")
 
       (bydi-was-not-set compile-history)
 
-      (setq ship-mate-command--last-category 'test
+      (setq ship-mate-command--last-command 'test
             matches t)
 
       (ship-mate-command--rehydrate #'ignore)
