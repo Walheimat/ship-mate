@@ -391,8 +391,9 @@ Optionally the PROJECT may be passed directly."
 (defun ship-mate-with-bounded-compilation (fun &rest args)
   "Run FUN applying ARGS.
 
-Makes sure this is done with `compilation-save-buffers-predicate'
-set to filter by project buffers."
+This makes sure that FUN is run while setting
+`compilation-save-buffers-predicate' to check if a buffer is part
+of a project's buffers."
   (if-let* ((project (project-current nil))
             (buffers (project-buffers project))
             (compilation-save-buffers-predicate (lambda () (memq (current-buffer) buffers))))
@@ -445,14 +446,22 @@ run in `comint-mode' instead."
 
 ;;;###autoload
 (defun ship-mate-edit-environment ()
-  "Edit the `compilation-environment'."
+  "Edit the `compilation-environment'.
+
+Needs to be called from within a `compilation-mode' buffer."
   (interactive)
 
   (ship-mate-environment--edit))
 
 ;;;###autoload
 (define-minor-mode ship-mate-mode
-  "Minor-mode for project-scoped compilation."
+  "Minor-mode for project-scoped compilation.
+
+Enabling this mode will (1) advise `compilation-start' to update
+project-local histories, (2) advise `recompile' to read this
+scoped history as well as make all functions in
+`ship-mate-compile-functions' bounded to the current
+project (will only ask you save buffers in that project)."
   :lighter ship-mate-lighter
   :global t
   (if ship-mate-mode
