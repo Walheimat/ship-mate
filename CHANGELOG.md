@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ship-mate-command-history-size`.
 - The function used to fuzzy-match commands against histories can now
   be customized using `ship-mate-command-fuzzy-match-function`.
+- The generator used to generate a buffer-name function can now be
+  customized using `ship-mate-command-buffer-name-function-generator`.
 
 ## [v0.2.0]
 

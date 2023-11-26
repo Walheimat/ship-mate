@@ -47,6 +47,16 @@ match against and the history of the last command category."
   :group 'ship-mate
   :type 'function)
 
+(defcustom ship-mate-command-buffer-name-function-generator
+ #'ship-mate-command--buffer-name-function
+  "Generator function to name buffers.
+
+This function will be called with the current project's name and
+should return a function that `compilation-buffer-name-function'
+can be set to."
+  :group 'ship-mate
+  :type 'function)
+
 ;;; -- Variables
 
 (defvar ship-mate-commands nil
@@ -73,13 +83,6 @@ Ideally you bind this in in your .dir-locals file.")
 (put 'ship-mate-environment 'safe-local-variable #'ship-mate-environment--valid-env-p)
 
 ;;; -- Commands
-
-(defun ship-mate-command--buffer-name-function (project)
-  "Return a function to name the compilation buffer for PROJECT."
-  (let* ((cmd (or ship-mate-command--current-command "compile"))
-         (name (format "*ship-mate-%s-%s*" cmd project)))
-
-    (lambda (_major-mode) name)))
 
 (defun ship-mate-command (cmd &optional arg)
   "Run CMD for the current project.
@@ -122,7 +125,7 @@ instead of `compile-mode'."
          (default-directory (project-root current))
 
          (lowercase (downcase name))
-         (compilation-buffer-name-function (ship-mate-command--buffer-name-function lowercase)))
+         (compilation-buffer-name-function (funcall ship-mate-command-buffer-name-function-generator lowercase)))
 
     (setq ship-mate-command--last-category cmd)
 
@@ -147,6 +150,13 @@ instead of `compile-mode'."
                       elements)))
 
     (ring-member history match)))
+
+(defun ship-mate-command--buffer-name-function (project)
+  "Return a function to name the compilation buffer for PROJECT."
+  (let* ((cmd (or ship-mate-command--current-command "compile"))
+         (name (format "*ship-mate-%s-%s*" cmd project)))
+
+    (lambda (_major-mode) name)))
 
 (defun ship-mate-command--update-history (command &rest _)
   "Update history using COMMAND.
