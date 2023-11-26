@@ -20,7 +20,8 @@
   (should-not (ship-mate-environment--valid-env-p '("hello" "world")))
   (should-not (ship-mate-environment--valid-env-p "hello=world"))
   (should-not (ship-mate-environment--valid-env-p '("hello=world" "test")))
-  (should (ship-mate-environment--valid-env-p '("hello=world" "test=ing"))))
+  (should (ship-mate-environment--valid-env-p '("hello=world" "test=ing")))
+  (should-not (ship-mate-environment--valid-env-p '("hello=world" "test=ing" ""))))
 
 (ert-deftest ship-mate-with-bounded-compilation ()
   :tags '(bounded-comp)
@@ -271,7 +272,7 @@ p           (:mock project-root :return "/tmp/cmd")
 
   (ert-with-test-buffer (:name "listify")
 
-    (insert "TES=TING\nMOC=KING")
+    (insert "TES=TING\n\nMOC=KING")
 
     (let ((ship-mate-environment--buffer-name (buffer-name)))
 

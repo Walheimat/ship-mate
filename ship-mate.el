@@ -307,7 +307,7 @@ is the default."
          (raw (with-current-buffer buffer
                 (buffer-string))))
 
-    (string-split raw "\n")))
+    (seq-filter (lambda (it) (not (string-empty-p it))) (string-split raw "\n"))))
 
 (defun ship-mate-environment--validate ()
   "Validate the current edit state."
@@ -355,9 +355,11 @@ is the default."
 (defun ship-mate-environment--valid-env-p (value)
   "Check if VALUE is a valid environment."
   (and (listp value)
-       (seq-every-p
-        (lambda (it) (eq 2 (length (string-split it "="))))
-        value)))
+       (or (null value)
+           (seq-every-p
+            (lambda (it)
+              (eq 2 (length (string-split it "="))))
+            value))))
 
 ;;; -- Utility
 

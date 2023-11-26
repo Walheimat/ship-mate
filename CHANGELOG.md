@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The generator used to generate a buffer-name function can now be
   customized using `ship-mate-command-buffer-name-function-generator`.
 
+### Fixed
+
+- Empty lines are filtered out by `ship-mate-environment--listify`
+  which means calling `ship-mate-environment-apply` with an empty
+  buffer also works.
+
 ## [v0.2.0]
 
 ### Added
