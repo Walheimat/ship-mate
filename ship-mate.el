@@ -34,20 +34,34 @@
   :group 'ship-mate
   :type 'string)
 
+(defcustom ship-mate-command-history-size 10
+  "Size of the history per command."
+  :group 'ship-mate
+  :type 'integer)
+
 ;;; -- Variables
 
 (defvar ship-mate-commands nil
-  "Hash maps for compilation commands.")
+  "List of commands and their per-project histories.
+
+Each command created by `ship-mate-create-command' will
+`plist-put' a new entry mapping a project's root to a command
+history. The general structure is ([COMMAND-SYMBOL] .
+HASH-MAP<PROJECT-ROOT, HISTORY>).")
+
+(defvar ship-mate-command-history nil)
+(defvar ship-mate-command-map (make-sparse-keymap))
 
 (defvar ship-mate-command--current-command nil)
 (defvar ship-mate-command--last-category nil)
 
-(defvar ship-mate-command-history nil)
-(defvar ship-mate-command-history-length 10)
+(defvar ship-mate-environment nil
+  "The project environment.
 
-(defvar ship-mate-command-map (make-sparse-keymap))
+The value of this variable will be bound to
+`compilation-environment'.
 
-(defvar ship-mate-environment nil)
+Ideally you bind this in in your .dir-locals file.")
 (put 'ship-mate-environment 'safe-local-variable #'ship-mate-environment--valid-env-p)
 
 ;;; -- Commands
@@ -175,7 +189,7 @@ is the default."
 
     (let* ((var (intern (format "ship-mate-%s-default-cmd" cmd)))
            (default (project--value-in-dir var root))
-           (new-history (make-ring ship-mate-command-history-length)))
+           (new-history (make-ring ship-mate-command-history-size)))
 
       (cond
        ((listp default)
