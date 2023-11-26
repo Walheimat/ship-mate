@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `compilation-environment` of the current compilation buffer and
   allows the user to freely edit and apply it.
 
+### Changed
+
+- Prefix for environment editing is now `environment`, no longer
+  `env`.
+- Prefixes have been harmonized, meaning there are no more plain
+  `ship-mate-` functions.
+
 ## [v0.1.0]
 
 Initial release of the package that was spliced out of my own

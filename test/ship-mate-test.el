@@ -14,13 +14,13 @@
 (ert-deftest ship-mate--plist-keys--extracts-keys ()
   (should (equal '(:test :this :function) (ship-mate--plist-keys '(:test "whether" :this "hacky" :function "works")))))
 
-(ert-deftest ship-mate--valid-env-p ()
+(ert-deftest ship-mate-environment--valid-env-p ()
   :tags '(user-facing)
 
-  (should-not (ship-mate--valid-env-p '("hello" "world")))
-  (should-not (ship-mate--valid-env-p "hello=world"))
-  (should-not (ship-mate--valid-env-p '("hello=world" "test")))
-  (should (ship-mate--valid-env-p '("hello=world" "test=ing"))))
+  (should-not (ship-mate-environment--valid-env-p '("hello" "world")))
+  (should-not (ship-mate-environment--valid-env-p "hello=world"))
+  (should-not (ship-mate-environment--valid-env-p '("hello=world" "test")))
+  (should (ship-mate-environment--valid-env-p '("hello=world" "test=ing"))))
 
 (ert-deftest ship-mate-with-bounded-compilation ()
   :tags '(bounded-comp)
@@ -44,7 +44,7 @@
 (ert-deftest ship-mate-command--buffer-name ()
   :tags '(command)
 
-  (let* ((ship-mate--current-command "test")
+  (let* ((ship-mate-command--current-command "test")
          (fun (ship-mate-command--buffer-name-function "test")))
     (should (string-equal (funcall fun 'test-mode) "*ship-mate-test-test*")))
 
@@ -126,7 +126,7 @@ p           (:mock project-root :return "/tmp/cmd")
   :tags '(command)
 
   (let ((fake-history (make-ring 3))
-        (ship-mate--last-command-category 'test))
+        (ship-mate-command--last-category 'test))
 
     (ring-insert fake-history "make test")
 
@@ -157,7 +157,7 @@ p           (:mock project-root :return "/tmp/cmd")
 
   (let ((compile-history '("make test"))
         (compile-command "make best")
-        (ship-mate--last-command-category nil)
+        (ship-mate-command--last-category nil)
         (history (make-ring 2))
         (matches nil))
 
@@ -171,7 +171,7 @@ p           (:mock project-root :return "/tmp/cmd")
 
       (bydi-was-not-set compile-history)
 
-      (setq ship-mate--last-command-category 'test
+      (setq ship-mate-command--last-category 'test
             matches t)
 
       (ship-mate-command--rehydrate #'ignore)
@@ -249,12 +249,12 @@ p           (:mock project-root :return "/tmp/cmd")
 
 ;;; -- Env editing
 
-(ert-deftest ship-mate-env--edit--errors-for-non-comp ()
+(ert-deftest ship-mate-environment--edit--errors-for-non-comp ()
   :tags '(user-facing env)
 
-  (should-error (ship-mate-env--edit)))
+  (should-error (ship-mate-environment--edit)))
 
-(ert-deftest ship-mate-env--creates-buffer ()
+(ert-deftest ship-mate-environment--creates-buffer ()
   :tags '(user-facing env)
 
   (ert-with-test-buffer (:name "env-test")
@@ -262,102 +262,102 @@ p           (:mock project-root :return "/tmp/cmd")
 
     (setq compilation-environment '("TES=TING" "MOC=KING"))
 
-    (with-current-buffer (ship-mate-env--edit)
+    (with-current-buffer (ship-mate-environment--edit)
 
       (should (string= "TES=TING\nMOC=KING" (buffer-string))))))
 
-(ert-deftest ship-mate-env--listify ()
+(ert-deftest ship-mate-environment--listify ()
   :tags '(env)
 
   (ert-with-test-buffer (:name "listify")
 
     (insert "TES=TING\nMOC=KING")
 
-    (let ((ship-mate-env--buffer-name (buffer-name)))
+    (let ((ship-mate-environment--buffer-name (buffer-name)))
 
-      (should (equal '("TES=TING" "MOC=KING") (ship-mate-env--listify))))))
+      (should (equal '("TES=TING" "MOC=KING") (ship-mate-environment--listify))))))
 
-(ert-deftest ship-mate-env--validate ()
+(ert-deftest ship-mate-environment--validate ()
   :tags '(env)
 
   (let ((list '("TES=TING" "MOC=KING")))
 
-    (bydi ((:mock ship-mate-env--listify :return list))
+    (bydi ((:mock ship-mate-environment--listify :return list))
 
-      (should-not (ship-mate-env--validate))
+      (should-not (ship-mate-environment--validate))
 
       (setq list '("TESTING" "MOC=KING"))
 
-      (should (equal '("Invalid assignments") (ship-mate-env--validate))))))
+      (should (equal '("Invalid assignments") (ship-mate-environment--validate))))))
 
-(ert-deftest ship-mate-env-apply--errors-if-validation-fails ()
+(ert-deftest ship-mate-environment-apply--errors-if-validation-fails ()
   :tags '(user-facing env)
 
-  (bydi ((:mock ship-mate-env--validate :return '("Test error a" "Test error b")))
-    (should-error (ship-mate-env-apply) :type 'user-error)))
+  (bydi ((:mock ship-mate-environment--validate :return '("Test error a" "Test error b")))
+    (should-error (ship-mate-environment-apply) :type 'user-error)))
 
-(ert-deftest ship-mate-env-apply ()
+(ert-deftest ship-mate-environment-apply ()
   :tags '(user-facing env)
 
-  (bydi ((:ignore ship-mate-env--validate)
-         (:mock ship-mate-env--listify :return '("TES=TING"))
-         (:ignore ship-mate-env--quit)
+  (bydi ((:ignore ship-mate-environment--validate)
+         (:mock ship-mate-environment--listify :return '("TES=TING"))
+         (:ignore ship-mate-environment--quit)
          (:watch compilation-environment))
 
     (ert-with-test-buffer (:name "apply")
-      (setq ship-mate-env--target-buffer (current-buffer))
+      (setq ship-mate-environment--target-buffer (current-buffer))
 
-      (ship-mate-env-apply)
+      (ship-mate-environment-apply)
 
       (bydi-was-set-to compilation-environment '("TES=TING"))
 
-      (bydi-was-called ship-mate-env--quit))))
+      (bydi-was-called ship-mate-environment--quit))))
 
-(ert-deftest ship-mate-env--quit ()
+(ert-deftest ship-mate-environment--quit ()
   :tags '(user-facing env)
 
   (ert-with-test-buffer (:name "quit")
-    (let ((ship-mate-env--buffer-name (buffer-name))
-          (ship-mate-env--target-buffer (current-buffer)))
+    (let ((ship-mate-environment--buffer-name (buffer-name))
+          (ship-mate-environment--target-buffer (current-buffer)))
 
       (bydi ((:spy quit-window)
-             (:watch ship-mate-env--target-buffer))
+             (:watch ship-mate-environment--target-buffer))
 
-        (ship-mate-env--quit)
+        (ship-mate-environment--quit)
 
         (bydi-was-called quit-window)
-        (bydi-was-set-to ship-mate-env--target-buffer nil)))))
+        (bydi-was-set-to ship-mate-environment--target-buffer nil)))))
 
-(ert-deftest ship-mate-env-abort ()
+(ert-deftest ship-mate-environment-abort ()
   :tags '(user-facing env)
 
-  (bydi (ship-mate-env--quit)
+  (bydi (ship-mate-environment--quit)
 
-    (ship-mate-env-abort)
+    (ship-mate-environment-abort)
 
-    (bydi-was-called ship-mate-env--quit)))
+    (bydi-was-called ship-mate-environment--quit)))
 
-(ert-deftest ship-mate-env-clear ()
+(ert-deftest ship-mate-environment-clear ()
   :tags '(user-facing env)
 
   (ert-with-test-buffer (:name "clear")
     (setq-local compilation-environment '("TES=TING"))
 
-    (setq ship-mate-env--target-buffer (current-buffer))
+    (setq ship-mate-environment--target-buffer (current-buffer))
 
-    (bydi (ship-mate-env--quit)
-      (ship-mate-env-clear)
+    (bydi (ship-mate-environment--quit)
+      (ship-mate-environment-clear)
 
       (should-not compilation-environment)
-      (bydi-was-called ship-mate-env--quit))))
+      (bydi-was-called ship-mate-environment--quit))))
 
 (ert-deftest ship-mate-edit-environment ()
   :tags '(user-facing env)
 
-  (bydi (ship-mate-env--edit)
+  (bydi (ship-mate-environment--edit)
     (ship-mate-edit-environment)
 
-    (bydi-was-called ship-mate-env--edit)))
+    (bydi-was-called ship-mate-environment--edit)))
 
 ;;; ship-mate-test.el ends here
 

@@ -39,8 +39,8 @@
 (defvar ship-mate-commands nil
   "Hash maps for compilation commands.")
 
-(defvar ship-mate--current-command nil)
-(defvar ship-mate--last-command-category nil)
+(defvar ship-mate-command--current-command nil)
+(defvar ship-mate-command--last-category nil)
 
 (defvar ship-mate-command-history nil)
 (defvar ship-mate-command-history-length 10)
@@ -48,46 +48,13 @@
 (defvar ship-mate-command-map (make-sparse-keymap))
 
 (defvar ship-mate-environment nil)
-(put 'ship-mate-environment 'safe-local-variable #'ship-mate--valid-env-p)
-
-;;; -- Utility
-
-(defun ship-mate--plist-keys (plist)
-  "Get all keys from PLIST."
-  (unless (plistp plist)
-    (user-error "Not a plist"))
-
-  (let ((elements plist)
-        (keys nil))
-
-    (while elements
-      (push (car elements) keys)
-      (setq elements (cddr elements)))
-
-    (reverse keys)))
-
-(defun ship-mate--local-value (symbol &optional project)
-  "Get the project-local value of SYMBOL.
-
-Optionally the PROJECT may be passed directly."
-  (and-let* (((boundp symbol))
-             (project (or project (project-current)))
-             (root (project-root project)))
-
-    (project--value-in-dir symbol root)))
-
-(defun ship-mate--valid-env-p (value)
-  "Check if VALUE is a valid environment."
-  (and (listp value)
-       (seq-every-p
-        (lambda (it) (eq 2 (length (string-split it "="))))
-        value)))
+(put 'ship-mate-environment 'safe-local-variable #'ship-mate-environment--valid-env-p)
 
 ;;; -- Commands
 
 (defun ship-mate-command--buffer-name-function (project)
   "Return a function to name the compilation buffer for PROJECT."
-  (let* ((cmd (or ship-mate--current-command "compile"))
+  (let* ((cmd (or ship-mate-command--current-command "compile"))
          (name (format "*ship-mate-%s-%s*" cmd project)))
 
     (lambda (_major-mode) name)))
@@ -120,11 +87,11 @@ instead of `compile-mode'."
 
          (initial (unless (ring-empty-p history)
                     (ring-ref history 0)))
-         (ship-mate--current-command (symbol-name cmd))
+         (ship-mate-command--current-command (symbol-name cmd))
 
          (comint (zerop (prefix-numeric-value arg)))
          (prompt (format "%s project (%s)%s"
-                         (capitalize ship-mate--current-command)
+                         (capitalize ship-mate-command--current-command)
                          name
                          (if comint " interactively: " ": ")))
          (command (or (and (not arg) initial)
@@ -135,7 +102,7 @@ instead of `compile-mode'."
          (lowercase (downcase name))
          (compilation-buffer-name-function (ship-mate-command--buffer-name-function lowercase)))
 
-    (setq ship-mate--last-command-category cmd)
+    (setq ship-mate-command--last-category cmd)
 
     (ring-remove+insert+extend history command)
 
@@ -164,8 +131,8 @@ instead of `compile-mode'."
 
 If COMMAND matches other commands of the last command category,
 add it to the history."
-  (and-let* (ship-mate--last-command-category
-             (history (ship-mate-command--history ship-mate--last-command-category))
+  (and-let* (ship-mate-command--last-category
+             (history (ship-mate-command--history ship-mate-command--last-category))
              (index (ship-mate-command--fuzzy-match-p command history)))
 
     (ring-remove+insert+extend history command)))
@@ -180,8 +147,8 @@ EDIT is passed as-is to RECOMPILE."
   (defvar compile-history)
 
   (if-let* ((command compile-command)
-            (history (and ship-mate--last-command-category
-                          (ship-mate-command--history ship-mate--last-command-category)))
+            (history (and ship-mate-command--last-category
+                          (ship-mate-command--history ship-mate-command--last-category)))
             (matches (ship-mate-command--fuzzy-match-p command history)))
 
       (let ((compile-history (ring-elements history)))
@@ -247,37 +214,37 @@ is the default."
 
 ;;; -- Editing the environment
 
-(defvar ship-mate-env--buffer-name "*ship-mate-edit-env*")
-(defvar ship-mate-env--target-buffer nil)
+(defvar ship-mate-environment--buffer-name "*ship-mate-edit-env*")
+(defvar ship-mate-environment--target-buffer nil)
 
-(defvar ship-mate-env-mode-map
+(defvar ship-mate-environment-mode-map
   (let ((map (make-sparse-keymap)))
 
-    (define-key map "\C-c\C-c" #'ship-mate-env-apply)
-    (define-key map "\C-c\C-q" #'ship-mate-env-clear)
-    (define-key map "\C-c\C-k" #'ship-mate-env-abort)
+    (define-key map "\C-c\C-c" #'ship-mate-environment-apply)
+    (define-key map "\C-c\C-q" #'ship-mate-environment-clear)
+    (define-key map "\C-c\C-k" #'ship-mate-environment-abort)
     map))
 
-(define-minor-mode ship-mate-env-mode
+(define-minor-mode ship-mate-environment-mode
   "Minor mode to edit the environment."
   :lighter " sme"
   (setq-local header-line-format
               (substitute-command-keys
-               "\\<ship-mate-env-mode-map>\
-`\\[ship-mate-env-apply]' applies and recompiles, \
-`\\[ship-mate-env-clear]' clears all env variables, \
-`'\\[ship-mate-env-abort]' reverts.")))
+               "\\<ship-mate-environment-mode-map>\
+`\\[ship-mate-environment-apply]' applies and recompiles, \
+`\\[ship-mate-environment-clear]' clears all env variables, \
+`'\\[ship-mate-environment-abort]' reverts.")))
 
-(defun ship-mate-env--edit ()
+(defun ship-mate-environment--edit ()
   "Show env edit buffer."
   (with-current-buffer (current-buffer)
     (unless (derived-mode-p 'compilation-mode 'comint-mode)
       (user-error "Can only edit environments of compilation buffers")))
 
-  (setq ship-mate-env--target-buffer (current-buffer))
+  (setq ship-mate-environment--target-buffer (current-buffer))
 
-  (let* ((buffer (get-buffer-create ship-mate-env--buffer-name))
-         (env (buffer-local-value 'compilation-environment ship-mate-env--target-buffer))
+  (let* ((buffer (get-buffer-create ship-mate-environment--buffer-name))
+         (env (buffer-local-value 'compilation-environment ship-mate-environment--target-buffer))
          (count (length env)))
 
     (with-current-buffer buffer
@@ -290,61 +257,94 @@ is the default."
            (insert "\n")))
        env)
 
-      (unless ship-mate-env-mode
-        (ship-mate-env-mode))
+      (unless ship-mate-environment-mode
+        (ship-mate-environment-mode))
 
       (pop-to-buffer buffer nil t))))
 
-(defun ship-mate-env--listify ()
+(defun ship-mate-environment--listify ()
   "Listify the current edit state."
-  (let* ((buffer (get-buffer ship-mate-env--buffer-name))
+  (let* ((buffer (get-buffer ship-mate-environment--buffer-name))
          (raw (with-current-buffer buffer
                 (buffer-string))))
 
     (string-split raw "\n")))
 
-(defun ship-mate-env--validate ()
+(defun ship-mate-environment--validate ()
   "Validate the current edit state."
-  (let ((new-state (ship-mate-env--listify))
+  (let ((new-state (ship-mate-environment--listify))
         (warnings nil))
 
-    (unless (ship-mate--valid-env-p new-state)
+    (unless (ship-mate-environment--valid-env-p new-state)
       (push "Invalid assignments" warnings))
 
     warnings))
 
-(defun ship-mate-env-apply ()
+(defun ship-mate-environment-apply ()
   "Apply the edited environment."
   (interactive)
 
-  (when-let ((warnings (ship-mate-env--validate)))
+  (when-let ((warnings (ship-mate-environment--validate)))
     (user-error (string-join warnings ", ")))
 
-  (with-current-buffer ship-mate-env--target-buffer
-    (setq-local compilation-environment (ship-mate-env--listify)))
+  (with-current-buffer ship-mate-environment--target-buffer
+    (setq-local compilation-environment (ship-mate-environment--listify)))
 
-  (ship-mate-env--quit))
+  (ship-mate-environment--quit))
 
-(defun ship-mate-env--quit ()
+(defun ship-mate-environment--quit ()
   "Quit the editing."
-  (quit-window t (get-buffer-window ship-mate-env--buffer-name))
+  (quit-window t (get-buffer-window ship-mate-environment--buffer-name))
 
-  (setq ship-mate-env--target-buffer nil))
+  (setq ship-mate-environment--target-buffer nil))
 
-(defun ship-mate-env-abort ()
+(defun ship-mate-environment-abort ()
   "Abort editing."
   (interactive)
 
-  (ship-mate-env--quit))
+  (ship-mate-environment--quit))
 
-(defun ship-mate-env-clear ()
+(defun ship-mate-environment-clear ()
   "Clear the environment."
   (interactive)
 
-  (with-current-buffer ship-mate-env--target-buffer
+  (with-current-buffer ship-mate-environment--target-buffer
     (setq-local compilation-environment nil))
 
-  (ship-mate-env--quit))
+  (ship-mate-environment--quit))
+
+(defun ship-mate-environment--valid-env-p (value)
+  "Check if VALUE is a valid environment."
+  (and (listp value)
+       (seq-every-p
+        (lambda (it) (eq 2 (length (string-split it "="))))
+        value)))
+
+;;; -- Utility
+
+(defun ship-mate--plist-keys (plist)
+  "Get all keys from PLIST."
+  (unless (plistp plist)
+    (user-error "Not a plist"))
+
+  (let ((elements plist)
+        (keys nil))
+
+    (while elements
+      (push (car elements) keys)
+      (setq elements (cddr elements)))
+
+    (reverse keys)))
+
+(defun ship-mate--local-value (symbol &optional project)
+  "Get the project-local value of SYMBOL.
+
+Optionally the PROJECT may be passed directly."
+  (and-let* (((boundp symbol))
+             (project (or project (project-current)))
+             (root (project-root project)))
+
+    (project--value-in-dir symbol root)))
 
 ;;; -- API
 
@@ -404,11 +404,12 @@ run in `comint-mode' instead."
        (define-key ship-mate-command-map ,key ',function-name)
        (put ',default-var 'safe-local-variable #'ship-mate-command--valid-default-p))))
 
+;;;###autoload
 (defun ship-mate-edit-environment ()
   "Edit the `compilation-environment'."
   (interactive)
 
-  (ship-mate-env--edit))
+  (ship-mate-environment--edit))
 
 ;;;###autoload
 (define-minor-mode ship-mate-mode
