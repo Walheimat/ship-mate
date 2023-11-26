@@ -326,9 +326,7 @@ is the default."
   (when-let ((warnings (ship-mate-environment--validate)))
     (user-error (string-join warnings ", ")))
 
-  (with-current-buffer ship-mate-environment--target-buffer
-    (setq-local compilation-environment (ship-mate-environment--listify)))
-
+  (ship-mate-environment--set-environment (ship-mate-environment--listify))
   (ship-mate-environment--quit))
 
 (defun ship-mate-environment--quit ()
@@ -347,10 +345,16 @@ is the default."
   "Clear the environment."
   (interactive)
 
-  (with-current-buffer ship-mate-environment--target-buffer
-    (setq-local compilation-environment nil))
-
+  (ship-mate-environment--set-environment nil)
   (ship-mate-environment--quit))
+
+(defun ship-mate-environment--set-environment (env)
+  "Set `compilation-environment' to ENV.
+
+This is set in buffer `ship-mate-environment--buffer-name'."
+  (with-current-buffer ship-mate-environment--target-buffer
+    (setq-local compilation-environment env)
+    (ship-mate-dinghy--reset-header-line-format)))
 
 (defun ship-mate-environment--valid-env-p (value)
   "Check if VALUE is a valid environment."
