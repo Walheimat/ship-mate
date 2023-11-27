@@ -155,7 +155,7 @@
       (should (equal (ring-elements fake-history)
                      '("make test" "make test FLAG=t"))))))
 
-(ert-deftest ship-mate-command--rehydrate ()
+(ert-deftest ship-mate-command--capture ()
   :tags '(command)
 
   (let ((compile-history '("make test"))
@@ -166,20 +166,21 @@
 
     (bydi ((:mock ship-mate-command--history :return history)
            (:mock ship-mate-command--fuzzy-match-p :return matches)
-           (:watch compile-history))
+           (:mock ship-mate--local-value :return environment)
+           ship-mate-command)
 
       (ring-insert history "make history")
 
-      (ship-mate-command--rehydrate #'ignore)
+      (ship-mate-command--capture #'ignore)
 
-      (bydi-was-not-set compile-history)
+      (bydi-was-not-called ship-mate-command)
 
       (setq ship-mate-command--last-command 'test
             matches t)
 
-      (ship-mate-command--rehydrate #'ignore)
+      (ship-mate-command--capture #'ignore)
 
-      (bydi-was-set-to compile-history '("make history")))))
+      (bydi-was-called ship-mate-command))))
 
 (ert-deftest ship-mate-create-command ()
   :tags '(user-facing command)

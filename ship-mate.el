@@ -180,7 +180,7 @@ add it to the history."
 
     (ring-remove+insert+extend history command)))
 
-(defun ship-mate-command--rehydrate (recompile &optional edit)
+(defun ship-mate-command--capture (recompile &optional edit)
   "Call RECOMPILE after re-hydrating.
 
 This will set `compile-history' when `compile-command' matches a
@@ -192,9 +192,7 @@ EDIT is passed as-is to RECOMPILE."
                           (ship-mate-command--history ship-mate-command--last-command)))
             (matches (funcall ship-mate-command-fuzzy-match-function command history)))
 
-      (let ((compile-history (ring-elements history)))
-
-        (funcall-interactively recompile edit))
+      (ship-mate-command ship-mate-command--last-command edit)
 
     (funcall-interactively recompile edit)))
 
@@ -240,7 +238,7 @@ is the default."
 (defun ship-mate-mode--setup ()
   "Setup `ship-mate-mode'."
   (advice-add 'compilation-start :after #'ship-mate-command--update-history)
-  (advice-add 'recompile :around #'ship-mate-command--rehydrate)
+  (advice-add 'recompile :around #'ship-mate-command--capture)
 
   (add-hook 'compilation-start-hook 'ship-mate-dinghy--maybe-enable)
 
@@ -250,7 +248,7 @@ is the default."
 (defun ship-mate-mode--teardown ()
   "Tear down `ship-mate-mode'."
   (advice-remove 'compilation-start #'ship-mate-command--update-history)
-  (advice-remove 'recompile #'ship-mate-command--rehydrate)
+  (advice-remove 'recompile #'ship-mate-command--capture)
 
   (remove-hook 'compilation-start-hook 'ship-mate-dinghy--maybe-enable)
 

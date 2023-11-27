@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Empty lines are filtered out by `ship-mate-environment--listify`
   which means calling `ship-mate-environment-apply` with an empty
   buffer also works.
+- `recompile` is now advised to instead call `ship-mate-command` when
+  a match happens.
 
 ## [v0.2.0]
 
