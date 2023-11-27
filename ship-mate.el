@@ -205,27 +205,11 @@ default.
 The default can be a string or a list of strings. In the latter
 case, they are inserted in reverse order so that the first item
 is the default."
-  (if-let* ((history (ship-mate-command--existing-history cmd)))
+  (if-let ((history (ship-mate-command--existing-history cmd)))
 
       history
 
-    (let* ((table (plist-get ship-mate-commands cmd))
-           (project (project-current))
-           (root (project-root project))
-           (var (intern (format "ship-mate-%s-default-cmd" cmd)))
-           (default (project--value-in-dir var root))
-           (new-history (make-ring ship-mate-command-history-size)))
-
-      (cond
-       ((listp default)
-        (mapc (lambda (it) (ring-insert new-history it)) (reverse default)))
-       ((stringp default)
-        (ring-insert new-history default))
-       (t nil))
-
-      (puthash root new-history table)
-
-      new-history)))
+    (ship-mate-command--create-history cmd)))
 
 (defun ship-mate-command--existing-history (cmd)
   "Get the existing history for CMD."
@@ -234,7 +218,29 @@ is the default."
               (root (project-root project))
               (history (gethash root table)))
 
-      history))
+    history))
+
+(defun ship-mate-command--create-history (cmd &optional empty)
+  "Create history for CMD.
+
+If EMPTY is t, do not read the defaults."
+  (let* ((table (plist-get ship-mate-commands cmd))
+         (project (project-current))
+         (root (project-root project))
+         (var (intern (format "ship-mate-%s-default-cmd" cmd)))
+         (default (if empty nil (project--value-in-dir var root)))
+         (new-history (make-ring ship-mate-command-history-size)))
+
+    (cond
+     ((listp default)
+      (mapc (lambda (it) (ring-insert new-history it)) (reverse default)))
+     ((stringp default)
+      (ring-insert new-history default))
+     (t nil))
+
+    (puthash root new-history table)
+
+    new-history))
 
 (defun ship-mate-command--valid-default-p (val)
   "Check if VAL is a valid project command default."
@@ -457,6 +463,13 @@ Optionally the PROJECT may be passed directly."
 
     (project--value-in-dir symbol root)))
 
+(defun ship-mate--read-command (prompt)
+  "Complete command using PROMPT."
+  (completing-read prompt
+                   (ship-mate--plist-keys ship-mate-commands)
+                   nil
+                   t))
+
 ;;; -- API
 
 ;;;###autoload
@@ -476,10 +489,7 @@ of a project's buffers."
 (defun ship-mate-select-command (cmd)
   "Complete and run CMD."
   (interactive
-   (list (completing-read "Select command: "
-                          (ship-mate--plist-keys ship-mate-commands)
-                          nil
-                          t)))
+   (list (ship-mate--read-command "Select command: ")))
 
   (ship-mate-command (intern cmd)))
 
@@ -515,6 +525,17 @@ run in `comint-mode' instead."
 
        (define-key ship-mate-command-map ,key ',function-name)
        (put ',default-var 'safe-local-variable #'ship-mate-command--valid-default-p))))
+
+;;;###autoload
+(defun ship-mate-refresh-history (cmd &optional clear)
+  "Refresh history for CMD.
+
+If optional CLEAR is t, clear the history instead of re-filling
+it with the default value(s)."
+  (interactive (list (ship-mate--read-command "Refresh command: ")
+                     current-prefix-arg))
+
+  (ship-mate-command--create-history (intern cmd) clear))
 
 ;;;###autoload
 (defun ship-mate-edit-environment ()

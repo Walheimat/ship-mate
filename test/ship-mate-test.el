@@ -422,6 +422,14 @@
 
       (should (string= header-line-format "env[test]")))))
 
+(ert-deftest ship-mate-refresh-history ()
+  (bydi (ship-mate-command--create-history
+         (:mock ship-mate--read-command :return "test"))
+
+    (call-interactively 'ship-mate-refresh-history)
+
+    (bydi-was-called-with ship-mate-command--create-history (list 'test nil))))
+
 ;;; ship-mate-test.el ends here
 
 ;; Local Variables:
