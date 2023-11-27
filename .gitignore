@@ -1,6 +1,10 @@
-.dir-locals.el
+*.elc
 
-node_modules/
+.dir-locals.el
+ship-mate-autoloads.el
+ship-mate-pkg.el
+
 .cask/
-coverage/
 dist/
+coverage/
+node_modules/

@@ -1,10 +1,9 @@
 Cask
 Makefile
-
 commitlint.config.js
 package.json
 package-lock.json
-.husky/
 
+.husky/
 .github/
 test/
