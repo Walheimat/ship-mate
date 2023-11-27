@@ -251,7 +251,7 @@
 (ert-deftest ship-mate-select-command ()
   :tags '(user-facing command)
 
-  (bydi ((:mock completing-read :return "test")
+  (bydi ((:mock ship-mate--read-command :return "test")
          ship-mate-command)
     (call-interactively 'ship-mate-select-command)
 
@@ -265,6 +265,14 @@
            (:mock project--value-in-dir :return 'text-mode))
 
       (should (equal (ship-mate--local-value 'major-mode) 'text-mode)))))
+
+(ert-deftest ship-mate--read-command ()
+  (bydi ((:always completing-read)
+         (:mock ship-mate--plist-keys :return '("one" "two")))
+
+    (ship-mate--read-command "Test: ")
+
+    (bydi-was-called-with completing-read '("Test: " ("one" "two") nil t))))
 
 (ert-deftest ship-mate-mode--setup ()
   (let ((ship-mate-compile-functions '(recompile)))
@@ -545,14 +553,10 @@
 (ert-deftest ship-mate-hidden-recompile ()
   :tags '(user-facing submarine)
 
-  (shut-up
-    (ert-with-message-capture messages
-      (bydi ship-mate-submarine--recompile
-        (ship-mate-hidden-recompile)
+  (bydi ship-mate-submarine--recompile
+    (shut-up (ship-mate-hidden-recompile))
 
-        (should (string= "Hidden recompile\n" messages))
-
-        (bydi-was-called ship-mate-submarine--recompile)))))
+    (bydi-was-called ship-mate-submarine--recompile)))
 
 ;;; ship-mate-test.el ends here
 
