@@ -205,14 +205,14 @@ default.
 The default can be a string or a list of strings. In the latter
 case, they are inserted in reverse order so that the first item
 is the default."
-  (if-let* ((table (plist-get ship-mate-commands cmd))
-            (project (project-current))
-            (root (project-root project))
-            (history (gethash root table)))
+  (if-let* ((history (ship-mate-command--existing-history cmd)))
 
       history
 
-    (let* ((var (intern (format "ship-mate-%s-default-cmd" cmd)))
+    (let* ((table (plist-get ship-mate-commands cmd))
+           (project (project-current))
+           (root (project-root project))
+           (var (intern (format "ship-mate-%s-default-cmd" cmd)))
            (default (project--value-in-dir var root))
            (new-history (make-ring ship-mate-command-history-size)))
 
@@ -226,6 +226,15 @@ is the default."
       (puthash root new-history table)
 
       new-history)))
+
+(defun ship-mate-command--existing-history (cmd)
+  "Get the existing history for CMD."
+  (when-let* ((table (plist-get ship-mate-commands cmd))
+              (project (project-current))
+              (root (project-root project))
+              (history (gethash root table)))
+
+      history))
 
 (defun ship-mate-command--valid-default-p (val)
   "Check if VAL is a valid project command default."
