@@ -272,7 +272,7 @@
            (:risky-mock add-hook :with always))
       (ship-mate-mode--setup)
       (bydi-was-called-n-times advice-add 4)
-      (bydi-was-called-n-times add-hook 1))))
+      (bydi-was-called-n-times add-hook 2))))
 
 (ert-deftest ship-mate-mode--teardown()
   (let ((ship-mate-compile-functions '(recompile)))
@@ -280,7 +280,7 @@
            (:risky-mock remove-hook :with always))
       (ship-mate-mode--teardown)
       (bydi-was-called-n-times advice-remove 4)
-      (bydi-was-called-n-times remove-hook 1))))
+      (bydi-was-called-n-times remove-hook 2))))
 
 (ert-deftest ship-mate-mode ()
   :tags '(user-facing)
@@ -470,6 +470,89 @@
     (call-interactively 'ship-mate-refresh-history)
 
     (bydi-was-called-with ship-mate-command--create-history (list 'test nil))))
+
+(ert-deftest ship-mate-submarine--recompile ()
+  :tags '(submarine)
+
+  (let ((ship-mate-submarine--in-progress t))
+
+    (should-error (ship-mate-submarine--recompile)))
+
+  (let ((ship-mate-submarine--in-progress nil)
+        (ship-mate-submarine--buffer nil))
+    (bydi ((:watch ship-mate-submarine--in-progress)
+           (:watch ship-mate-submarine--buffer)
+           (:watch display-buffer-alist)
+           recompile)
+
+      (ship-mate-submarine--recompile)
+
+      (bydi-was-called recompile)
+      (bydi-was-set display-buffer-alist)
+      (bydi-was-set ship-mate-submarine--in-progress)
+      (bydi-was-set ship-mate-submarine--buffer))))
+
+(ert-deftest ship-mate-submarine--check ()
+  :tags '(submarine)
+
+  (let ((ship-mate-submarine--process nil))
+
+    (should-error (ship-mate-submarine--check)))
+
+  (let ((ship-mate-submarine--process 'process)
+        (ship-mate-submarine--timer 'timer)
+        (ship-mate-submarine--in-progress t)
+        (ship-mate-prompt-for-hidden-buffer t))
+
+    (bydi ((:sometimes process-live-p)
+           cancel-timer
+           (:always yes-or-no-p)
+           pop-to-buffer
+           (:watch ship-mate-submarine--in-progress))
+
+      (ship-mate-submarine--check)
+
+      (bydi-was-not-set ship-mate-submarine--in-progress)
+      (bydi-was-not-called pop-to-buffer)
+
+      (bydi-toggle-sometimes)
+
+      (ship-mate-submarine--check)
+
+      (bydi-was-set ship-mate-submarine--in-progress)
+      (bydi-was-called pop-to-buffer))))
+
+(ert-deftest ship-mate-submarine--watch-process ()
+  :tags '(submarine)
+
+  (let ((ship-mate-submarine--in-progress nil)
+        (ship-mate-submarine--process nil)
+        (ship-mate-submarine--timer))
+
+    (bydi (run-with-timer
+           (:watch ship-mate-submarine--timer))
+
+      (ship-mate-submarine--watch-process 'process)
+
+      (bydi-was-not-set ship-mate-submarine--timer)
+
+      (setq ship-mate-submarine--in-progress t)
+
+      (ship-mate-submarine--watch-process 'process)
+
+      (bydi-was-set ship-mate-submarine--timer))))
+
+(ert-deftest ship-mate-hidden-recompile ()
+  :tags '(user-facing submarine)
+
+  (shut-up
+    (ert-with-message-capture messages
+      (bydi ship-mate-submarine--recompile
+        (ship-mate-hidden-recompile)
+
+        (should (string= "Hidden recompile\n" messages))
+
+        (bydi-was-called ship-mate-submarine--recompile)))))
 
 ;;; ship-mate-test.el ends here
 

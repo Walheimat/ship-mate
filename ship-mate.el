@@ -62,9 +62,17 @@ can be set to."
   :group 'ship-mate
   :type 'boolean)
 
+(defcustom ship-mate-prompt-for-hidden-buffer nil
+  "Whether user should be prompted when hidden buffer is done."
+  :group 'ship-mate
+  :type 'boolean)
+
 ;;; -- Variables
 
-(defvar ship-mate-command-map (make-sparse-keymap)
+(defvar ship-mate-command-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "r" #'ship-mate-hidden-recompile)
+    map)
   "Command map for `ship-mate' commands.
 
 Each command created by `ship-mate-create-command' will be
@@ -95,6 +103,12 @@ The value of this variable will be bound to
 
 Ideally you bind this in in your .dir-locals file.")
 (put 'ship-mate-environment 'safe-local-variable #'ship-mate-environment--valid-env-p)
+
+(defvar ship-mate-hands-off-environment nil
+  "Whether to not let-bind the environment.
+
+This is set by `ship-mate-command--capture' to avoid resetting
+the environment.")
 
 ;;; -- Commands
 
@@ -259,6 +273,45 @@ If EMPTY is t, do not read the defaults."
       (and (listp val)
            (cl-every #'stringp val))))
 
+;;; -- Hidden recompilation
+
+(defvar ship-mate-submarine--in-progress nil)
+(defvar ship-mate-submarine--buffer nil)
+(defvar ship-mate-submarine--timer nil)
+(defvar ship-mate-submarine--process nil)
+
+(defun ship-mate-submarine--recompile ()
+  "Recompile but with no window."
+  (when ship-mate-submarine--in-progress
+    (user-error "Compilation in progress"))
+
+  (let ((display-buffer-alist '(("\\*ship-mate" (display-buffer-no-window)))))
+
+    (setq ship-mate-submarine--in-progress t
+          ship-mate-submarine--buffer (recompile))))
+
+(defun ship-mate-submarine--check ()
+  "Check on the recorded process."
+  (unless ship-mate-submarine--process
+    (user-error "No process"))
+
+  (unless (process-live-p ship-mate-submarine--process)
+    (cancel-timer ship-mate-submarine--timer)
+
+    (setq ship-mate-submarine--timer nil
+          ship-mate-submarine--process nil
+          ship-mate-submarine--in-progress nil)
+
+    (or (and ship-mate-prompt-for-hidden-buffer
+             (not (yes-or-no-p "Compilation finished. Show buffer?")))
+        (pop-to-buffer ship-mate-submarine--buffer))))
+
+(defun ship-mate-submarine--watch-process (process)
+  "Save PROCESS and set timer to check on it."
+  (when ship-mate-submarine--in-progress
+    (setq ship-mate-submarine--process process
+          ship-mate-submarine--timer (run-with-timer 0 0.1 #'ship-mate-submarine--check))))
+
 ;;; -- Global minor mode
 
 (defun ship-mate-mode--setup ()
@@ -267,6 +320,7 @@ If EMPTY is t, do not read the defaults."
   (advice-add 'recompile :around #'ship-mate-command--capture)
 
   (add-hook 'compilation-start-hook 'ship-mate-dinghy--maybe-enable)
+  (add-hook 'compilation-start-hook 'ship-mate-submarine--watch-process)
 
   (dolist (fun (append ship-mate-compile-functions '(ship-mate-command)))
     (advice-add fun :around 'ship-mate-with-bounded-compilation)))
@@ -277,6 +331,7 @@ If EMPTY is t, do not read the defaults."
   (advice-remove 'recompile #'ship-mate-command--capture)
 
   (remove-hook 'compilation-start-hook 'ship-mate-dinghy--maybe-enable)
+  (remove-hook 'compilation-start-hook 'ship-mate-submarine--watch-process)
 
   (dolist (fun (append ship-mate-compile-functions '(ship-mate-command)))
     (advice-remove fun 'ship-mate-with-bounded-compilation)))
@@ -547,6 +602,14 @@ it with the default value(s)."
                      current-prefix-arg))
 
   (ship-mate-command--create-history (intern cmd) clear))
+
+(defun ship-mate-hidden-recompile ()
+  "Recompile and show the buffer after compilation finishes."
+  (interactive)
+
+  (message "Hidden recompile")
+
+  (ship-mate-submarine--recompile))
 
 ;;;###autoload
 (defun ship-mate-edit-environment ()

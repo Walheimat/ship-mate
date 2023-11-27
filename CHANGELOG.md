@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ship-mate-edit-environment`.
 - Command `ship-mate-refresh-history` to either reset to defaults to
   clear a command's history (in the project).
+- Command `ship-mate-hidden-recompile`, bound in
+  `ship-mate-command-map` to `r`. It will call `recompile` but only
+  show the compilation buffer once the process has finished. User may
+  set `ship-mate-prompt-for-hidden-buffer` if they should be prompted
+  first.
 
 ### Fixed
 
