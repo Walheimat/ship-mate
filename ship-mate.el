@@ -135,7 +135,6 @@ instead of `compile-mode'."
 
          ;; Binding external variables.
          (default-directory (project-root current))
-         (compilation-environment (ship-mate--local-value 'ship-mate-environment))
          (compilation-buffer-name-function (funcall ship-mate-command-buffer-name-function-generator lowercase)))
 
     (setq ship-mate-command--last-command cmd)
@@ -144,7 +143,19 @@ instead of `compile-mode'."
 
     (puthash root history table)
 
-    (compile command comint)))
+    (if compilation-environment
+        (compile command comint)
+      (let ((compilation-environment (ship-mate-command--last-environment-or-local-value)))
+        (compile command comint)))))
+
+(defun ship-mate-command--last-environment-or-local-value ()
+  "Get the last environment for CMD or default."
+  (if-let* ((buffer-name (funcall compilation-buffer-name-function nil))
+            (buffer (get-buffer buffer-name)))
+
+      (buffer-local-value 'compilation-environment buffer)
+
+    (ship-mate--local-value 'ship-mate-environment)))
 
 (defun ship-mate-command--fuzzy-match-p (command history)
   "Check if COMMAND matches previous commands in HISTORY."

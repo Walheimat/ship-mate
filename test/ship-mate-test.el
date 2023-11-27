@@ -103,7 +103,48 @@
       (ship-mate-command 'test)
       (should (eq 1 (ring-length (gethash "/tmp/cmd" (plist-get ship-mate-commands 'test))))))))
 
-(ert-deftest project-command--history--inserts-multiple ()
+(ert-deftest ship-mate-command--no-let-bind-for-existing-env ()
+  :tags '(command)
+
+  (let ((compilation-environment nil)
+        (env nil)
+        (ship-mate-commands (list 'test (make-hash-table :test 'equal)))
+        (history (make-ring 1)))
+
+    (ring-insert history "make test")
+
+    (bydi ((:always project-current)
+           (:mock project-root :return "/tmp/env")
+           (:mock project-name :return "Test Project")
+           (:mock ship-mate-command--history :return history)
+           (:mock ship-mate--local-value :return env)
+           (:watch compilation-environment)
+           (:mock compile :return (current-buffer)))
+
+      (ship-mate-command 'test)
+
+      (bydi-was-set compilation-environment)
+      (setq compilation-environment '("TES=TING"))
+
+      (bydi-clear-mocks-for 'compilation-environment)
+
+      (ship-mate-command 'test)
+
+      (bydi-was-not-set compilation-environment))))
+
+(ert-deftest ship-mate-command--last-environment-or-local-value ()
+  (ert-with-test-buffer (:name "last-env")
+
+    (setq-local compilation-environment '("TES=TING"))
+
+    (bydi (ship-mate--local-value)
+
+      (let ((compilation-buffer-name-function (lambda (_) (buffer-name))))
+
+        (should (equal '("TES=TING")
+                       (ship-mate-command--last-environment-or-local-value)))))))
+
+(ert-deftest ship-mate-command--history--inserts-multiple ()
   :tags '(command)
 
   (let ((ship-mate-commands (list 'test (make-hash-table :test 'equal)))
@@ -120,7 +161,7 @@
         (should (string= "make test" (ring-ref history 0)))
         (should (string= "test make" (ring-ref history 1)))))))
 
-(ert-deftest project-command--valid-default-p ()
+(ert-deftest ship-mate-command--valid-default-p ()
   (should (ship-mate-command--valid-default-p "test"))
   (should (ship-mate-command--valid-default-p '("test" "make")))
   (should-not (ship-mate-command--valid-default-p '("test" make))))
