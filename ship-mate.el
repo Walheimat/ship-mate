@@ -359,7 +359,8 @@ If EMPTY is t, do not read the defaults."
 
 (defun ship-mate-dinghy--maybe-enable (&optional _process)
   "Enable `ship-mate-dinghy-mode' if not disabled."
-  (when ship-mate-dinghy-enable
+  (when (and ship-mate-dinghy-enable
+             (ship-mate--command-buffer-p))
     (ship-mate-dinghy-mode)))
 
 (defun ship-mate-dinghy--print-variables ()
@@ -537,6 +538,12 @@ Optionally the PROJECT may be passed directly."
                    (ship-mate--plist-keys ship-mate-commands)
                    nil
                    t))
+
+(defun ship-mate--command-buffer-p (&optional buffer)
+  "Check if BUFFER is a `ship-mate-command' buffer."
+  (let ((buffer (or buffer (current-buffer))))
+
+    (string-match-p "\\*ship-mate" (buffer-name buffer))))
 
 ;;; -- API
 

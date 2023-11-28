@@ -450,9 +450,11 @@
 
       (setq ship-mate-dinghy-enable t)
 
-      (ship-mate-dinghy--maybe-enable)
+      (ert-with-test-buffer (:name "*ship-mate-maybe*")
 
-      (bydi-was-called ship-mate-dinghy-mode))))
+        (ship-mate-dinghy--maybe-enable)
+
+        (bydi-was-called ship-mate-dinghy-mode)))))
 
 (ert-deftest ship-mate-dinghy--print-variables ()
   (let ((compilation-environment nil))
