@@ -33,7 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   which means calling `ship-mate-environment-apply` with an empty
   buffer also works.
 - `recompile` is now advised to instead call `ship-mate-command` when
-  a match happens.
+  a match happens unless the current buffer is a compilation buffer
+  already.
 
 ## [v0.2.0]
 

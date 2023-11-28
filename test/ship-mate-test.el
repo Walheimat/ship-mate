@@ -223,6 +223,15 @@
 
       (bydi-was-called ship-mate-command))))
 
+(ert-deftest ship-mate-command--capture--in-compilation-buffer ()
+  :tags '(command)
+
+  (ert-with-test-buffer (:name "in-compilation")
+
+    (setq major-mode 'compilation-mode)
+
+    (should (ship-mate-command--capture #'always))))
+
 (ert-deftest ship-mate-create-command ()
   :tags '(user-facing command)
 

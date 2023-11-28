@@ -212,14 +212,16 @@ This will set `compile-history' when `compile-command' matches a
 command in the history of the last category.
 
 EDIT is passed as-is to RECOMPILE."
-  (if-let* ((command compile-command)
-            (history (and ship-mate-command--last-command
-                          (ship-mate-command--history ship-mate-command--last-command)))
-            (matches (funcall ship-mate-command-fuzzy-match-function command history)))
+  (if (eq 'compilation-mode (buffer-local-value 'major-mode (current-buffer)))
+      (funcall-interactively recompile edit)
+    (if-let* ((command compile-command)
+              (history (and ship-mate-command--last-command
+                            (ship-mate-command--history ship-mate-command--last-command)))
+              (matches (funcall ship-mate-command-fuzzy-match-function command history)))
 
-      (ship-mate-command ship-mate-command--last-command edit)
+        (ship-mate-command ship-mate-command--last-command edit)
 
-    (funcall-interactively recompile edit)))
+      (funcall-interactively recompile edit))))
 
 (defun ship-mate-command--history (cmd)
   "Access history for CMD.
