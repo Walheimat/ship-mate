@@ -257,6 +257,50 @@
         (define-key ship-mate-command-map "o" 'ship-mate-test)
         (put 'ship-mate-test-default-cmd 'safe-local-variable #'ship-mate-command--valid-default-p)))))
 
+(ert-deftest ship-mate-command--buffers ()
+  (let ((a (get-buffer-create "*ship-mate-a*"))
+        (b (get-buffer-create "other"))
+        (c (get-buffer-create "*ship-mate-c*"))
+        (default-directory "/tmp/default"))
+
+    (with-current-buffer a
+      (setq default-directory "/tmp/other"))
+
+    (with-current-buffer b
+      (setq default-directory "/tmp/default"))
+
+    (with-current-buffer c
+      (setq default-directory "/tmp/default"))
+
+    (bydi ((:mock buffer-list :return (list a b c)))
+
+      (should (eq (length (ship-mate-command--buffers)) 1)))))
+
+(ert-deftest ship-mate-command--next-and-prev ()
+  (let ((current 'b)
+        (buffers '(a b c)))
+    (bydi ((:mock current-buffer :return current)
+           (:mock ship-mate-command--buffers :return buffers)
+           (:mock switch-to-buffer :with bydi-rf))
+
+      (should (eq 'c (ship-mate-command-next-buffer)))
+      (should (eq 'a (ship-mate-command-prev-buffer)))
+
+      (setq current 'a)
+
+      (should (eq 'b (ship-mate-command-next-buffer)))
+      (should (eq 'c (ship-mate-command-prev-buffer)))
+
+      (setq current 'c)
+
+      (should (eq 'a (ship-mate-command-next-buffer)))
+      (should (eq 'b (ship-mate-command-prev-buffer)))
+
+      (setq buffers '(c))
+
+      (should-error (ship-mate-command-next-buffer))
+      (should-error (ship-mate-command-prev-buffer)))))
+
 (ert-deftest ship-mate-select-command ()
   :tags '(user-facing command)
 

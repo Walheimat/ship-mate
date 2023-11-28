@@ -275,6 +275,38 @@ If EMPTY is t, do not read the defaults."
       (and (listp val)
            (cl-every #'stringp val))))
 
+(defun ship-mate-command--buffers ()
+  "Get all `ship-mate' buffers in the current project."
+  (cl-loop for buffer in (buffer-list)
+           if (and (ship-mate--command-buffer-p buffer)
+                   (equal default-directory
+                          (buffer-local-value 'default-directory buffer)))
+           collect buffer))
+
+(defun ship-mate-command-next-buffer ()
+  "Get the next buffer."
+  (interactive)
+
+  (let* ((buffers (ship-mate-command--buffers))
+         (pos (cl-position (current-buffer) buffers)))
+
+    (when (<= (length buffers) 1)
+      (user-error "Only buffer"))
+
+    (switch-to-buffer (nth (mod (1+ pos) (length buffers)) buffers))))
+
+(defun ship-mate-command-prev-buffer ()
+  "Get the next buffer."
+  (interactive)
+
+  (let* ((buffers (ship-mate-command--buffers))
+         (pos (cl-position (current-buffer) buffers)))
+
+    (when (<= (length buffers) 1)
+      (user-error "Only buffer"))
+
+    (switch-to-buffer (nth (mod (+ (length buffers) (1- pos)) (length buffers)) buffers))))
+
 ;;; -- Hidden recompilation
 
 (defvar ship-mate-submarine--in-progress nil)
@@ -344,6 +376,8 @@ If EMPTY is t, do not read the defaults."
   (let ((map (make-sparse-keymap)))
 
     (define-key map "\C-c\C-e" #'ship-mate-edit-environment)
+    (define-key map "\C-c\C-n" #'ship-mate-command-next-buffer)
+    (define-key map "\C-c\C-p" #'ship-mate-command-prev-buffer)
 
     map)
   "Map used in buffers that enable `ship-mate-dinghy-mode'.")

@@ -18,7 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minor-mode `ship-mate-dinghy-mode` is enabled in all `compilation`
   buffers created by `ship-mate` unless `ship-mate-dinghy-enable` is
   `nil`. It displays the current `compilation-environment` and binds
-  `ship-mate-edit-environment`.
+  `ship-mate-edit-environment` as well as
+  `ship-mate-command-next-buffer` and `ship-mate-command-prev-buffer`.
 - Command `ship-mate-refresh-history` to either reset to defaults to
   clear a command's history (in the project).
 - Command `ship-mate-hidden-recompile`, bound in
