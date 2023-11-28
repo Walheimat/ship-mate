@@ -173,19 +173,17 @@ instead of `compile-mode'."
 
 (defun ship-mate-command--fuzzy-match-p (command history)
   "Check if COMMAND matches previous commands in HISTORY."
-  (when-let* ((elements (ring-elements history))
-              (min-count 1)
-              (match (seq-find
-                      (lambda (it)
-                        (let* ((el-parts (string-split it " "))
-                               (matches (seq-count
-                                         (lambda (part)
-                                           (string-match-p part command))
-                                         el-parts)))
-                          (> matches min-count)))
-                      elements)))
-
-    (ring-member history match)))
+  (and-let* ((elements (ring-elements history))
+             (min-count 1)
+             (match (seq-find
+                     (lambda (it)
+                       (let* ((el-parts (string-split it " "))
+                              (matches (seq-count
+                                        (lambda (part)
+                                          (string-match-p part command))
+                                        el-parts)))
+                         (> matches min-count)))
+                     elements)))))
 
 (defun ship-mate-command--buffer-name-function (project)
   "Return a function to name the compilation buffer for PROJECT."
@@ -222,6 +220,7 @@ EDIT is passed as-is to RECOMPILE."
         (ship-mate-command ship-mate-command--last-command edit)
 
       (funcall-interactively recompile edit))))
+
 
 (defun ship-mate-command--history (cmd)
   "Access history for CMD.
