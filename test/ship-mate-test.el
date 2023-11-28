@@ -226,11 +226,14 @@
 (ert-deftest ship-mate-command--capture--in-compilation-buffer ()
   :tags '(command)
 
-  (ert-with-test-buffer (:name "in-compilation")
+  (ert-with-test-buffer (:name "*ship-mate-in-comp*")
 
-    (setq major-mode 'compilation-mode)
+    (let ((history (make-ring 1))
+          (ship-mate-command-category 'test))
 
-    (should (ship-mate-command--capture #'always))))
+      (bydi ((:mock ship-mate-command--history :return history))
+
+        (should (ship-mate-command--capture (lambda (&rest _) (current-buffer))))))))
 
 (ert-deftest ship-mate-create-command ()
   :tags '(user-facing command)

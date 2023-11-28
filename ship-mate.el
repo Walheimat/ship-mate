@@ -87,6 +87,11 @@ Each command created by `ship-mate-create-command' will
 history. The general structure is ([COMMAND-SYMBOL] .
 HASH-MAP<PROJECT-ROOT, HISTORY>).")
 
+(defvar-local ship-mate-command-category nil
+  "The command category of this buffer.
+
+This is set by `ship-mate-command'.")
+
 (defvar ship-mate-command-history nil
   "The history of the currently executed command.")
 
@@ -157,10 +162,13 @@ instead of `compile-mode'."
 
     (puthash root history table)
 
-    (if compilation-environment
-        (compile command comint)
-      (let ((compilation-environment (ship-mate-command--last-environment-or-local-value)))
-        (compile command comint)))))
+    (let ((buffer (if compilation-environment
+                      (compile command comint)
+                    (let ((compilation-environment (ship-mate-command--last-environment-or-local-value)))
+                      (compile command comint)))))
+
+      (with-current-buffer buffer
+        (setq ship-mate-command-category cmd)))))
 
 (defun ship-mate-command--last-environment-or-local-value ()
   "Get the last environment for CMD or default."
@@ -204,14 +212,23 @@ add it to the history."
     (ring-remove+insert+extend history command)))
 
 (defun ship-mate-command--capture (recompile &optional edit)
-  "Call RECOMPILE after re-hydrating.
+  "Only call RECOMPILE conditionally.
 
-This will set `compile-history' when `compile-command' matches a
-command in the history of the last category.
+If we're in a `ship-mate-command' buffer, call recompile after
+setting the `compile-history'. Otherwise check if the current
+`compile-command' matches the history of the previous command; if
+that is the case just call `ship-mate-command' with that last
+command again.
 
-EDIT is passed as-is to RECOMPILE."
-  (if (eq 'compilation-mode (buffer-local-value 'major-mode (current-buffer)))
-      (funcall-interactively recompile edit)
+As a last resort call `recompile'.
+
+EDIT is passed as-is to all invocations of RECOMPILE."
+  (if-let* (((ship-mate--command-buffer-p))
+            (cmd ship-mate-command-category)
+            (history (ship-mate-command--history ship-mate-command-category)))
+      (let ((compile-history (and history (ring-elements history))))
+        (with-current-buffer (funcall-interactively recompile edit)
+          (setq ship-mate-command-category cmd)))
     (if-let* ((command compile-command)
               (history (and ship-mate-command--last-command
                             (ship-mate-command--history ship-mate-command--last-command)))
@@ -220,7 +237,6 @@ EDIT is passed as-is to RECOMPILE."
         (ship-mate-command ship-mate-command--last-command edit)
 
       (funcall-interactively recompile edit))))
-
 
 (defun ship-mate-command--history (cmd)
   "Access history for CMD.
