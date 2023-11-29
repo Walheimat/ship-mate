@@ -363,30 +363,6 @@ If EMPTY is t, do not read the defaults."
     (setq ship-mate-submarine--process process
           ship-mate-submarine--timer (run-with-timer 0 0.1 #'ship-mate-submarine--check))))
 
-;;; -- Global minor mode
-
-(defun ship-mate-mode--setup ()
-  "Setup `ship-mate-mode'."
-  (advice-add 'compilation-start :after #'ship-mate-command--update-history)
-  (advice-add 'recompile :around #'ship-mate-command--capture)
-
-  (add-hook 'compilation-start-hook 'ship-mate-dinghy--maybe-enable)
-  (add-hook 'compilation-start-hook 'ship-mate-submarine--watch-process)
-
-  (dolist (fun (append ship-mate-compile-functions '(ship-mate-command)))
-    (advice-add fun :around 'ship-mate-with-bounded-compilation)))
-
-(defun ship-mate-mode--teardown ()
-  "Tear down `ship-mate-mode'."
-  (advice-remove 'compilation-start #'ship-mate-command--update-history)
-  (advice-remove 'recompile #'ship-mate-command--capture)
-
-  (remove-hook 'compilation-start-hook 'ship-mate-dinghy--maybe-enable)
-  (remove-hook 'compilation-start-hook 'ship-mate-submarine--watch-process)
-
-  (dolist (fun (append ship-mate-compile-functions '(ship-mate-command)))
-    (advice-remove fun 'ship-mate-with-bounded-compilation)))
-
 ;;; -- Dinghy mode
 
 (defvar ship-mate-dinghy-mode-map
@@ -597,6 +573,30 @@ Optionally the PROJECT may be passed directly."
   (let ((buffer (or buffer (current-buffer))))
 
     (string-match-p "\\*ship-mate" (buffer-name buffer))))
+
+;;; -- Global minor mode
+
+(defun ship-mate-mode--setup ()
+  "Setup `ship-mate-mode'."
+  (advice-add 'compilation-start :after #'ship-mate-command--update-history)
+  (advice-add 'recompile :around #'ship-mate-command--capture)
+
+  (add-hook 'compilation-start-hook 'ship-mate-dinghy--maybe-enable)
+  (add-hook 'compilation-start-hook 'ship-mate-submarine--watch-process)
+
+  (dolist (fun (append ship-mate-compile-functions '(ship-mate-command)))
+    (advice-add fun :around 'ship-mate-with-bounded-compilation)))
+
+(defun ship-mate-mode--teardown ()
+  "Tear down `ship-mate-mode'."
+  (advice-remove 'compilation-start #'ship-mate-command--update-history)
+  (advice-remove 'recompile #'ship-mate-command--capture)
+
+  (remove-hook 'compilation-start-hook 'ship-mate-dinghy--maybe-enable)
+  (remove-hook 'compilation-start-hook 'ship-mate-submarine--watch-process)
+
+  (dolist (fun (append ship-mate-compile-functions '(ship-mate-command)))
+    (advice-remove fun 'ship-mate-with-bounded-compilation)))
 
 ;;; -- API
 
