@@ -65,8 +65,11 @@
     (bydi ((:always project-current)
            (:mock project-root :return "/tmp/cmd")
            (:mock project-name :return "Test Project")
+           (:mock project-buffers :return (list (current-buffer)))
            (:mock project--value-in-dir :return ship-mate-test-default-cmd)
-           (:mock compile :return (current-buffer))
+           (:mock compile :with (lambda (&rest _)
+                                  (funcall compilation-save-buffers-predicate)
+                                  (current-buffer)))
            (:mock read-shell-command :return entered-command)
            ship-mate-dinghy-mode)
 
@@ -93,6 +96,7 @@
     (bydi ((:always project-current)
            (:mock project-root :return "/tmp/cmd")
            (:mock project-name :return "Test Project")
+           (:mock project-buffers :return (list (current-buffer)))
            (:mock project--value-in-dir :return ship-mate-test-default-cmd)
            (:mock compile :return (current-buffer))
            (:mock read-shell-command :return entered-command)
@@ -335,7 +339,7 @@
     (bydi ((:risky-mock advice-add :with always)
            (:risky-mock add-hook :with always))
       (ship-mate-mode--setup)
-      (bydi-was-called-n-times advice-add 4)
+      (bydi-was-called-n-times advice-add 3)
       (bydi-was-called-n-times add-hook 2))))
 
 (ert-deftest ship-mate-mode--teardown()
@@ -343,7 +347,7 @@
     (bydi ((:risky-mock advice-remove :with always)
            (:risky-mock remove-hook :with always))
       (ship-mate-mode--teardown)
-      (bydi-was-called-n-times advice-remove 4)
+      (bydi-was-called-n-times advice-remove 3)
       (bydi-was-called-n-times remove-hook 2))))
 
 (ert-deftest ship-mate-mode ()

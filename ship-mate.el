@@ -133,6 +133,7 @@ instead of `compile-mode'."
          (current (project-current t))
          (root (project-root current))
          (name (project-name current))
+         (project-buffers (project-buffers current))
          (lowercase (downcase name))
 
          ;; History.
@@ -154,6 +155,7 @@ instead of `compile-mode'."
 
          ;; Binding external variables.
          (default-directory (project-root current))
+         (compilation-save-buffers-predicate (lambda () (memq (current-buffer) project-buffers)))
          (compilation-buffer-name-function (funcall ship-mate-command-buffer-name-function-generator lowercase)))
 
     (setq ship-mate-command--last-command cmd)
@@ -584,7 +586,7 @@ Optionally the PROJECT may be passed directly."
   (add-hook 'compilation-start-hook 'ship-mate-dinghy--maybe-enable)
   (add-hook 'compilation-start-hook 'ship-mate-submarine--watch-process)
 
-  (dolist (fun (append ship-mate-compile-functions '(ship-mate-command)))
+  (dolist (fun ship-mate-compile-functions)
     (advice-add fun :around 'ship-mate-with-bounded-compilation)))
 
 (defun ship-mate-mode--teardown ()
@@ -595,7 +597,7 @@ Optionally the PROJECT may be passed directly."
   (remove-hook 'compilation-start-hook 'ship-mate-dinghy--maybe-enable)
   (remove-hook 'compilation-start-hook 'ship-mate-submarine--watch-process)
 
-  (dolist (fun (append ship-mate-compile-functions '(ship-mate-command)))
+  (dolist (fun ship-mate-compile-functions)
     (advice-remove fun 'ship-mate-with-bounded-compilation)))
 
 ;;; -- API
