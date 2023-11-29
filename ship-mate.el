@@ -168,7 +168,9 @@ instead of `compile-mode'."
                       (compile command comint)))))
 
       (with-current-buffer buffer
-        (setq ship-mate-command-category cmd)))))
+        (setq ship-mate-command-category cmd))
+
+      buffer)))
 
 (defun ship-mate-command--last-environment-or-local-value ()
   "Get the last environment for CMD or default."
