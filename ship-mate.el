@@ -486,6 +486,8 @@ If BUFFER is non-nil, reset in buffer."
            (insert "\n")))
        env)
 
+      (set-buffer-modified-p nil)
+
       (unless ship-mate-environment-mode
         (ship-mate-environment-mode))
 
