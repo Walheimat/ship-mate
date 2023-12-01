@@ -12,6 +12,8 @@
 
 ;; Setup
 
+(setq byte-compile-warnings '(not not-unused))
+
 (bydi-ci-setup-paths)
 (bydi-report-setup-undercover (list "ship-mate.el"))
 (bydi-report-setup-ert-runner)
