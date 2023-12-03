@@ -548,6 +548,10 @@
 
     (should-error (ship-mate-submarine--recompile)))
 
+  (let ((ship-mate--last-compilation 'other))
+
+    (should-error (ship-mate-submarine--recompile)))
+
   (let ((ship-mate-submarine--in-progress nil)
         (ship-mate-submarine--buffer nil))
     (bydi ((:watch ship-mate-submarine--in-progress)
@@ -555,7 +559,7 @@
            (:watch display-buffer-alist)
            recompile)
 
-      (ship-mate-submarine--recompile)
+      (shut-up (ship-mate-submarine--recompile))
 
       (bydi-was-called recompile)
       (bydi-was-set display-buffer-alist)
@@ -616,7 +620,7 @@
   :tags '(user-facing submarine)
 
   (bydi ship-mate-submarine--recompile
-    (shut-up (ship-mate-hidden-recompile))
+    (ship-mate-hidden-recompile)
 
     (bydi-was-called ship-mate-submarine--recompile)))
 

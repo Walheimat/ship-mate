@@ -69,6 +69,11 @@ can be set to."
 
 ;;; -- Variables
 
+(defvar ship-mate--last-compilation nil
+  "The type of the last compilation.
+
+This is either nil, `ship-mate' or `other'.")
+
 (defvar ship-mate-command-map
   (let ((map (make-sparse-keymap)))
     (define-key map "r" #'ship-mate-hidden-recompile)
@@ -97,6 +102,7 @@ This is set by `ship-mate-command'.")
 
 (defvar ship-mate-command--current-command-name nil
   "The symbol name of the currently executed command.")
+
 (defvar ship-mate-command--last-command nil
   "The symbol of the last executed command.")
 
@@ -338,6 +344,11 @@ If EMPTY is t, do not read the defaults."
   (when ship-mate-submarine--in-progress
     (user-error "Compilation in progress"))
 
+  (unless (eq 'ship-mate ship-mate--last-compilation)
+    (user-error "Previous compilation wasn't a `ship-mate' compilation"))
+
+  (message "Hidden recompile")
+
   (let ((display-buffer-alist '(("\\*ship-mate" (display-buffer-no-window)))))
 
     (setq ship-mate-submarine--in-progress t
@@ -388,9 +399,12 @@ If EMPTY is t, do not read the defaults."
 
 (defun ship-mate-dinghy--maybe-enable (&optional _process)
   "Enable `ship-mate-dinghy-mode' if not disabled."
-  (when (and ship-mate-dinghy-enable
-             (ship-mate--command-buffer-p))
-    (ship-mate-dinghy-mode)))
+  (if (and ship-mate-dinghy-enable
+           (ship-mate--command-buffer-p))
+      (progn
+        (setq ship-mate--last-compilation 'ship-mate)
+        (ship-mate-dinghy-mode))
+    (setq ship-mate--last-compilation 'other)))
 
 (defun ship-mate-dinghy--print-variables ()
   "Pretty-print environment variables."
@@ -670,8 +684,6 @@ it with the default value(s)."
 (defun ship-mate-hidden-recompile ()
   "Recompile and show the buffer after compilation finishes."
   (interactive)
-
-  (message "Hidden recompile")
 
   (ship-mate-submarine--recompile))
 
