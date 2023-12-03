@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Calling `ship-mate-edit-environment` from outside a `ship-mate`
+  buffer now completes `ship-mate` buffers in the project to edit
+  their environment.
+
 ### Changed
 
 - Calling `ship-mate-hidden-recompile` when the previous command

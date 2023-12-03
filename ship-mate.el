@@ -453,10 +453,9 @@ If BUFFER is non-nil, reset in buffer."
 `'\\[ship-mate-environment-abort]' reverts.")))
 
 (defun ship-mate-environment--edit ()
-  "Show env edit buffer."
-  (with-current-buffer (current-buffer)
-    (unless (derived-mode-p 'compilation-mode 'comint-mode)
-      (user-error "Can only edit environments of compilation buffers")))
+  "Edit environment in the current buffer."
+  (unless (ship-mate--command-buffer-p (current-buffer))
+    (user-error "Can only edit command buffer"))
 
   (setq ship-mate-environment--target-buffer (current-buffer))
 
@@ -584,6 +583,20 @@ Optionally the PROJECT may be passed directly."
 
     (string-match-p "\\*ship-mate" (buffer-name buffer))))
 
+(defun ship-mate--command-buffers ()
+  "Find all command buffers in the current project."
+  (seq-filter #'ship-mate--command-buffer-p (project-buffers (project-current))))
+
+(defun ship-mate--complete-buffer (prompt)
+  "Complete `ship-mate' buffer using PROMPT."
+  (when-let* ((buffers (ship-mate--command-buffers))
+              (buffer (completing-read
+                       prompt
+                       (mapcar (lambda (it) (cons (buffer-name it) it)) buffers)
+                       nil
+                       t)))
+    buffer))
+
 ;;; -- Global minor mode
 
 (defun ship-mate-mode--setup ()
@@ -682,13 +695,20 @@ it with the default value(s)."
   (ship-mate-submarine--recompile))
 
 ;;;###autoload
-(defun ship-mate-edit-environment ()
-  "Edit the `compilation-environment'.
+(defun ship-mate-edit-environment (buffer)
+  "Edit the `compilation-environment' for BUFFER.
 
-Needs to be called from within a `compilation-mode' buffer."
-  (interactive)
+If BUFFER isn't a compilation buffer, this prompts to select one."
+  (interactive
+   (list (if (ship-mate--command-buffer-p)
+             (current-buffer)
+           (ship-mate--complete-buffer "Edit environment for buffer: "))))
 
-  (ship-mate-environment--edit))
+  (unless buffer
+    (user-error "No editable buffer"))
+
+  (with-current-buffer buffer
+    (ship-mate-environment--edit)))
 
 ;;;###autoload
 (define-minor-mode ship-mate-mode

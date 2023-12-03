@@ -375,13 +375,13 @@
   :tags '(user-facing env)
 
   (ert-with-test-buffer (:name "env-test")
-    (setq major-mode 'compilation-mode)
 
     (setq compilation-environment '("TES=TING" "MOC=KING"))
 
-    (with-current-buffer (ship-mate-environment--edit)
+    (bydi ((:always ship-mate--command-buffer-p))
+      (with-current-buffer (ship-mate-environment--edit)
 
-      (should (string= "TES=TING\nMOC=KING" (buffer-string))))))
+        (should (string= "TES=TING\nMOC=KING" (buffer-string)))))))
 
 (ert-deftest ship-mate-environment--listify ()
   :tags '(env)
@@ -471,10 +471,29 @@
 (ert-deftest ship-mate-edit-environment ()
   :tags '(user-facing env)
 
-  (bydi (ship-mate-environment--edit)
-    (ship-mate-edit-environment)
+  (bydi ((:always ship-mate--command-buffer-p)
+         ship-mate-environment--edit)
+
+    (call-interactively 'ship-mate-edit-environment)
 
     (bydi-was-called ship-mate-environment--edit)))
+
+(ert-deftest ship-mate-edit-environment--completes ()
+  :tags '(user-facing env)
+
+  (let ((buffer (current-buffer)))
+
+    (bydi ((:ignore ship-mate--command-buffer-p)
+           (:mock ship-mate--complete-buffer :return buffer)
+           ship-mate-environment--edit)
+
+      (call-interactively 'ship-mate-edit-environment)
+
+      (bydi-was-called ship-mate-environment--edit t)
+
+      (setq buffer nil)
+
+      (should-error (call-interactively 'ship-mate-edit-environment)))))
 
 ;;; -- Dinghy
 
@@ -623,6 +642,22 @@
     (ship-mate-hidden-recompile)
 
     (bydi-was-called ship-mate-submarine--recompile)))
+
+(ert-deftest ship-mate--command-buffers ()
+  (bydi (project-current
+         (:mock project-buffers :return '(a b c))
+         (:mock ship-mate--command-buffer-p :with (lambda (it) (eq it 'b))))
+
+    (should (equal '(b) (ship-mate--command-buffers)))))
+
+(ert-deftest ship-mate--complete-buffer ()
+  (bydi ((:mock completing-read :with bydi-rf)
+         (:mock buffer-name :with bydi-rf)
+         (:mock ship-mate--command-buffers :return '(a b c)))
+
+    (ship-mate--complete-buffer "Test: ")
+
+    (bydi-was-called-with completing-read '("Test: " ...))))
 
 ;;; ship-mate-test.el ends here
 
