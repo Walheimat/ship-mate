@@ -115,12 +115,6 @@ The value of this variable will be bound to
 Ideally you bind this in in your .dir-locals file.")
 (put 'ship-mate-environment 'safe-local-variable #'ship-mate-environment--valid-env-p)
 
-(defvar ship-mate-hands-off-environment nil
-  "Whether to not let-bind the environment.
-
-This is set by `ship-mate-command--capture' to avoid resetting
-the environment.")
-
 ;;; -- Commands
 
 (defun ship-mate-command (cmd &optional arg)
