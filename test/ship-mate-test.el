@@ -651,11 +651,11 @@
     (should (equal '(b) (ship-mate--command-buffers)))))
 
 (ert-deftest ship-mate--complete-buffer ()
-  (bydi ((:mock completing-read :with bydi-rf)
+  (bydi ((:mock completing-read :with (lambda (_ coll &rest _) (caar coll)))
          (:mock ship-mate--command-buffers :return '(a b c))
-         (:mock ship-mate--completion-candidate :with bydi-rf))
+         (:mock ship-mate--completion-candidate :with (lambda (it) (cons (symbol-name it) it))))
 
-    (ship-mate--complete-buffer "Test: ")
+    (should (eq 'a (ship-mate--complete-buffer "Test: ")))
 
     (bydi-was-called-with completing-read '("Test: " ...))))
 

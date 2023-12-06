@@ -602,12 +602,14 @@ Optionally the PROJECT may be passed directly."
 (defun ship-mate--complete-buffer (prompt)
   "Complete `ship-mate' buffer using PROMPT."
   (when-let* ((buffers (ship-mate--command-buffers))
+              (collection (mapcar #'ship-mate--completion-candidate buffers))
               (buffer (completing-read
                        prompt
-                       (mapcar #'ship-mate--completion-candidate buffers)
+                       collection
                        nil
                        t)))
-    buffer))
+
+    (cdr-safe (assoc buffer collection))))
 
 ;;; -- Global minor mode
 
