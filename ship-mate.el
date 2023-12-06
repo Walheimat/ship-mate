@@ -587,12 +587,24 @@ Optionally the PROJECT may be passed directly."
   "Find all command buffers in the current project."
   (seq-filter #'ship-mate--command-buffer-p (project-buffers (project-current))))
 
+(defun ship-mate--completion-candidate (buffer)
+  "Get a representation of BUFFER for completion."
+  (with-current-buffer buffer
+    (let ((command (or (car-safe compilation-arguments)
+                       "unknown"))
+          (category ship-mate-command-category))
+
+      (cons (format "%s [%s]"
+             (capitalize (symbol-name category))
+             (propertize command 'face 'italic))
+            buffer))))
+
 (defun ship-mate--complete-buffer (prompt)
   "Complete `ship-mate' buffer using PROMPT."
   (when-let* ((buffers (ship-mate--command-buffers))
               (buffer (completing-read
                        prompt
-                       (mapcar (lambda (it) (cons (buffer-name it) it)) buffers)
+                       (mapcar #'ship-mate--completion-candidate buffers)
                        nil
                        t)))
     buffer))

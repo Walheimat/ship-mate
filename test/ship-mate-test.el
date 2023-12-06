@@ -652,12 +652,21 @@
 
 (ert-deftest ship-mate--complete-buffer ()
   (bydi ((:mock completing-read :with bydi-rf)
-         (:mock buffer-name :with bydi-rf)
-         (:mock ship-mate--command-buffers :return '(a b c)))
+         (:mock ship-mate--command-buffers :return '(a b c))
+         (:mock ship-mate--completion-candidate :with bydi-rf))
 
     (ship-mate--complete-buffer "Test: ")
 
     (bydi-was-called-with completing-read '("Test: " ...))))
+
+(ert-deftest ship-mate--completion-candidate ()
+  (ert-with-test-buffer (:name "completion candidate")
+
+    (setq-local compilation-arguments '("make test")
+                ship-mate-command-category 'test)
+
+    (should (equal (cons "Test [make test]" (current-buffer))
+                   (ship-mate--completion-candidate (current-buffer))))))
 
 ;;; ship-mate-test.el ends here
 
