@@ -9,25 +9,7 @@
 </a>
 #+END_HTML
 
-=ship-mate= provides functionality for project-scoped compilation.
-
-Create commands using =ship-mate-create-command=.
-
-#+begin_src emacs-lisp
-(ship-mate-create-command test)
-(ship-mate-create-command bundle :default "make bundle"
-(ship-mate-create-command compile :key "x" :default ("make -k" "make all"))
-#+end_src
-
-Each such command will have a per-project history. Invoking them will
-only ask you to save buffers within the project.
-
-You should consider also activating =ship-mate-mode= to advise all
-functions in =ship-mate-compilation-functions= to be project-scoped
-and to make sure that a =recompile= will behave predictably.
-
-You can also use =ship-mate-with-project-bounded-compilation= to
-advise functions yourself using combinator =:around=.
+This package tries to marry packages =project= and =compile=.
 
 ** Installation
 
@@ -37,3 +19,169 @@ If you're on Emacs >29, I recommend using =package-vc-install=.
 
 Alternatively, provided you have Cask, you can install the package
 with =make package-install= after initializing the submodule =dinghy=.
+
+** Usage
+
+Here's a =use-package= configuration example.
+
+#+begin_src emacs-lisp
+(use-package ship-mate
+  :config
+  ;; Create common commands.
+  (ship-mate-create-command build :default "make")
+  (ship-mate-create-command install :default "make install")
+  (ship-mate-create-command clean :default "make clean")
+  (ship-mate-create-command execute)
+  (ship-mate-create-command test :default '("make test" "make coverage"))
+
+  ;; This mode sets up `compilation-start' and `recompile' to play
+  ;; nice with commands created above.
+  (ship-mate-mode)
+
+  :custom
+  ;; The functions to advise to maybe use the appropriate `ship-mate'
+  ;; command instead.
+  (ship-mate-compile-functions '(project-compile recompile))
+
+  ;; The lighter used in the mode line.
+  (ship-mate-lighter " shp")
+
+  ;; The size (per project and command) for the history.
+  (ship-mate-command-history-size 10)
+
+  ;; The function used to check if the next compilation relates to a
+  ;; `ship-mate' command.
+  (ship-mate-command-fuzzy-match-function #'ship-mate-command--fuzzy-match-p)
+
+  ;; The function used to name `ship-mate' buffers.
+  (ship-matecommand-buffer-name-function-generator #'ship-mate-command--buffer-name-function)
+
+  ;; Mode used in `ship-mate' buffers to show information about the
+  ;; environment and bind useful commands.
+  (ship-mate-dinghy-enable t)
+
+  ;; Used for `ship-mate-hidden-recompile'. If this is `t' the buffer
+  ;; of the resulting compilation is only shown after accepting a
+  ;; prompt.
+  (ship-mate-prompt-for-hidden-buffer nil)
+
+  :bind-keymap
+  ;; All commands created above are bound in this map automatically.
+  (("C-c p" . ship-mate-command-map)))
+#+end_src
+
+*** Creating commands
+
+The first step is to create new =ship-mate= commands using macro
+=ship-mate-create-command=. Let's create one for testing.
+
+#+begin_src emacs-lisp
+(ship-mate-create-command test)
+#+end_src
+
+This will create command =ship-mate-test=. This command wraps
+=compile= but providing it a project-scoped history. On first
+invocation (assuming you call it from a buffer belonging to a
+project) this will prompt because there is no history and no default
+command.
+
+We could have used the following instead.
+
+#+begin_src emacs-lisp
+(ship-mate-create-command test :default "make test")
+#+end_src
+
+We'd no longer be prompted when running =ship-mate-test= for the first
+time. The =:default= here will be the first entry in the history for
+all projects. You can also pass multiple defaults.
+
+#+begin_src emacs-lisp
+(ship-mate-create-command test :default ("make test" "make test-all"))
+#+end_src
+
+If you run the command with =C-u= (the universal argument) you will be
+instead prompted from the history. In our last example, the history
+would contain the two defined commands. If you enter a different
+command it will be added to the history.
+
+This history is the history of the command /for/ the project. Projects
+/do/ inherit the default but not the history created through usage.
+
+While setting defaults this way is useful, you may want to use
+different entries for different projects. You can do so by setting the
+appropriate variable in a =.dir-locals.el= file.
+
+#+begin_src lisp-data
+((nil . ((ship-mate-test-default-cmd . ("make test"
+                                        "make test-tagged"
+                                        "make test-selector"
+                                        "make test-coverage")))))
+#+end_src
+
+This would prep the history with four entries for this project
+(assuming the =.dir-locals.el= file exists at project root).
+
+The commands created in this way are automatically bound in map
+=ship-mate-command-map=. In our case since we didn't specify a key, it
+would be bound to =t= in the map since the initial is =t=.
+
+Since this might lead to clashes, you can also specify the key
+yourself using =:key=. The value here is passed as-is to =define-key=.
+
+#+begin_src emacs-lisp
+(ship-mate-create-command test)
+(ship-mate-create-command tag :key "g")
+#+end_src
+
+*** Using commands
+
+Beyond providing a per-project history, =ship-mate= commands also set
+the =compilation-save=buffers-predicate= to make sure you're only
+prompted to save buffers belonging to the project.
+
+You will also notice a header line. This header line is set by
+=ship-mate-dinghy-mode=. Its purpose is to bind commands and to show
+additional information like the currently used environment variables.
+You can disable this by setting =ship-mate-dinghy-enable= to =nil=.
+
+Provided you enable =ship-mate-mode= this package advises =recompile=
+and =project-compile= to offer the same benefits when running it (from
+within or without a compilation buffer). In fact, these two commands
+are the defaults in =ship-mate-compile-functions= which you may want
+to customize.
+
+You can also use =ship-mate-with-project-bounded-compilation= to
+advise functions yourself using advice combinator =:around=.
+
+=ship-mate= uses the function in
+=ship-mate-command-fuzzy-match-function= to check if a command belongs
+to the history of a =ship-mate= command and to also update the history
+when using =recompile= or =compile= instead.
+
+You can also use command =ship-mate-hidden-recompile= which will run
+=recompile= but not display the buffer until the compilation has
+finished. If you don't like the sudden pop-up you can set
+=ship-mate-prompt-for-hidden-buffer= to =t= which will prompt you
+first.
+
+From a =ship-mate= command buffer you can use
+=ship-mate-command-{next,prev}-buffer= to quickly switch between
+command buffers of the same project (they're also bound in
+=ship-mate-dinghy-mode=).
+
+*** Setting the environment
+
+If you use environment variables, you can set =ship-mate-environment=
+in your =.dir-locals.el=. The value of this variable will be used to
+set =compilation-environment= and is safe to set (checked by
+=ship-mate-environment--valid-env-p=). The initial value is local to
+the project.
+
+One benefit of doing this over using =compilation-environment=
+directly is that you can use =ship-mate-edit-environment= to
+conveniently edit the environment variables in a buffer to apply
+changes (if they're valid) or clear all variables.
+
+This command is automatically bound to =C-c C-e= in =ship-mate=
+command buffers. You can also call it from without which will prompt
+you to select the buffer for which to edit it.
