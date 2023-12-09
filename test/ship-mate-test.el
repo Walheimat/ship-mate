@@ -136,6 +136,29 @@
 
       (bydi-was-not-set compilation-environment))))
 
+(ert-deftest ship-mate-command--compile--editing-env ()
+  (let ((env '("TES=TING"))
+        (edited '("MOC=KING"))
+        (compilation-environment nil))
+
+    (bydi ((:mock ship-mate-environment--edit-in-minibuffer :return edited)
+           (:mock ship-mate-command--last-environment-or-local-value :return env)
+           (:watch compilation-environment)
+           compile)
+
+      (ship-mate-command--compile "make test")
+
+      (bydi-was-called ship-mate-command--last-environment-or-local-value t)
+      (bydi-was-not-called ship-mate-environment--edit-in-minibuffer)
+      (bydi-was-set-to compilation-environment '("TES=TING") t)
+
+      (setq compilation-environment env)
+      (ship-mate-command--compile "make test" nil '(5))
+
+      (bydi-was-not-called ship-mate-command--last-environment-or-local-value)
+      (bydi-was-called ship-mate-environment--edit-in-minibuffer)
+      (bydi-was-set-to compilation-environment '("MOC=KING")))))
+
 (ert-deftest ship-mate-command--last-environment-or-local-value ()
   (ert-with-test-buffer (:name "last-env")
 
@@ -494,6 +517,21 @@
       (setq buffer nil)
 
       (should-error (call-interactively 'ship-mate-edit-environment)))))
+
+(ert-deftest ship-mate-environment--edit-in-minibuffer ()
+  (let ((read ""))
+
+    (bydi ((:mock read-string :return read))
+
+      (should-not (ship-mate-environment--edit-in-minibuffer nil))
+
+      (setq read "TES=TING MOC=KING")
+
+      (should (equal '("TES=TING" "MOC=KING") (ship-mate-environment--edit-in-minibuffer nil)))
+
+      (setq read "TES=TING MOC+KING")
+
+      (should-error (ship-mate-environment--edit-in-minibuffer nil)))))
 
 ;;; -- Dinghy
 

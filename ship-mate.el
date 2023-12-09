@@ -128,7 +128,8 @@ The `compilation-environment' is set from the project's
 `ship-mate-environment'.
 
 If the prefix argument ARG is 0, `comint-mode' will be used
-instead of `compile-mode'."
+instead of `compile-mode'. If it is 5, the user is prompted to
+edit the environment first."
   (let* ((project-vc-name nil)
          (current (project-current t))
          (root (project-root current))
@@ -164,15 +165,35 @@ instead of `compile-mode'."
 
     (puthash root history table)
 
-    (let ((buffer (if compilation-environment
-                      (compile command comint)
-                    (let ((compilation-environment (ship-mate-command--last-environment-or-local-value)))
-                      (compile command comint)))))
+    (let ((buffer (ship-mate-command--compile command comint arg)))
 
       (with-current-buffer buffer
         (setq ship-mate-command-category cmd))
 
       buffer)))
+
+(defun ship-mate-command--compile (command &optional comint arg)
+  "Compile COMMAND.
+
+This uses `comint-mode' if COMINT is t.
+
+If optional ARG is 5, the user is prompted to edit the
+environment first."
+  (let* ((env (or compilation-environment
+                  (ship-mate-command--last-environment-or-local-value)))
+         (edited (if (eq 5 (prefix-numeric-value arg))
+                     (ship-mate-environment--edit-in-minibuffer env)
+                   env)))
+
+    (if (null compilation-environment)
+        (let ((compilation-environment edited))
+
+          (compile command comint))
+
+      (when (not (equal compilation-environment edited))
+        (setq-local compilation-environment edited))
+
+      (compile command comint))))
 
 (defun ship-mate-command--last-environment-or-local-value ()
   "Get the last environment for CMD or default."
@@ -459,9 +480,12 @@ If BUFFER is non-nil, reset in buffer."
 
   (setq ship-mate-environment--target-buffer (current-buffer))
 
+  (ship-mate-environment--edit-in-buffer (buffer-local-value 'compilation-environment ship-mate-environment--target-buffer)))
+
+(defun ship-mate-environment--edit-in-buffer (environment)
+  "Create the buffer for editing the ENVIRONMENT."
   (let* ((buffer (get-buffer-create ship-mate-environment--buffer-name))
-         (env (buffer-local-value 'compilation-environment ship-mate-environment--target-buffer))
-         (count (length env)))
+         (count (length environment)))
 
     (with-current-buffer buffer
       (erase-buffer)
@@ -471,7 +495,7 @@ If BUFFER is non-nil, reset in buffer."
          (insert it)
          (unless (eq i (1- count))
            (insert "\n")))
-       env)
+       environment)
 
       (set-buffer-modified-p nil)
 
@@ -479,6 +503,16 @@ If BUFFER is non-nil, reset in buffer."
         (ship-mate-environment-mode))
 
       (pop-to-buffer buffer nil t))))
+
+(defun ship-mate-environment--edit-in-minibuffer (environment)
+  "Edit ENVIRONMENT in the minibuffer and return the result."
+  (let* ((env (read-string "Edit environment: " (string-join environment " ")))
+         (recreated (string-split env " " t)))
+
+    (unless (ship-mate-environment--valid-env-p recreated)
+      (user-error "Invalid environment"))
+
+    recreated))
 
 (defun ship-mate-environment--listify ()
   "Listify the current edit state."
