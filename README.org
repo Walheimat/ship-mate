@@ -136,7 +136,7 @@ yourself using =:key=. The value here is passed as-is to =define-key=.
 *** Using commands
 
 Beyond providing a per-project history, =ship-mate= commands also set
-the =compilation-save=buffers-predicate= to make sure you're only
+the =compilation-save-buffers-predicate= to make sure you're only
 prompted to save buffers belonging to the project.
 
 You will also notice a header line. This header line is set by
@@ -185,3 +185,7 @@ changes (if they're valid) or clear all variables.
 This command is automatically bound to =C-c C-e= in =ship-mate=
 command buffers. You can also call it from without which will prompt
 you to select the buffer for which to edit it.
+
+You can also run a =ship-mate= command with numeric prefix 5 to edit
+the environment in the minibuffer before executing it. This also works
+for recompilation.
