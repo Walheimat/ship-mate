@@ -22,17 +22,19 @@ with =make package-install= after initializing the submodule =dinghy=.
 
 ** Preview
 
-#+CAPTION: Executing commands
+*** Executing commands
+
 [[./assets/commands.gif]]
 
-#+CAPTION: Editing the environment
+*** Editing the environment
+
 [[./assets/editenvinbuffer.gif]]
 
-#+CAPTION: Editing the environment (outside)
 [[./assets/editenvoutside.gif]]
 
-#+CAPTION: Hidden recompilation
-[[./assets/editenvoutside.gif]]
+*** Hidden recompilation
+
+[[./assets/hiddenrecompile.gif]]
 
 ** Usage
 
