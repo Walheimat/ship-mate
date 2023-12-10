@@ -45,7 +45,7 @@
 (ert-deftest ship-mate-command--buffer-name ()
   :tags '(command)
 
-  (let* ((ship-mate-command--current-command-name "test")
+  (let* ((ship-mate--current-command-name "test")
          (fun (ship-mate-command--buffer-name-function "test")))
     (should (string-equal (funcall fun 'test-mode) "*ship-mate-test-test*")))
 
@@ -196,7 +196,7 @@
   :tags '(command)
 
   (let ((fake-history (make-ring 3))
-        (ship-mate-command--last-command 'test))
+        (ship-mate--last-command 'test))
 
     (ring-insert fake-history "make test")
 
@@ -227,7 +227,7 @@
 
   (let ((compile-history '("make test"))
         (compile-command "make best")
-        (ship-mate-command--last-command nil)
+        (ship-mate--last-command nil)
         (history (make-ring 2))
         (matches nil))
 
@@ -242,7 +242,7 @@
 
       (bydi-was-not-called ship-mate-command)
 
-      (setq ship-mate-command--last-command 'test
+      (setq ship-mate--last-command 'test
             matches t)
 
       (ship-mate-command--capture #'ignore)
@@ -255,7 +255,7 @@
   (ert-with-test-buffer (:name "*ship-mate-in-comp*")
 
     (let ((history (make-ring 1))
-          (ship-mate-command-category 'test))
+          (ship-mate--this-command 'test))
 
       (bydi ((:mock ship-mate-command--history :return history))
 
@@ -704,7 +704,7 @@
   (ert-with-test-buffer (:name "completion candidate")
 
     (setq-local compilation-arguments '("make test")
-                ship-mate-command-category 'test)
+                ship-mate--this-command 'test)
 
     (should (equal (cons "Test [make test]" (current-buffer))
                    (ship-mate--completion-candidate (current-buffer))))))

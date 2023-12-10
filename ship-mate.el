@@ -69,11 +69,6 @@ can be set to."
 
 ;;; -- Variables
 
-(defvar ship-mate--last-compilation-type nil
-  "The type of the last compilation.
-
-This is either nil, `ship-mate' or `other'.")
-
 (defvar ship-mate-command-map
   (let ((map (make-sparse-keymap)))
     (define-key map "r" #'ship-mate-hidden-recompile)
@@ -92,19 +87,8 @@ Each command created by `ship-mate-create-command' will
 history. The general structure is ([COMMAND-SYMBOL] .
 HASH-MAP<PROJECT-ROOT, HISTORY>).")
 
-(defvar-local ship-mate-command-category nil
-  "The command category of this buffer.
-
-This is set by `ship-mate-command'.")
-
 (defvar ship-mate-command-history nil
   "The history of the currently executed command.")
-
-(defvar ship-mate-command--current-command-name nil
-  "The symbol name of the currently executed command.")
-
-(defvar ship-mate-command--last-command nil
-  "The symbol of the last executed command.")
 
 (defvar ship-mate-environment nil
   "The project environment.
@@ -114,6 +98,22 @@ The value of this variable will be bound to
 
 Ideally you bind this in in your .dir-locals file.")
 (put 'ship-mate-environment 'safe-local-variable #'ship-mate-environment--valid-env-p)
+
+(defvar ship-mate--last-compilation-type nil
+  "The type of the last compilation.
+
+This is either nil, `ship-mate' or `other'.")
+
+(defvar-local ship-mate--this-command nil
+  "The `ship-mate' command for this buffer.
+
+This is set by `ship-mate-command'.")
+
+(defvar ship-mate--current-command-name nil
+  "The symbol name of the currently executed command.")
+
+(defvar ship-mate--last-command nil
+  "The symbol of the last executed command.")
 
 ;;; -- Commands
 
@@ -145,10 +145,10 @@ edit the environment first."
          ;; Reading user input.
          (initial (unless (ring-empty-p history)
                     (ring-ref history 0)))
-         (ship-mate-command--current-command-name (symbol-name cmd))
+         (ship-mate--current-command-name (symbol-name cmd))
          (comint (zerop (prefix-numeric-value arg)))
          (prompt (format "%s project (%s)%s"
-                         (capitalize ship-mate-command--current-command-name)
+                         (capitalize ship-mate--current-command-name)
                          name
                          (if comint " interactively: " ": ")))
          (command (or (and (not arg) initial)
@@ -159,16 +159,18 @@ edit the environment first."
          (compilation-save-buffers-predicate (lambda () (memq (current-buffer) project-buffers)))
          (compilation-buffer-name-function (funcall ship-mate-command-buffer-name-function-generator lowercase)))
 
-    (setq ship-mate-command--last-command cmd)
+    ;; Record this as the last command.
+    (setq ship-mate--last-command cmd)
 
+    ;; Amend history.
     (ring-remove+insert+extend history command)
-
     (puthash root history table)
 
+    ;; Compile and set command for buffer.
     (let ((buffer (ship-mate-command--compile command comint arg)))
 
       (with-current-buffer buffer
-        (setq ship-mate-command-category cmd))
+        (setq ship-mate--this-command cmd))
 
       buffer)))
 
@@ -210,7 +212,7 @@ environment first."
 
 (defun ship-mate-command--buffer-name-function (project)
   "Return a function to name the compilation buffer for PROJECT."
-  (let* ((cmd (or ship-mate-command--current-command-name "compile"))
+  (let* ((cmd (or ship-mate--current-command-name "compile"))
          (name (format "*ship-mate-%s-%s*" cmd project)))
 
     (lambda (_major-mode) name)))
@@ -220,8 +222,8 @@ environment first."
 
 If COMMAND matches other commands of the last command category,
 add it to the history."
-  (and-let* (ship-mate-command--last-command
-             (history (ship-mate-command--history ship-mate-command--last-command))
+  (and-let* (ship-mate--last-command
+             (history (ship-mate-command--history ship-mate--last-command))
              (index (funcall ship-mate-command-fuzzy-match-function command history)))
 
     (ring-remove+insert+extend history command)))
@@ -239,17 +241,17 @@ As a last resort call `recompile'.
 
 EDIT is passed as-is to all invocations of RECOMPILE."
   (if-let* (((ship-mate--command-buffer-p))
-            (cmd ship-mate-command-category)
-            (history (ship-mate-command--history ship-mate-command-category)))
+            (cmd ship-mate--this-command)
+            (history (ship-mate-command--history ship-mate--this-command)))
       (let ((compile-history (and history (ring-elements history))))
         (with-current-buffer (funcall-interactively recompile edit)
-          (setq ship-mate-command-category cmd)))
+          (setq ship-mate--this-command cmd)))
     (if-let* ((command compile-command)
-              (history (and ship-mate-command--last-command
-                            (ship-mate-command--history ship-mate-command--last-command)))
+              (history (and ship-mate--last-command
+                            (ship-mate-command--history ship-mate--last-command)))
               (matches (funcall ship-mate-command-fuzzy-match-function command history)))
 
-        (ship-mate-command ship-mate-command--last-command edit)
+        (ship-mate-command ship-mate--last-command edit)
 
       (funcall-interactively recompile edit))))
 
@@ -337,7 +339,7 @@ If EMPTY is t, do not read the defaults."
 
     (switch-to-buffer (nth (mod (+ (length buffers) (1- pos)) (length buffers)) buffers))))
 
-;;; -- Hidden recompilation
+;;; -- Submarine
 
 (defvar ship-mate-submarine--in-progress nil)
 (defvar ship-mate-submarine--buffer nil)
@@ -354,7 +356,7 @@ If EMPTY is t, do not read the defaults."
                     "Previous compilation wasn't a `ship-mate' compilation"
                   "No previous compilation")))
 
-  (message "Recompiling `%s' command in the background" ship-mate-command--last-command)
+  (message "Recompiling `%s' command in the background" ship-mate--last-command)
 
   (let ((display-buffer-alist '(("\\*ship-mate" (display-buffer-no-window)))))
 
@@ -627,10 +629,10 @@ Optionally the PROJECT may be passed directly."
   (with-current-buffer buffer
     (let ((command (or (car-safe compilation-arguments)
                        "unknown"))
-          (category ship-mate-command-category))
+          (this-command ship-mate--this-command))
 
       (cons (format "%s [%s]"
-             (capitalize (symbol-name category))
+             (capitalize (symbol-name this-command))
              (propertize command 'face 'italic))
             buffer))))
 
