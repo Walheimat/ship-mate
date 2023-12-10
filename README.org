@@ -20,6 +20,20 @@ If you're on Emacs >29, I recommend using =package-vc-install=.
 Alternatively, provided you have Cask, you can install the package
 with =make package-install= after initializing the submodule =dinghy=.
 
+** Preview
+
+#+CAPTION: Executing commands
+[[./assets/commands.gif]]
+
+#+CAPTION: Editing the environment
+[[./assets/editenvinbuffer.gif]]
+
+#+CAPTION: Editing the environment (outside)
+[[./assets/editenvoutside.gif]]
+
+#+CAPTION: Hidden recompilation
+[[./assets/editenvoutside.gif]]
+
 ** Usage
 
 Here's a =use-package= configuration example.

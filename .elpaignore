@@ -7,3 +7,4 @@ package-lock.json
 .husky/
 .github/
 test/
+assets/
