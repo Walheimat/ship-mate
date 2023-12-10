@@ -179,8 +179,7 @@ This uses `comint-mode' if COMINT is t.
 
 If optional ARG is 5, the user is prompted to edit the
 environment first."
-  (let* ((env (or compilation-environment
-                  (ship-mate-command--last-environment-or-local-value)))
+  (let* ((env (or compilation-environment (ship-mate-environment--current-environment)))
          (edited (if (eq 5 (prefix-numeric-value arg))
                      (ship-mate-environment--edit-in-minibuffer env)
                    env)))
@@ -194,15 +193,6 @@ environment first."
         (setq-local compilation-environment edited))
 
       (compile command comint))))
-
-(defun ship-mate-command--last-environment-or-local-value ()
-  "Get the last environment for CMD or default."
-  (if-let* ((buffer-name (funcall compilation-buffer-name-function nil))
-            (buffer (get-buffer buffer-name)))
-
-      (buffer-local-value 'compilation-environment buffer)
-
-    (ship-mate--local-value 'ship-mate-environment)))
 
 (defun ship-mate-command--fuzzy-match-p (command history)
   "Check if COMMAND matches previous commands in HISTORY."
@@ -472,6 +462,15 @@ If BUFFER is non-nil, reset in buffer."
 `\\[ship-mate-environment-apply]' applies and recompiles, \
 `\\[ship-mate-environment-clear]' clears all env variables, \
 `'\\[ship-mate-environment-abort]' reverts.")))
+
+(defun ship-mate-environment--current-environment ()
+  "Get the last environment for CMD or default."
+  (if-let* ((buffer-name (funcall compilation-buffer-name-function nil))
+            (buffer (get-buffer buffer-name)))
+
+      (buffer-local-value 'compilation-environment buffer)
+
+    (ship-mate--local-value 'ship-mate-environment)))
 
 (defun ship-mate-environment--edit ()
   "Edit environment in the current buffer."

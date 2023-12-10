@@ -142,24 +142,24 @@
         (compilation-environment nil))
 
     (bydi ((:mock ship-mate-environment--edit-in-minibuffer :return edited)
-           (:mock ship-mate-command--last-environment-or-local-value :return env)
+           (:mock ship-mate-environment--current-environment :return env)
            (:watch compilation-environment)
            compile)
 
       (ship-mate-command--compile "make test")
 
-      (bydi-was-called ship-mate-command--last-environment-or-local-value t)
+      (bydi-was-called ship-mate-environment--current-environment t)
       (bydi-was-not-called ship-mate-environment--edit-in-minibuffer)
       (bydi-was-set-to compilation-environment '("TES=TING") t)
 
       (setq compilation-environment env)
       (ship-mate-command--compile "make test" nil '(5))
 
-      (bydi-was-not-called ship-mate-command--last-environment-or-local-value)
+      (bydi-was-not-called ship-mate-environment--current-environment)
       (bydi-was-called ship-mate-environment--edit-in-minibuffer)
       (bydi-was-set-to compilation-environment '("MOC=KING")))))
 
-(ert-deftest ship-mate-command--last-environment-or-local-value ()
+(ert-deftest ship-mate-environment--current-environment ()
   (ert-with-test-buffer (:name "last-env")
 
     (setq-local compilation-environment '("TES=TING"))
@@ -168,8 +168,7 @@
 
       (let ((compilation-buffer-name-function (lambda (_) (buffer-name))))
 
-        (should (equal '("TES=TING")
-                       (ship-mate-command--last-environment-or-local-value)))))))
+        (should (equal '("TES=TING") (ship-mate-environment--current-environment)))))))
 
 (ert-deftest ship-mate-command--history--inserts-multiple ()
   :tags '(command)
