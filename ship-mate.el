@@ -69,7 +69,7 @@ can be set to."
 
 ;;; -- Variables
 
-(defvar ship-mate--last-compilation nil
+(defvar ship-mate--last-compilation-type nil
   "The type of the last compilation.
 
 This is either nil, `ship-mate' or `other'.")
@@ -345,14 +345,16 @@ If EMPTY is t, do not read the defaults."
 (defvar ship-mate-submarine--process nil)
 
 (defun ship-mate-submarine--recompile ()
-  "Recompile but with no window."
+  "Recompile without a window."
   (when ship-mate-submarine--in-progress
     (user-error "Compilation in progress"))
 
-  (unless (eq 'ship-mate ship-mate--last-compilation)
-    (user-error "Previous compilation wasn't a `ship-mate' compilation"))
+  (unless (eq 'ship-mate ship-mate--last-compilation-type)
+    (user-error (if (eq 'other ship-mate--last-compilation-type)
+                    "Previous compilation wasn't a `ship-mate' compilation"
+                  "No previous compilation")))
 
-  (message "Hidden recompile")
+  (message "Recompiling `%s' command in the background" ship-mate-command--last-command)
 
   (let ((display-buffer-alist '(("\\*ship-mate" (display-buffer-no-window)))))
 
@@ -407,9 +409,9 @@ If EMPTY is t, do not read the defaults."
   (if (and ship-mate-dinghy-enable
            (ship-mate--command-buffer-p))
       (progn
-        (setq ship-mate--last-compilation 'ship-mate)
+        (setq ship-mate--last-compilation-type 'ship-mate)
         (ship-mate-dinghy-mode))
-    (setq ship-mate--last-compilation 'other)))
+    (setq ship-mate--last-compilation-type 'other)))
 
 (defun ship-mate-dinghy--print-variables ()
   "Pretty-print environment variables."

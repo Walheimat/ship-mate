@@ -604,7 +604,11 @@
 
     (should-error (ship-mate-submarine--recompile)))
 
-  (let ((ship-mate--last-compilation 'other))
+  (let ((ship-mate--last-compilation-type 'other))
+
+    (should-error (ship-mate-submarine--recompile)))
+
+  (let ((ship-mate--last-compilation-type nil))
 
     (should-error (ship-mate-submarine--recompile)))
 
