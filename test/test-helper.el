@@ -7,16 +7,15 @@
 ;;; Code:
 
 (require 'bydi)
-(require 'bydi-ci)
-(require 'bydi-report)
+(require 'dinghy-rope)
 
 ;; Setup
 
 (setq byte-compile-warnings '(not not-unused))
 
-(bydi-ci-setup-paths)
-(bydi-report-setup-undercover (list "ship-mate.el"))
-(bydi-report-setup-ert-runner)
+(dinghy-rope-setup-paths)
+(dinghy-rope-setup-undercover (list "ship-mate.el"))
+(dinghy-rope-setup-ert-runner)
 
 ;;; test-helper.el ends here
 
