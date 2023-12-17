@@ -640,9 +640,9 @@
 
     (bydi ((:sometimes process-live-p)
            cancel-timer
-           (:always yes-or-no-p)
            pop-to-buffer
-           (:watch ship-mate-submarine--in-progress))
+           (:watch ship-mate-submarine--in-progress)
+           run-with-idle-timer)
 
       (ship-mate-submarine--check)
 
@@ -654,7 +654,24 @@
       (ship-mate-submarine--check)
 
       (bydi-was-set ship-mate-submarine--in-progress)
+      (bydi-was-called run-with-idle-timer)
+
+      (setq ship-mate-submarine--process 'process
+            ship-mate-submarine--timer 'timer
+            ship-mate-submarine--in-progress t
+            ship-mate-prompt-for-hidden-buffer nil)
+
+      (ship-mate-submarine--check)
+
       (bydi-was-called pop-to-buffer))))
+
+(ert-deftest ship-mate-submarine--delayed-prompt ()
+  (bydi ((:always yes-or-no-p)
+         pop-to-buffer)
+
+    (ship-mate-submarine--delayed-prompt (current-time))
+
+    (bydi-was-called pop-to-buffer)))
 
 (ert-deftest ship-mate-submarine--watch-process ()
   :tags '(submarine)

@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   their environment.
 - Calling `ship-mate-command` with numeric prefix 5 now prompts the
   user to edit the environment in the minibuffer.
+- `ship-mate-hidden-recompile` now prompts after customizable
+  `ship-mate-prompt-for-hidden-buffer-idle-delay`.
 
 ### Changed
 

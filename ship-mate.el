@@ -67,6 +67,11 @@ can be set to."
   :group 'ship-mate
   :type 'boolean)
 
+(defcustom ship-mate-prompt-for-hidden-buffer-idle-delay 2
+  "Time in seconds of idle time before prompt is shown."
+  :group 'ship-mate
+  :type 'boolean)
+
 ;;; -- Variables
 
 (defvar ship-mate-command-map
@@ -375,9 +380,19 @@ If EMPTY is t, do not read the defaults."
           ship-mate-submarine--process nil
           ship-mate-submarine--in-progress nil)
 
-    (or (and ship-mate-prompt-for-hidden-buffer
-             (not (yes-or-no-p "Compilation finished. Show buffer?")))
-        (pop-to-buffer ship-mate-submarine--buffer))))
+    (if ship-mate-prompt-for-hidden-buffer
+        (run-with-idle-timer ship-mate-prompt-for-hidden-buffer-idle-delay
+                             nil
+                             #'ship-mate-submarine--delayed-prompt
+                             (current-time))
+      (pop-to-buffer ship-mate-submarine--buffer))))
+
+(defun ship-mate-submarine--delayed-prompt (time)
+  "Show a prompt to pop to buffer indicating TIME."
+  (when-let* ((since (time-since time))
+              (show (yes-or-no-p (format "Hidden compilation finished %.1fs ago. Show buffer?" (time-to-seconds since)))))
+
+    (pop-to-buffer ship-mate-submarine--buffer)))
 
 (defun ship-mate-submarine--watch-process (process)
   "Save PROCESS and set timer to check on it."

@@ -1,3 +1,5 @@
+#+STARTUP: noinlineimages
+
 * ship-mate
 
 #+BEGIN_HTML
@@ -80,6 +82,10 @@ Here's a =use-package= configuration example.
   ;; of the resulting compilation is only shown after accepting a
   ;; prompt.
   (ship-mate-prompt-for-hidden-buffer nil)
+
+  ;; Time in seconds to wait before prompting after compilation
+  ;; finished.
+  (ship-mate-prompt-for-hidden-buffer-idle-delay 2)
 
   :bind-keymap
   ;; All commands created above are bound in this map automatically.
