@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   user to edit the environment in the minibuffer.
 - `ship-mate-hidden-recompile` now prompts after customizable
   `ship-mate-prompt-for-hidden-buffer-idle-delay`.
+- Command `ship-mate-edit-history` to edit the history.
 
 ### Changed
 

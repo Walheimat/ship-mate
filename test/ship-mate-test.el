@@ -6,7 +6,7 @@
 
 ;;; Code:
 
-(require 'ship-mate nil t)
+(require 'ship-mate)
 
 (ert-deftest ship-mate--plist-keys--errors-if-invalid ()
   (should-error (ship-mate--plist-keys '(:test a :best))))
@@ -531,6 +531,102 @@
       (setq read "TES=TING MOC+KING")
 
       (should-error (ship-mate-environment--edit-in-minibuffer nil)))))
+
+;;; -- Editing history
+
+(ert-deftest ship-mate-history--edit--errors-for-non-comp ()
+  :tags '(user-facing history)
+
+  (should-error (ship-mate-history--edit)))
+
+(ert-deftest ship-mate-history--creates-buffer ()
+  :tags '(user-facing history)
+
+  (ert-with-test-buffer (:name "history-test")
+
+    (let ((ring (make-ring 1)))
+
+      (ring-insert ring "make test")
+
+      (setq-local ship-mate--this-command 'test)
+
+      (bydi ((:always ship-mate--command-buffer-p)
+             (:mock ship-mate-command--history :return ring))
+
+        (with-current-buffer (ship-mate-history--edit)
+
+          (should (string= "make test" (buffer-string))))))))
+
+(ert-deftest ship-mate-history--api ()
+  :tags '(user-facing history)
+
+  (bydi (ship-mate-history--set-history
+         ship-mate-history--quit
+         (:mock ship-mate-history--listify :return '("make test")))
+
+    (ship-mate-history-abort)
+
+    (bydi-was-called ship-mate-history--quit t)
+    (bydi-was-not-called ship-mate-history--set-history)
+
+    (ship-mate-history-apply)
+    (ship-mate-history-clear)
+
+    (bydi-was-called-nth-with ship-mate-history--set-history '(("make test")) 0)
+    (bydi-was-called-nth-with ship-mate-history--set-history nil 1)
+    (bydi-was-called-n-times ship-mate-history--quit 2)))
+
+(ert-deftest ship-mate-history--set-history ()
+  :tags '(history)
+
+  (let ((ring (make-ring 2)))
+
+    (ring-insert ring "make test")
+
+    (bydi ((:mock ship-mate-command--history :return ring))
+
+      (ship-mate-history--set-history '("make best" "make hest"))
+
+      (should (equal '("make hest" "make best") (ring-elements ring))))))
+
+(ert-deftest ship-mate-history--quit ()
+  :tags '(user-facing history)
+
+  (ert-with-test-buffer (:name "history-quit")
+
+    (let ((ship-mate-history--buffer-name (buffer-name))
+          (ship-mate-history--command 'test))
+
+      (bydi (quit-window
+             (:watch ship-mate-history--command))
+
+        (ship-mate-history--quit)
+
+        (bydi-was-called quit-window)
+        (bydi-was-set-to ship-mate-history--command nil)))))
+
+(ert-deftest ship-mate-history--listify ()
+  :tags '(history)
+
+  (bydi ((:mock ship-mate--listify-buffer :return '("make test" "make rest")))
+
+    (should (equal '("make rest" "make test") (ship-mate-history--listify)))))
+
+(ert-deftest ship-mate-edit-history ()
+  :tags '(user-facing history)
+
+  (let ((buf))
+    (bydi ((:sometimes ship-mate--command-buffer-p)
+           (:mock ship-mate--complete-buffer :return buf)
+           ship-mate-history--edit)
+
+      (call-interactively 'ship-mate-edit-history)
+
+      (bydi-was-called ship-mate-history--edit t)
+
+      (bydi-toggle-sometimes)
+
+      (should-error (call-interactively 'ship-mate-edit-history)))))
 
 ;;; -- Dinghy
 

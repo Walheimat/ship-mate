@@ -211,3 +211,9 @@ you to select the buffer for which to edit it.
 You can also run a =ship-mate= command with numeric prefix 5 to edit
 the environment in the minibuffer before executing it. This also works
 for recompilation.
+
+*** Setting the history
+
+You can also call =ship-mate-edit-history= to edit a command's history
+(for that project) which works in the exact same way as the editing
+the environment described above.

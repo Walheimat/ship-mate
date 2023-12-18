@@ -406,6 +406,7 @@ If EMPTY is t, do not read the defaults."
   (let ((map (make-sparse-keymap)))
 
     (define-key map "\C-c\C-e" #'ship-mate-edit-environment)
+    (define-key map "\C-c\C-h" #'ship-mate-edit-history)
     (define-key map "\C-c\C-n" #'ship-mate-command-next-buffer)
     (define-key map "\C-c\C-p" #'ship-mate-command-prev-buffer)
 
@@ -602,6 +603,90 @@ This is set in buffer `ship-mate-environment--buffer-name'."
               (eq 2 (length (string-split it "="))))
             value))))
 
+;;; -- Editing history
+
+(defvar ship-mate-history--buffer-name "*ship-mate-edit-history*"
+  "The name of the buffer used for `ship-mate-edit-history'.")
+
+(defvar ship-mate-history--command nil
+  "The symbol of the command currently edited.")
+
+(defvar ship-mate-history-mode-map
+  (let ((map (make-sparse-keymap)))
+
+    (define-key map "\C-c\C-c" #'ship-mate-history-apply)
+    (define-key map "\C-c\C-q" #'ship-mate-history-clear)
+    (define-key map "\C-c\C-k" #'ship-mate-history-abort)
+    map)
+  "Map used in buffer created by `ship-mate-edit-history'.")
+
+(define-minor-mode ship-mate-history-mode
+  "Minor mode to edit the history."
+  :lighter " smh"
+  (setq-local header-line-format
+              (substitute-command-keys
+               "\\<ship-mate-history-mode-map>\
+`\\[ship-mate-history-apply]' applies, \
+`\\[ship-mate-history-clear]' clears the history, \
+`'\\[ship-mate-history-abort]' reverts.")))
+
+(defun ship-mate-history--edit ()
+  "Edit the history of the current buffer."
+  (unless (ship-mate--command-buffer-p (current-buffer))
+    (user-error "Can only edit command buffer"))
+
+  (setq ship-mate-history--command (buffer-local-value 'ship-mate--this-command (current-buffer)))
+
+  (ship-mate-history--edit-in-buffer))
+
+(defun ship-mate-history--edit-in-buffer ()
+  "Edit the history in a buffer."
+  (let ((history (ship-mate-command--history ship-mate-history--command)))
+
+    (ship-mate-edit--in-buffer ship-mate-history--buffer-name
+                               (ring-elements history)
+                               'ship-mate-history-mode)))
+
+(defun ship-mate-history-apply ()
+  "Apply the edited history."
+  (interactive)
+
+  (ship-mate-history--set-history (ship-mate-history--listify))
+  (ship-mate-history--quit))
+
+(defun ship-mate-history-clear ()
+  "Clear the history."
+  (interactive)
+
+  (ship-mate-history--set-history nil)
+  (ship-mate-history--quit))
+
+(defun ship-mate-history-abort ()
+  "Abort editing history."
+  (interactive)
+
+  (ship-mate-history--quit))
+
+(defun ship-mate-history--set-history (new-elements)
+  "Set the edited history to include NEW-ELEMENTS."
+  (let ((history (ship-mate-command--history ship-mate-history--command)))
+
+    (ring-resize history 0)
+    (ring-resize history ship-mate-command-history-size)
+
+    (dolist (it new-elements)
+      (ring-insert history it))))
+
+(defun ship-mate-history--quit ()
+  "Quit the history editing buffer."
+  (quit-window t (get-buffer-window ship-mate-history--buffer-name))
+
+  (setq ship-mate-history--command nil))
+
+(defun ship-mate-history--listify ()
+  "Listify history buffer."
+  (reverse (ship-mate--listify-buffer (get-buffer ship-mate-history--buffer-name))))
+
 ;;; -- Utility
 
 (defun ship-mate--listify-buffer (buffer)
@@ -788,6 +873,22 @@ If BUFFER isn't a compilation buffer, this prompts to select one."
 
   (with-current-buffer buffer
     (ship-mate-environment--edit)))
+
+;;;###autoload
+(defun ship-mate-edit-history (buffer)
+  "Edit the history for BUFFER.
+
+If BUFFER isn't a compilation buffer, this prompts to select one."
+  (interactive
+   (list (if (ship-mate--command-buffer-p)
+             (current-buffer)
+           (ship-mate--complete-buffer "Edit environment for buffer: "))))
+
+  (unless buffer
+    (user-error "No editable buffer"))
+
+  (with-current-buffer buffer
+    (ship-mate-history--edit)))
 
 ;;;###autoload
 (define-minor-mode ship-mate-mode
