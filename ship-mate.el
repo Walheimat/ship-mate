@@ -456,7 +456,33 @@ If BUFFER is non-nil, reset in buffer."
                         (propertize "env" 'face 'mode-line)
                         (ship-mate-dinghy--print-variables)))))
 
-;;; -- Editing the environment
+;;; -- Editing
+
+(defun ship-mate-edit--in-buffer (buffer-name elements mode)
+  "Edit ELEMENTS in buffer BUFFER-NAME.
+
+Sets MODE unless already set."
+  (let* ((buffer (get-buffer-create buffer-name))
+         (length (length elements)))
+
+    (with-current-buffer buffer
+      (erase-buffer)
+
+      (seq-map-indexed
+       (lambda (it i)
+         (insert it)
+         (unless (eq i (1- length))
+           (insert "\n")))
+       elements)
+
+      (set-buffer-modified-p nil)
+
+      (unless (buffer-local-value mode (current-buffer))
+        (funcall mode))
+
+      (pop-to-buffer buffer nil t))))
+
+;;; -- Editing the environmanet
 
 (defvar ship-mate-environment--buffer-name "*ship-mate-edit-env*"
   "The name of the buffer used for `ship-mate-edit-environment'.")
@@ -502,25 +528,9 @@ If BUFFER is non-nil, reset in buffer."
 
 (defun ship-mate-environment--edit-in-buffer (environment)
   "Create the buffer for editing the ENVIRONMENT."
-  (let* ((buffer (get-buffer-create ship-mate-environment--buffer-name))
-         (count (length environment)))
-
-    (with-current-buffer buffer
-      (erase-buffer)
-
-      (seq-map-indexed
-       (lambda (it i)
-         (insert it)
-         (unless (eq i (1- count))
-           (insert "\n")))
-       environment)
-
-      (set-buffer-modified-p nil)
-
-      (unless ship-mate-environment-mode
-        (ship-mate-environment-mode))
-
-      (pop-to-buffer buffer nil t))))
+  (ship-mate-edit--in-buffer ship-mate-environment--buffer-name
+                             environment
+                             'ship-mate-environment-mode))
 
 (defun ship-mate-environment--edit-in-minibuffer (environment)
   "Edit ENVIRONMENT in the minibuffer and return the result."
@@ -532,14 +542,6 @@ If BUFFER is non-nil, reset in buffer."
 
     recreated))
 
-(defun ship-mate-environment--listify ()
-  "Listify the current edit state."
-  (let* ((buffer (get-buffer ship-mate-environment--buffer-name))
-         (raw (with-current-buffer buffer
-                (buffer-string))))
-
-    (seq-filter (lambda (it) (not (string-empty-p it))) (string-split raw "\n"))))
-
 (defun ship-mate-environment--validate ()
   "Validate the current edit state."
   (let ((new-state (ship-mate-environment--listify))
@@ -549,6 +551,10 @@ If BUFFER is non-nil, reset in buffer."
       (push "Invalid assignments" warnings))
 
     warnings))
+
+(defun ship-mate-environment--listify ()
+  "Listify the environment buffer."
+  (ship-mate--listify-buffer (get-buffer ship-mate-environment--buffer-name)))
 
 (defun ship-mate-environment-apply ()
   "Apply the edited environment."
@@ -597,6 +603,13 @@ This is set in buffer `ship-mate-environment--buffer-name'."
             value))))
 
 ;;; -- Utility
+
+(defun ship-mate--listify-buffer (buffer)
+  "Listify the content of BUFFER."
+  (let* ((raw (with-current-buffer buffer
+                (buffer-string))))
+
+    (seq-filter (lambda (it) (not (string-empty-p it))) (string-split raw "\n"))))
 
 (defun ship-mate--plist-keys (plist)
   "Get all keys from PLIST."
