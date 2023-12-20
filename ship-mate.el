@@ -187,6 +187,8 @@ This uses `comint-mode' if COMINT is t.
 If optional ARG is 5, the user is prompted to edit the
 environment first."
   (let* ((env (or compilation-environment (ship-mate-environment--current-environment)))
+         (exec (lambda () (compile command comint)))
+         (sub (eq 3 (prefix-numeric-value arg)))
          (edited (if (eq 5 (prefix-numeric-value arg))
                      (ship-mate-environment--edit-in-minibuffer env)
                    env)))
@@ -194,12 +196,16 @@ environment first."
     (if (null compilation-environment)
         (let ((compilation-environment edited))
 
-          (compile command comint))
+          (if sub
+              (ship-mate-submarine--run exec)
+            (funcall exec)))
 
       (when (not (equal compilation-environment edited))
         (setq-local compilation-environment edited))
 
-      (compile command comint))))
+      (if sub
+          (ship-mate-submarine--run exec)
+        (funcall exec)))))
 
 (defun ship-mate-command--fuzzy-match-p (command history)
   "Check if COMMAND matches previous commands in HISTORY."
@@ -361,12 +367,23 @@ If EMPTY is t, do not read the defaults."
                     "Previous compilation wasn't a `ship-mate' compilation"
                   "No previous compilation")))
 
-  (message "Recompiling `%s' command in the background" ship-mate--last-command)
+  (when (seq-find
+         (lambda (it) (buffer-local-value 'ship-mate--this-command (window-buffer it)))
+         (window-list))
+    (user-error "Close windows before recompilation"))
+
+  (let ((ship-mate--current-command-name (symbol-name ship-mate--last-command)))
+
+    (ship-mate-submarine--run 'recompile)))
+
+(defun ship-mate-submarine--run (exec)
+  "Run EXEC in the background."
+  (message "Running `%s' command in the background" ship-mate--current-command-name)
 
   (let ((display-buffer-alist '(("\\*ship-mate" (display-buffer-no-window)))))
 
     (setq ship-mate-submarine--in-progress t
-          ship-mate-submarine--buffer (recompile))))
+          ship-mate-submarine--buffer (funcall exec))))
 
 (defun ship-mate-submarine--check ()
   "Check on the recorded process."

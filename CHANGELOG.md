@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ship-mate-prompt-for-hidden-buffer-idle-delay`.
 - Command `ship-mate-edit-history` to edit the history.
 - A lighter that provides the `ship-mate-command-map` as a menu.
+- Calling `ship-mate-command` with numeric prefix 3 now runs the
+  command the same way `ship-mate-hidden-recompile` does.
 
 ### Changed
 

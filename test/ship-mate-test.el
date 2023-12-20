@@ -159,6 +159,17 @@
       (bydi-was-called ship-mate-environment--edit-in-minibuffer)
       (bydi-was-set-to compilation-environment '("MOC=KING")))))
 
+(ert-deftest ship-mate-command--compile--submarine ()
+  (bydi (ship-mate-submarine--run
+         (:ignore ship-mate-environment--current-environment)
+         (:mock prefix-numeric-value :return 3))
+
+    (ship-mate-command--compile 'test)
+    (let ((compilation-environment '("MOC=KING")))
+      (ship-mate-command--compile 'test))
+
+    (bydi-was-called-n-times ship-mate-submarine--run 2)))
+
 (ert-deftest ship-mate-environment--current-environment ()
   (ert-with-test-buffer (:name "last-env")
 
@@ -705,6 +716,14 @@
     (should-error (ship-mate-submarine--recompile)))
 
   (let ((ship-mate--last-compilation-type nil))
+
+    (should-error (ship-mate-submarine--recompile)))
+
+  (ert-with-test-buffer (:name "open window")
+
+    (pop-to-buffer (current-buffer))
+
+    (setq-local ship-mate--this-command 'test)
 
     (should-error (ship-mate-submarine--recompile)))
 
