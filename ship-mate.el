@@ -87,6 +87,7 @@ can be set to."
 (defvar ship-mate-command-map
   (let ((map (make-sparse-keymap)))
     (define-key map "r" #'ship-mate-hidden-recompile)
+    (define-key map "s" #'ship-mate-show-hidden)
     map)
   "Command map for `ship-mate' commands.
 
@@ -377,14 +378,18 @@ If EMPTY is t, do not read the defaults."
                     "Previous compilation wasn't a `ship-mate' compilation"
                   "No previous compilation")))
 
-  (when (seq-find
-         (lambda (it) (buffer-local-value 'ship-mate--this-command (window-buffer it)))
-         (window-list))
-    (user-error "Close windows before recompilation"))
+  (ship-mate-submarine--verify-not-visible)
 
   (let ((ship-mate--current-command-name (symbol-name ship-mate--last-command)))
 
     (ship-mate-submarine--run 'recompile)))
+
+(defun ship-mate-submarine--verify-not-visible ()
+  "Verify `ship-mate' buffer is not visible."
+  (when (seq-find
+         (lambda (it) (buffer-local-value 'ship-mate--this-command (window-buffer it)))
+         (window-list))
+    (user-error "Close windows before recompilation")))
 
 (defun ship-mate-submarine--run (exec)
   "Run EXEC in the background."
@@ -403,11 +408,7 @@ If EMPTY is t, do not read the defaults."
   (unless (process-live-p ship-mate-submarine--process)
     (let ((status (process-exit-status ship-mate-submarine--process)))
 
-      (cancel-timer ship-mate-submarine--timer)
-
-      (setq ship-mate-submarine--timer nil
-            ship-mate-submarine--process nil
-            ship-mate-submarine--in-progress nil)
+      (ship-mate-submarine--clear)
 
       (if ship-mate-prompt-for-hidden-buffer
           (run-with-idle-timer ship-mate-prompt-for-hidden-buffer-idle-delay
@@ -415,7 +416,7 @@ If EMPTY is t, do not read the defaults."
                                #'ship-mate-submarine--delayed-prompt
                                (current-time)
                                status)
-        (pop-to-buffer ship-mate-submarine--buffer)))))
+        (ship-mate-submarine--surface)))))
 
 (defun ship-mate-submarine--delayed-prompt (time status)
   "Show a prompt to pop to buffer indicating.
@@ -425,13 +426,33 @@ TIME is the time the process finished, STATUS its status."
               (verb (if (eq 0 status) "finished successfully" (format "failed (exit status %d)" status)))
               (show (yes-or-no-p (format "Hidden compilation %s %.1fs ago. Show buffer?" verb (time-to-seconds since)))))
 
-    (pop-to-buffer ship-mate-submarine--buffer)))
+    (ship-mate-submarine--surface)))
 
 (defun ship-mate-submarine--watch-process (process)
   "Save PROCESS and set timer to check on it."
   (when ship-mate-submarine--in-progress
     (setq ship-mate-submarine--process process
           ship-mate-submarine--timer (run-with-timer 0 0.1 #'ship-mate-submarine--check))))
+
+(defun ship-mate-submarine--clear ()
+  "Clear progress."
+  (when ship-mate-submarine--timer
+    (cancel-timer ship-mate-submarine--timer))
+
+  (setq ship-mate-submarine--timer nil
+        ship-mate-submarine--process nil
+        ship-mate-submarine--in-progress nil))
+
+(defun ship-mate-submarine--surface ()
+  "Surface a hidden compilation early."
+  (ship-mate-submarine--verify-not-visible)
+
+  (when-let ((buffer ship-mate-submarine--buffer))
+
+    (ship-mate-submarine--clear)
+    (setq ship-mate-submarine--buffer nil)
+
+    (pop-to-buffer buffer)))
 
 ;;; -- Dinghy mode
 
@@ -829,6 +850,7 @@ Optionally the PROJECT may be passed directly."
   (let ((map (make-sparse-keymap)))
 
     (define-key map [mode-line mouse-3] 'ship-mate-mode-lighter--menu)
+    (define-key map [mode-line mouse-1] 'ship-mate-show-hidden)
 
     map)
   "Map used in mode line construct.")
@@ -937,6 +959,12 @@ it with the default value(s)."
   (interactive)
 
   (ship-mate-submarine--recompile))
+
+(defun ship-mate-show-hidden ()
+  "Show a hidden compilation."
+  (interactive)
+
+  (ship-mate-submarine--surface))
 
 ;;;###autoload
 (defun ship-mate-edit-environment (buffer)

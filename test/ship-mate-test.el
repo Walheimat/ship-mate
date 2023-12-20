@@ -756,14 +756,13 @@
     (bydi ((:sometimes process-live-p)
            (:mock process-exit-status :return 0)
            cancel-timer
-           pop-to-buffer
+           ship-mate-submarine--surface
            (:watch ship-mate-submarine--in-progress)
            run-with-idle-timer)
 
       (ship-mate-submarine--check)
 
-      (bydi-was-not-set ship-mate-submarine--in-progress)
-      (bydi-was-not-called pop-to-buffer)
+      (bydi-was-not-called ship-mate-submarine--surface)
 
       (bydi-toggle-sometimes)
 
@@ -779,16 +778,16 @@
 
       (ship-mate-submarine--check)
 
-      (bydi-was-called pop-to-buffer))))
+      (bydi-was-called ship-mate-submarine--surface))))
 
 (ert-deftest ship-mate-submarine--delayed-prompt ()
   (bydi ((:always yes-or-no-p)
-         pop-to-buffer)
+         ship-mate-submarine--surface)
 
     (ship-mate-submarine--delayed-prompt (current-time) 0)
     (ship-mate-submarine--delayed-prompt (current-time) 1)
 
-    (bydi-was-called-n-times pop-to-buffer 2)))
+    (bydi-was-called-n-times ship-mate-submarine--surface 2)))
 
 (ert-deftest ship-mate-submarine--watch-process ()
   :tags '(submarine)
@@ -809,6 +808,28 @@
       (ship-mate-submarine--watch-process 'process)
 
       (bydi-was-set ship-mate-submarine--timer))))
+
+(ert-deftest ship-mate-submarine--surface ()
+  :tags '(submarine)
+
+  (let ((ship-mate-submarine--buffer 'buffer))
+    (bydi (pop-to-buffer
+           ship-mate-submarine--clear
+           (:watch ship-mate-submarine--buffer)
+           (:ignore ship-mate-submarine--verify-not-visible))
+
+      (ship-mate-submarine--surface)
+
+      (bydi-was-set ship-mate-submarine--buffer)
+      (bydi-was-called ship-mate-submarine--clear)
+      (bydi-was-called pop-to-buffer))))
+
+(ert-deftest ship-mate-show-hidden ()
+  (bydi (ship-mate-submarine--surface)
+
+    (ship-mate-show-hidden)
+
+    (bydi-was-called ship-mate-submarine--surface)))
 
 (ert-deftest ship-mate-hidden-recompile ()
   :tags '(user-facing submarine)

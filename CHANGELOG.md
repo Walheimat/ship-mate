@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   value can be customized using `ship-mate-hidden-compilation-prefix`.
 - If a hidden compilation fails, the exit status is shown in the
   prompt.
+- Hidden compilations can be surfaced by `ship-mate-show-hidden` or by
+  clicking the mode line.
 
 ### Changed
 
