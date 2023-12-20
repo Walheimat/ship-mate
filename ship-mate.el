@@ -787,7 +787,8 @@ Optionally the PROJECT may be passed directly."
 
 ;;; -- Lighter
 
-(defvar ship-mate-mode-lighter '((:eval (ship-mate-mode-lighter--title)))
+(defvar ship-mate-mode-lighter '((:eval (ship-mate-mode-lighter--title))
+                                 (:eval (ship-mate-mode-lighter--hidden)))
   "The lighter for `ship-mate-mode'.")
 (put 'ship-mate-mode-lighter 'risky-local-variable t)
 
@@ -826,6 +827,10 @@ Optionally the PROJECT may be passed directly."
                 mouse-face mode-line-highlight
                 help-echo "Ship Mate\nmouse-3: Menu"
                 local-map ,ship-mate-mode-lighter--map))
+
+(defun ship-mate-mode-lighter--hidden ()
+  "Indicates a running hidden recompile."
+  '(ship-mate-submarine--in-progress (:propertize "!" face mode-line-emphasis)))
 
 ;;; -- API
 

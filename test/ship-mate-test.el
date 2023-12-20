@@ -824,10 +824,11 @@
 
 ;;; -- Lighter
 
-(ert-deftest ship-mate-mode-lighter--title ()
+(ert-deftest ship-mate-mode-lighter--function-segments ()
   :tags '(mode-line user-facing)
 
-  (should (ship-mate-mode-lighter--title)))
+  (should (ship-mate-mode-lighter--title))
+  (should (ship-mate-mode-lighter--hidden)))
 
 (ert-deftest ship-mate-mode-lighter--menu ()
   (defvar ship-mate-command-map)
