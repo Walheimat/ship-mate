@@ -182,9 +182,15 @@ when using =recompile= or =compile= instead.
 
 You can also use command =ship-mate-hidden-recompile= which will run
 =recompile= but not display the buffer until the compilation has
-finished. If you don't like the sudden pop-up you can set
-=ship-mate-prompt-for-hidden-buffer= to =t= which will prompt you
-first.
+finished. After compilation and idle time of
+=ship-mate-prompt-for-hidden-buffer= seconds, you will be prompted to
+view the result. If you don't mind a sudden pop-up as soon as
+compilation finishes instead you can set
+=ship-mate-prompt-for-hidden-buffer= to =nil=.
+
+You can also run a =ship-mate= command with numeric prefix 3 (or
+whatever =ship-mate-hidden-compilation-prefix= is set to) to run it in
+the same way.
 
 From a =ship-mate= command buffer you can use
 =ship-mate-command-{next,prev}-buffer= to quickly switch between
@@ -208,9 +214,10 @@ This command is automatically bound to =C-c C-e= in =ship-mate=
 command buffers. You can also call it from without which will prompt
 you to select the buffer for which to edit it.
 
-You can also run a =ship-mate= command with numeric prefix 5 to edit
-the environment in the minibuffer before executing it. This also works
-for recompilation.
+You can also run a =ship-mate= command with numeric prefix 5 (or
+whatever =ship-mate-edit-environment-prefix= is set to) to edit the
+environment in the minibuffer before executing it. This also works for
+recompilation.
 
 *** Setting the history
 
