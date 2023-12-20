@@ -401,23 +401,29 @@ If EMPTY is t, do not read the defaults."
     (user-error "No process"))
 
   (unless (process-live-p ship-mate-submarine--process)
-    (cancel-timer ship-mate-submarine--timer)
+    (let ((status (process-exit-status ship-mate-submarine--process)))
 
-    (setq ship-mate-submarine--timer nil
-          ship-mate-submarine--process nil
-          ship-mate-submarine--in-progress nil)
+      (cancel-timer ship-mate-submarine--timer)
 
-    (if ship-mate-prompt-for-hidden-buffer
-        (run-with-idle-timer ship-mate-prompt-for-hidden-buffer-idle-delay
-                             nil
-                             #'ship-mate-submarine--delayed-prompt
-                             (current-time))
-      (pop-to-buffer ship-mate-submarine--buffer))))
+      (setq ship-mate-submarine--timer nil
+            ship-mate-submarine--process nil
+            ship-mate-submarine--in-progress nil)
 
-(defun ship-mate-submarine--delayed-prompt (time)
-  "Show a prompt to pop to buffer indicating TIME."
+      (if ship-mate-prompt-for-hidden-buffer
+          (run-with-idle-timer ship-mate-prompt-for-hidden-buffer-idle-delay
+                               nil
+                               #'ship-mate-submarine--delayed-prompt
+                               (current-time)
+                               status)
+        (pop-to-buffer ship-mate-submarine--buffer)))))
+
+(defun ship-mate-submarine--delayed-prompt (time status)
+  "Show a prompt to pop to buffer indicating.
+
+TIME is the time the process finished, STATUS its status."
   (when-let* ((since (time-since time))
-              (show (yes-or-no-p (format "Hidden compilation finished %.1fs ago. Show buffer?" (time-to-seconds since)))))
+              (verb (if (eq 0 status) "finished successfully" (format "failed (exit status %d)" status)))
+              (show (yes-or-no-p (format "Hidden compilation %s %.1fs ago. Show buffer?" verb (time-to-seconds since)))))
 
     (pop-to-buffer ship-mate-submarine--buffer)))
 

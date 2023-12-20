@@ -754,6 +754,7 @@
         (ship-mate-prompt-for-hidden-buffer t))
 
     (bydi ((:sometimes process-live-p)
+           (:mock process-exit-status :return 0)
            cancel-timer
            pop-to-buffer
            (:watch ship-mate-submarine--in-progress)
@@ -784,9 +785,10 @@
   (bydi ((:always yes-or-no-p)
          pop-to-buffer)
 
-    (ship-mate-submarine--delayed-prompt (current-time))
+    (ship-mate-submarine--delayed-prompt (current-time) 0)
+    (ship-mate-submarine--delayed-prompt (current-time) 1)
 
-    (bydi-was-called pop-to-buffer)))
+    (bydi-was-called-n-times pop-to-buffer 2)))
 
 (ert-deftest ship-mate-submarine--watch-process ()
   :tags '(submarine)

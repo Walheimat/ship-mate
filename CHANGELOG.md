@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Calling `ship-mate-command` with numeric prefix 3 now runs the
   command the same way `ship-mate-hidden-recompile` does. The prefix
   value can be customized using `ship-mate-hidden-compilation-prefix`.
+- If a hidden compilation fails, the exit status is shown in the
+  prompt.
 
 ### Changed
 
