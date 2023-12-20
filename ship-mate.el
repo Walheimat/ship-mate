@@ -785,6 +785,48 @@ Optionally the PROJECT may be passed directly."
   (dolist (fun ship-mate-compile-functions)
     (advice-remove fun 'ship-mate-with-bounded-compilation)))
 
+;;; -- Lighter
+
+(defvar ship-mate-mode-lighter '((:eval (ship-mate-mode-lighter--title)))
+  "The lighter for `ship-mate-mode'.")
+(put 'ship-mate-mode-lighter 'risky-local-variable t)
+
+(defvar ship-mate-mode-lighter--map
+  (let ((map (make-sparse-keymap)))
+
+    (define-key map [mode-line mouse-3] 'ship-mate-mode-lighter--menu)
+
+    map)
+  "Map used in mode line construct.")
+
+(defun ship-mate-mode-lighter--menu ()
+  "Menu for mode-line lighter."
+  (interactive)
+
+  (let* ((map (make-sparse-keymap))
+         (rename (lambda (sym) (substring (symbol-name sym)
+                                     (1+ (length "ship-mate")))))
+         (bind (lambda (_event func)
+                 (define-key-after map
+                   (vector func)
+                   (list 'menu-item (funcall rename func) func)))))
+
+    (define-key-after map [--actions] (list 'menu-item "Ship Mate"))
+
+    (map-keymap bind ship-mate-command-map)
+
+    (condition-case nil
+        (popup-menu map)
+      (quit nil))))
+
+(defun ship-mate-mode-lighter--title ()
+  "The mode-line title."
+  `(:propertize ship-mate-lighter
+                face shadow
+                mouse-face mode-line-highlight
+                help-echo "Ship Mate\nmouse-3: Menu"
+                local-map ,ship-mate-mode-lighter--map))
+
 ;;; -- API
 
 ;;;###autoload
@@ -901,7 +943,7 @@ scoped history as well as make all functions in
 project (will only ask you save buffers in that project) and (3)
 adds a hook `compilation-start-hook' to maybe enable
 `ship-mate-dinghy-mode'."
-  :lighter ship-mate-lighter
+  :lighter ship-mate-mode-lighter
   :global t
   (if ship-mate-mode
       (ship-mate-mode--setup)

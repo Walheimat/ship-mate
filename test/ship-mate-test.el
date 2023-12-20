@@ -822,6 +822,27 @@
     (should (equal (cons "Test [make test]" (current-buffer))
                    (ship-mate--completion-candidate (current-buffer))))))
 
+;;; -- Lighter
+
+(ert-deftest ship-mate-mode-lighter--title ()
+  :tags '(mode-line user-facing)
+
+  (should (ship-mate-mode-lighter--title)))
+
+(ert-deftest ship-mate-mode-lighter--menu ()
+  (defvar ship-mate-command-map)
+
+  (let ((ship-mate-command-map (make-sparse-keymap)))
+
+    (defun ship-mate-test ()
+      nil)
+
+    (define-key ship-mate-command-map (kbd "t") 'ship-mate-test)
+
+    (bydi (popup-menu)
+      (ship-mate-mode-lighter--menu)
+      (bydi-was-called popup-menu))))
+
 ;;; ship-mate-test.el ends here
 
 ;; Local Variables:
