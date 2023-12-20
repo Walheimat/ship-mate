@@ -16,7 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   user to edit the environment in the minibuffer. The prefix value can
   be customized through `ship-mate-edit-environment-prefix`.
 - `ship-mate-hidden-recompile` now prompts after customizable
-  `ship-mate-prompt-for-hidden-buffer-idle-delay`.
+  `ship-mate-prompt-for-hidden-buffer` which is now set to 2
+  (seconds).
 - Command `ship-mate-edit-history` to edit the history.
 - A lighter that provides the `ship-mate-command-map` as a menu.
 - Calling `ship-mate-command` with numeric prefix 3 now runs the
@@ -31,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Calling `ship-mate-hidden-recompile` when the previous command
   wasn't a `ship-mate-command` no longer recompiles.
-- Prompting is now the default for hidden compilation.
+- Prompting is now the default for hidden compilation (see above).
 
 ## [v0.3.0]
 

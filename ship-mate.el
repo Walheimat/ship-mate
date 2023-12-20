@@ -62,15 +62,14 @@ can be set to."
   :group 'ship-mate
   :type 'boolean)
 
-(defcustom ship-mate-prompt-for-hidden-buffer t
-  "Whether user should be prompted when hidden buffer is done."
-  :group 'ship-mate
-  :type 'boolean)
+(defcustom ship-mate-prompt-for-hidden-buffer 2
+  "Whether user should be prompted when hidden buffer is done.
 
-(defcustom ship-mate-prompt-for-hidden-buffer-idle-delay 2
-  "Time in seconds of idle time before prompt is shown."
+If this is an integer, prompt after so many seconds. If it is
+nil, show immediately."
   :group 'ship-mate
-  :type 'boolean)
+  :type '(choice (integer :tag "Delay for prompt")
+                 (const :tag "Show immediately" nil)))
 
 (defcustom ship-mate-hidden-compilation-prefix 3
   "Numeric prefix for hidden compilation."
@@ -411,7 +410,7 @@ If EMPTY is t, do not read the defaults."
       (ship-mate-submarine--clear)
 
       (if ship-mate-prompt-for-hidden-buffer
-          (run-with-idle-timer ship-mate-prompt-for-hidden-buffer-idle-delay
+          (run-with-idle-timer ship-mate-prompt-for-hidden-buffer
                                nil
                                #'ship-mate-submarine--delayed-prompt
                                (current-time)
