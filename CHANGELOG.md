@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Calling `ship-mate-hidden-recompile` when the previous command
   wasn't a `ship-mate-command` no longer recompiles.
+- Prompting is now the default for hidden compilation.
 
 ## [v0.3.0]
 

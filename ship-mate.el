@@ -62,7 +62,7 @@ can be set to."
   :group 'ship-mate
   :type 'boolean)
 
-(defcustom ship-mate-prompt-for-hidden-buffer nil
+(defcustom ship-mate-prompt-for-hidden-buffer t
   "Whether user should be prompted when hidden buffer is done."
   :group 'ship-mate
   :type 'boolean)
