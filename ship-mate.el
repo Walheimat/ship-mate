@@ -72,6 +72,16 @@ can be set to."
   :group 'ship-mate
   :type 'boolean)
 
+(defcustom ship-mate-hidden-compilation-prefix 3
+  "Numeric prefix for hidden compilation."
+  :group 'ship-mate
+  :type 'integer)
+
+(defcustom ship-mate-edit-environment-prefix 5
+  "Numeric prefix for editing environment before compilation."
+  :group 'ship-mate
+  :type 'integer)
+
 ;;; -- Variables
 
 (defvar ship-mate-command-map
@@ -188,8 +198,8 @@ If optional ARG is 5, the user is prompted to edit the
 environment first."
   (let* ((env (or compilation-environment (ship-mate-environment--current-environment)))
          (exec (lambda () (compile command comint)))
-         (sub (eq 3 (prefix-numeric-value arg)))
-         (edited (if (eq 5 (prefix-numeric-value arg))
+         (sub (eq ship-mate-hidden-compilation-prefix (prefix-numeric-value arg)))
+         (edited (if (eq ship-mate-edit-environment-prefix (prefix-numeric-value arg))
                      (ship-mate-environment--edit-in-minibuffer env)
                    env)))
 

@@ -13,13 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   buffer now completes `ship-mate` buffers in the project to edit
   their environment.
 - Calling `ship-mate-command` with numeric prefix 5 now prompts the
-  user to edit the environment in the minibuffer.
+  user to edit the environment in the minibuffer. The prefix value can
+  be customized through `ship-mate-edit-environment-prefix`.
 - `ship-mate-hidden-recompile` now prompts after customizable
   `ship-mate-prompt-for-hidden-buffer-idle-delay`.
 - Command `ship-mate-edit-history` to edit the history.
 - A lighter that provides the `ship-mate-command-map` as a menu.
 - Calling `ship-mate-command` with numeric prefix 3 now runs the
-  command the same way `ship-mate-hidden-recompile` does.
+  command the same way `ship-mate-hidden-recompile` does. The prefix
+  value can be customized using `ship-mate-hidden-compilation-prefix`.
 
 ### Changed
 
