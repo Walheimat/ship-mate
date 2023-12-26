@@ -348,7 +348,7 @@
          ship-mate-command)
     (call-interactively 'ship-mate-select-command)
 
-    (bydi-was-called-with ship-mate-command (list 'test))))
+    (bydi-was-called-with ship-mate-command (list 'test nil))))
 
 (ert-deftest ship-mate--local-value ()
   (ert-with-temp-file project

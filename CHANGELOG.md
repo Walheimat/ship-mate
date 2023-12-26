@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   only letter bound. The key used can be customized using
   `ship-mate-subcommands-key`.
 
+### Fixed
+
+- `ship-mate-select-command` now passes the prefix argument to the
+  command.
+
 ## [v0.3.1]
 
 ### Added

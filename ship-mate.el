@@ -928,12 +928,15 @@ of a project's buffers."
     (apply fun args)))
 
 ;;;###autoload
-(defun ship-mate-select-command (cmd)
-  "Complete and run CMD."
-  (interactive
-   (list (ship-mate--read-command "Select command: ")))
+(defun ship-mate-select-command (cmd &optional arg)
+  "Complete and run CMD.
 
-  (ship-mate-command (intern cmd)))
+ARG is passed to the underlying command."
+  (interactive
+   (list (ship-mate--read-command "Select command: ")
+         current-prefix-arg))
+
+  (ship-mate-command (intern cmd) arg))
 
 ;;;###autoload
 (cl-defmacro ship-mate-create-command (name &key key default)
