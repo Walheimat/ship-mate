@@ -81,12 +81,38 @@ nil, show immediately."
   :group 'ship-mate
   :type 'integer)
 
+(defcustom ship-mate-subcommands-key "x"
+  "The key used to bind subcommands.
+
+If this is nil, they aren't bound."
+  :group 'ship-mate
+  :type '(choice (key :tag "The key to bind to")
+                 (const :tag "Don't bind" nil)))
+
 ;;; -- Variables
+
+(defvar ship-mate-subcommand-map
+  (let ((map (make-sparse-keymap)))
+
+    (define-key map "r" #'ship-mate-hidden-recompile)
+    (define-key map "s" #'ship-mate-show-hidden)
+    (define-key map "c" #'ship-mate-select-command)
+    (define-key map "h" #'ship-mate-edit-history)
+    (define-key map "H" #'ship-mate-refresh-history)
+    (define-key map "e" #'ship-mate-edit-environment)
+
+    map)
+  "Command map for additional `ship-mate' commands.")
 
 (defvar ship-mate-command-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "r" #'ship-mate-hidden-recompile)
-    (define-key map "s" #'ship-mate-show-hidden)
+
+    (when ship-mate-subcommands-key
+      (define-key
+       map
+       ship-mate-subcommands-key
+       `("subcommands" . ,ship-mate-subcommand-map)))
+
     map)
   "Command map for `ship-mate' commands.
 

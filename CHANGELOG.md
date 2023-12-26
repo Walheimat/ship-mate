@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Additional commands are now bound to `ship-mate-subcommand-map`
+  which is bound to `x` in `ship-mate-command-map`. This is now the
+  only letter bound. The key used can be customized using
+  `ship-mate-subcommands-key`.
+
 ## [v0.3.1]
 
 ### Added
