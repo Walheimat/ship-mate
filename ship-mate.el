@@ -914,7 +914,6 @@ Optionally the PROJECT may be passed directly."
 (defun ship-mate-mode-lighter--title ()
   "The mode-line title."
   `(:propertize ship-mate-lighter
-                face shadow
                 mouse-face mode-line-highlight
                 help-echo "Ship Mate\nmouse-3: Menu"
                 local-map ,ship-mate-mode-lighter--map))
