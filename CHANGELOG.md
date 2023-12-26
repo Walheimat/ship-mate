@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `ship-mate-select-command` now passes the prefix argument to the
   command.
+- Calling `ship-mate-hidden-recompile` directly or indirectly quits
+  windows displaying a `ship-mate` buffer.
 
 ## [v0.3.1]
 

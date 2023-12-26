@@ -725,7 +725,12 @@
 
     (setq-local ship-mate--this-command 'test)
 
-    (should-error (ship-mate-submarine--recompile)))
+    (bydi (quit-window
+           recompile)
+
+      (shut-up (ship-mate-submarine--recompile))
+
+      (bydi-was-called quit-window)))
 
   (let ((ship-mate-submarine--in-progress nil)
         (ship-mate-submarine--buffer nil))
@@ -816,7 +821,7 @@
     (bydi (pop-to-buffer
            ship-mate-submarine--clear
            (:watch ship-mate-submarine--buffer)
-           (:ignore ship-mate-submarine--verify-not-visible))
+           (:ignore ship-mate-submarine--ensure-no-ship-mate-buffers))
 
       (ship-mate-submarine--surface)
 

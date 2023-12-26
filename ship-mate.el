@@ -403,27 +403,31 @@ If EMPTY is t, do not read the defaults."
                     "Previous compilation wasn't a `ship-mate' compilation"
                   "No previous compilation")))
 
-  (ship-mate-submarine--verify-not-visible)
-
   (let ((ship-mate--current-command-name (symbol-name ship-mate--last-command)))
 
     (ship-mate-submarine--run 'recompile)))
 
-(defun ship-mate-submarine--verify-not-visible ()
-  "Verify `ship-mate' buffer is not visible."
-  (when (seq-find
-         (lambda (it) (buffer-local-value 'ship-mate--this-command (window-buffer it)))
-         (window-list))
-    (user-error "Close windows before recompilation")))
-
 (defun ship-mate-submarine--run (exec)
   "Run EXEC in the background."
+  (ship-mate-submarine--ensure-no-ship-mate-buffers)
+
   (message "Running `%s' command in the background" ship-mate--current-command-name)
 
   (let ((display-buffer-alist '(("\\*ship-mate" (display-buffer-no-window)))))
 
     (setq ship-mate-submarine--in-progress t
           ship-mate-submarine--buffer (funcall exec))))
+
+(defun ship-mate-submarine--ensure-no-ship-mate-buffers ()
+  "Verify no `ship-mate' buffer is visible.
+
+If there are any, close them."
+  (when-let ((windows (seq-filter
+                       (lambda (it) (buffer-local-value 'ship-mate--this-command (window-buffer it)))
+                       (window-list-1 nil nil t))))
+
+    (dolist (win windows)
+      (quit-window nil win))))
 
 (defun ship-mate-submarine--check ()
   "Check on the recorded process."
@@ -469,15 +473,22 @@ TIME is the time the process finished, STATUS its status."
         ship-mate-submarine--in-progress nil))
 
 (defun ship-mate-submarine--surface ()
-  "Surface a hidden compilation early."
-  (ship-mate-submarine--verify-not-visible)
+  "Surface a hidden compilation early.
 
+If it is already shown, just clear timer and buffer."
   (when-let ((buffer ship-mate-submarine--buffer))
 
     (ship-mate-submarine--clear)
     (setq ship-mate-submarine--buffer nil)
 
-    (pop-to-buffer buffer)))
+    (unless (ship-mate-submarine--buffer-visible-p)
+      (pop-to-buffer buffer))))
+
+(defun ship-mate-submarine--buffer-visible-p ()
+  "Check if the submarine buffer is visible."
+  (let ((windows (window-list-1 nil nil t)))
+
+    (seq-find (lambda (it) (eq ship-mate-submarine--buffer (window-buffer it))) windows)))
 
 ;;; -- Dinghy mode
 
