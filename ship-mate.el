@@ -2,7 +2,7 @@
 
 ;; Author: Krister Schuchardt <krister.schuchardt@gmail.com>
 ;; Homepage: https://github.com/Walheimat/ship-mate
-;; Version: 0.3.1
+;; Version: 0.3.2
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: convenience
 
