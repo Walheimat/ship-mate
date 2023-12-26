@@ -48,7 +48,7 @@ match against and the history of the last command category."
   :type 'function)
 
 (defcustom ship-mate-command-buffer-name-function-generator
- #'ship-mate-command--buffer-name-function
+  #'ship-mate-command--buffer-name-function
   "Generator function to name buffers.
 
 This function will be called with the current project's name and
@@ -798,8 +798,8 @@ Optionally the PROJECT may be passed directly."
           (this-command ship-mate--this-command))
 
       (cons (format "%s [%s]"
-             (capitalize (symbol-name this-command))
-             (propertize command 'face 'italic))
+                    (capitalize (symbol-name this-command))
+                    (propertize command 'face 'italic))
             buffer))))
 
 (defun ship-mate--complete-buffer (prompt)
@@ -860,7 +860,7 @@ Optionally the PROJECT may be passed directly."
 
   (let* ((map (make-sparse-keymap))
          (rename (lambda (sym) (substring (symbol-name sym)
-                                     (1+ (length "ship-mate")))))
+                                          (1+ (length "ship-mate")))))
          (bind (lambda (_event func)
                  (define-key-after map
                    (vector func)
@@ -935,9 +935,9 @@ run in `comint-mode' instead."
          (ship-mate-command ',name arg))
 
        (setq ship-mate-commands (plist-put
-                                   ship-mate-commands
-                                   ',name
-                                   ,(make-hash-table :test 'equal)))
+                                 ship-mate-commands
+                                 ',name
+                                 ,(make-hash-table :test 'equal)))
 
        (define-key ship-mate-command-map ,key ',function-name)
        (put ',default-var 'safe-local-variable #'ship-mate-command--valid-default-p))))
