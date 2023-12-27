@@ -68,8 +68,9 @@ Here's a =use-package= configuration example.
   (ship-mate-command-history-size 10)
 
   ;; The function used to check if the next compilation relates to a
-  ;; `ship-mate' command.
-  (ship-mate-command-fuzzy-match-function #'ship-mate-command--fuzzy-match-p)
+  ;; `ship-mate' command. Returns a plist of MATCH, COUNT and INDEX on
+  ;; a match.
+  (ship-mate-command-fuzzy-match-function #'ship-mate-command--fuzzy-match)
 
   ;; The function used to name `ship-mate' buffers.
   (ship-matecommand-buffer-name-function-generator #'ship-mate-command--buffer-name-function)

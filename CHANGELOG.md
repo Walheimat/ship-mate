@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ship-mate-dinghy-mode`. It hides a running compilation like other
   hidden compilations.
 
+### Changed
+
+- Function that variable `ship-mate-command-fuzzy-match-function`
+  should now return a plist on match, returning match, count and
+  index. This is used during `ship-mate-command--update-history` to
+  replace a matched entry if the match count is higher that two.
+
 ## [0.3.2]
 
 ### Added

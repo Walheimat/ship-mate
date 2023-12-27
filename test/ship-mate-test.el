@@ -210,28 +210,39 @@
         (ship-mate--last-command 'test))
 
     (ring-insert fake-history "make test")
+    (ring-insert fake-history "make coverage")
 
     (bydi ((:mock ship-mate-command--history :return fake-history))
 
       (ship-mate-command--update-history "make new")
 
       (should (equal (ring-elements fake-history)
-                     '("make test")))
+                     '("make coverage" "make test")))
 
       (ship-mate-command--update-history "make test FLAG=t")
 
       (should (equal (ring-elements fake-history)
-                     '("make test FLAG=t" "make test")))
+                     '("make test FLAG=t" "make coverage" "make test")))
 
       (ship-mate-command--update-history "make way")
 
       (should (equal (ring-elements fake-history)
-                     '("make test FLAG=t" "make test")))
+                     '("make test FLAG=t" "make coverage" "make test")))
 
       (ship-mate-command--update-history "make test")
 
       (should (equal (ring-elements fake-history)
-                     '("make test" "make test FLAG=t"))))))
+                     '("make test" "make test FLAG=t" "make coverage")))
+
+      (ship-mate-command--update-history "make coverage FLAG=t")
+
+      (should (equal (ring-elements fake-history)
+                     '("make coverage FLAG=t" "make test" "make test FLAG=t")))
+
+      (ship-mate-command--update-history "make coverage FLAG=t CAPTURE=t")
+
+      (should (equal (ring-elements fake-history)
+                     '("make coverage FLAG=t CAPTURE=t" "make test" "make test FLAG=t"))))))
 
 (ert-deftest ship-mate-command--capture ()
   :tags '(command)
@@ -243,7 +254,7 @@
         (matches nil))
 
     (bydi ((:mock ship-mate-command--history :return history)
-           (:mock ship-mate-command--fuzzy-match-p :return matches)
+           (:mock ship-mate-command--fuzzy-match :return matches)
            (:mock ship-mate--local-value :return environment)
            ship-mate-command)
 
@@ -254,7 +265,7 @@
       (bydi-was-not-called ship-mate-command)
 
       (setq ship-mate--last-command 'test
-            matches t)
+            matches '(:match "match" :count 1 :index 0))
 
       (ship-mate-command--capture #'ignore)
 

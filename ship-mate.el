@@ -39,11 +39,13 @@
   :group 'ship-mate
   :type 'integer)
 
-(defcustom ship-mate-command-fuzzy-match-function #'ship-mate-command--fuzzy-match-p
+(defcustom ship-mate-command-fuzzy-match-function #'ship-mate-command--fuzzy-match
   "Function to match a command against history entries.
 
 The function will be called with two arguments: the command to
-match against and the history of the last command category."
+match against and the history of the last command category. On a
+match it should return a plist that includes MATCH, COUNT and
+INDEX (of matched item)."
   :group 'ship-mate
   :type 'function)
 
@@ -203,7 +205,7 @@ edit the environment first."
     ;; Record this as the last command.
     (setq ship-mate--last-command cmd)
 
-    ;; Amend history.
+    ;; Amend history (don't extend).
     (ring-remove+insert+extend history command)
     (puthash root history table)
 
@@ -243,19 +245,29 @@ environment first."
           (ship-mate-submarine--run exec)
         (funcall exec)))))
 
-(defun ship-mate-command--fuzzy-match-p (command history)
-  "Check if COMMAND matches previous commands in HISTORY."
+(defun ship-mate-command--fuzzy-match (command history)
+  "Match COMMAND against commands in HISTORY.
+
+If there is a match this returns a plist of match, match count
+and the index of the matched item."
   (and-let* ((elements (ring-elements history))
              (min-count 1)
-             (match (seq-find
-                     (lambda (it)
-                       (let* ((el-parts (string-split it " "))
-                              (matches (seq-count
-                                        (lambda (part)
-                                          (string-match-p part command))
-                                        el-parts)))
-                         (> matches min-count)))
-                     elements)))))
+             (top-matches 0)
+             (matcher (lambda (it)
+                        (let* ((el-parts (string-split it " "))
+                               (matches (seq-count
+                                         (lambda (part)
+                                           (string-match-p part command))
+                                         el-parts)))
+
+                          (when (> matches min-count)
+                            (setq top-matches matches)))))
+             (match (seq-find matcher elements)))
+
+    (list
+     :match match
+     :count top-matches
+     :index (ring-member history match))))
 
 (defun ship-mate-command--buffer-name-function (project)
   "Return a function to name the compilation buffer for PROJECT."
@@ -268,12 +280,21 @@ environment first."
   "Update history using COMMAND.
 
 If COMMAND matches other commands of the last command category,
-add it to the history."
+replace the matched item or add it to the history based on the
+match count."
   (and-let* (ship-mate--last-command
              (history (ship-mate-command--history ship-mate--last-command))
-             (index (funcall ship-mate-command-fuzzy-match-function command history)))
 
-    (ring-remove+insert+extend history command)))
+             (replace-count 2)
+             (specs (funcall ship-mate-command-fuzzy-match-function command history)))
+
+    (if (and (plistp specs)
+             (> (plist-get specs :count) replace-count))
+        (progn
+          (ring-remove history (plist-get specs :index))
+          (ring-insert history command))
+
+      (ring-remove+insert+extend history command))))
 
 (defun ship-mate-command--capture (recompile &optional edit)
   "Only call RECOMPILE conditionally.
@@ -329,7 +350,9 @@ is the default."
 (defun ship-mate-command--create-history (cmd &optional empty)
   "Create history for CMD.
 
-If EMPTY is t, do not read the defaults."
+This will read the default history from its dir-local value of
+`ship-mate-CMD-default-cmd' (a string or a list of strings)
+unless EMPTY is t."
   (let* ((table (plist-get ship-mate-commands cmd))
          (project (project-current))
          (root (project-root project))
