@@ -188,6 +188,9 @@ view the result. If you don't mind a sudden pop-up as soon as
 compilation finishes instead you can set
 =ship-mate-prompt-for-hidden-buffer= to =nil=.
 
+In the same way you can type =C-c C-q= in a running =ship-mate= buffer
+to send it to the background and make it prompt when finished.
+
 You can also run a =ship-mate= command with numeric prefix 3 (or
 whatever =ship-mate-hidden-compilation-prefix= is set to) to run it in
 the same way.
