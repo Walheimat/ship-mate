@@ -891,6 +891,47 @@
       (ship-mate-mode-lighter--menu)
       (bydi-was-called popup-menu))))
 
+;;; -- Hiding running compilations
+
+(ert-deftest ship-mate-hide ()
+  :tags '(user-facing submarine)
+
+  (bydi ship-mate-submarine--hide
+    (ship-mate-hide)
+
+    (bydi-was-called ship-mate-submarine--hide)))
+
+(ert-deftest ship-mate-submarine--hide ()
+  :tags '(submarine)
+
+  (shut-up
+    (let ((process nil))
+
+      (bydi ((:mock get-buffer-process :return process)
+             (:othertimes ship-mate--command-buffer-p)
+             (:mock ship-mate-submarine--watch-process :return 'hello)
+             (:watch ship-mate-submarine--buffer)
+             (:watch ship-mate-submarine--in-progress)
+             quit-window)
+
+
+        (should-error (ship-mate-submarine--hide))
+
+        (bydi-toggle-sometimes)
+
+        (should-error (ship-mate-submarine--hide))
+
+        (setq process 'process)
+
+        (ship-mate-submarine--hide)
+
+        (bydi-was-set ship-mate-submarine--buffer)
+        (bydi-was-set ship-mate-submarine--in-progress)
+
+        (bydi-was-called-with ship-mate-submarine--watch-process 'process))
+
+      (setq ship-mate-submarine--in-progress nil))))
+
 ;;; ship-mate-test.el ends here
 
 ;; Local Variables:

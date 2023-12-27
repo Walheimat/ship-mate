@@ -418,6 +418,26 @@ If EMPTY is t, do not read the defaults."
     (setq ship-mate-submarine--in-progress t
           ship-mate-submarine--buffer (funcall exec))))
 
+(defun ship-mate-submarine--hide ()
+  "Hide current compilation."
+  (let* ((buffer (current-buffer))
+         (process (get-buffer-process buffer)))
+
+    (unless (ship-mate--command-buffer-p buffer)
+      (user-error "Can only hide `ship-mate' buffers"))
+
+    (unless process
+      (user-error "Buffer has no process"))
+
+    (message "Continuing `%s' command in the background" ship-mate--this-command)
+
+    (setq ship-mate-submarine--buffer buffer
+          ship-mate-submarine--in-progress t)
+
+    (ship-mate-submarine--watch-process process)
+
+    (quit-window)))
+
 (defun ship-mate-submarine--ensure-no-ship-mate-buffers ()
   "Verify no `ship-mate' buffer is visible.
 
@@ -499,6 +519,7 @@ If it is already shown, just clear timer and buffer."
     (define-key map "\C-c\C-h" #'ship-mate-edit-history)
     (define-key map "\C-c\C-n" #'ship-mate-command-next-buffer)
     (define-key map "\C-c\C-p" #'ship-mate-command-prev-buffer)
+    (define-key map "\C-c\C-q" #'ship-mate-hide)
 
     map)
   "Map used in buffers that enable `ship-mate-dinghy-mode'.")
@@ -1035,6 +1056,13 @@ If BUFFER isn't a compilation buffer, this prompts to select one."
 
   (with-current-buffer buffer
     (ship-mate-history--edit)))
+
+;;;###autoload
+(defun ship-mate-hide ()
+  "Hide the current compilation."
+  (interactive)
+
+  (ship-mate-submarine--hide))
 
 ;;;###autoload
 (define-minor-mode ship-mate-mode
