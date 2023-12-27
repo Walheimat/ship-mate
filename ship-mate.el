@@ -130,17 +130,21 @@ Each command created by `ship-mate-create-command' will
 history. The general structure is ([COMMAND-SYMBOL] .
 HASH-MAP<PROJECT-ROOT, HISTORY>).")
 
-(defvar ship-mate-command-history nil
-  "The history of the currently executed command.")
-
 (defvar ship-mate-environment nil
   "The project environment.
 
 The value of this variable will be bound to
-`compilation-environment'.
+`compilation-environment' when a command is run (provided none
+has been set yet). This is shared between all commands.
 
-Ideally you bind this in in your .dir-locals file.")
+Ideally you set this in in your .dir-locals file to include
+variables executions should have.")
 (put 'ship-mate-environment 'safe-local-variable #'ship-mate-environment--valid-env-p)
+
+;;; -- Internal variables
+
+(defvar ship-mate--command-history nil
+  "The history of the currently executed command.")
 
 (defvar ship-mate--last-compilation-type nil
   "The type of the last compilation.
@@ -183,7 +187,7 @@ edit the environment first."
          ;; History.
          (table (plist-get ship-mate-commands cmd))
          (history (ship-mate-command--history cmd))
-         (ship-mate-command-history (ring-elements history))
+         (ship-mate--command-history (ring-elements history))
 
          ;; Reading user input.
          (initial (unless (ring-empty-p history)
@@ -195,7 +199,7 @@ edit the environment first."
                          name
                          (if comint " interactively: " ": ")))
          (command (or (and (not arg) initial)
-                      (read-shell-command prompt initial 'ship-mate-command-history)))
+                      (read-shell-command prompt initial 'ship-mate--command-history)))
 
          ;; Binding external variables.
          (default-directory (project-root current))

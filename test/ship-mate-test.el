@@ -59,7 +59,7 @@
 
   (let ((ship-mate-commands (list 'test (make-hash-table :test 'equal)))
         (ship-mate-test-default-cmd "untest")
-        (ship-mate-command-history nil)
+        (ship-mate--command-history nil)
         (entered-command nil))
 
     (bydi ((:always project-current)
@@ -76,7 +76,7 @@
       (setq entered-command "test")
 
       (ship-mate-command 'test t)
-      (bydi-was-called-with read-shell-command (list "Test project (Test Project): " "untest" 'ship-mate-command-history))
+      (bydi-was-called-with read-shell-command (list "Test project (Test Project): " "untest" 'ship-mate--command-history))
       (bydi-was-called-with compile '("test" nil))
 
       (setq entered-command "best")
@@ -90,7 +90,7 @@
   :tags '(command)
 
   (let ((ship-mate-commands (list 'test (make-hash-table :test 'equal)))
-        (ship-mate-command-history nil)
+        (ship-mate--command-history nil)
         (entered-command "test"))
 
     (bydi ((:always project-current)
@@ -185,7 +185,7 @@
   :tags '(command)
 
   (let ((ship-mate-commands (list 'test (make-hash-table :test 'equal)))
-        (ship-mate-command-history nil)
+        (ship-mate--command-history nil)
         (ship-mate-test-default-cmd '("make test" "test make")))
 
     (bydi ((:always project-current)
