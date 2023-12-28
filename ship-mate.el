@@ -394,24 +394,28 @@ unless EMPTY is t."
   (interactive)
 
   (let* ((buffers (ship-mate-command--buffers))
-         (pos (cl-position (current-buffer) buffers)))
+         (length (length buffers))
+         (pos (cl-position (current-buffer) buffers))
+         (next (mod (1+ pos) length)))
 
-    (when (<= (length buffers) 1)
+    (when (<= length 1)
       (user-error "Only buffer"))
 
-    (switch-to-buffer (nth (mod (1+ pos) (length buffers)) buffers))))
+    (switch-to-buffer (nth next buffers))))
 
 (defun ship-mate-command-prev-buffer ()
-  "Get the next buffer."
+  "Get the previous buffer."
   (interactive)
 
   (let* ((buffers (ship-mate-command--buffers))
-         (pos (cl-position (current-buffer) buffers)))
+         (pos (cl-position (current-buffer) buffers))
+         (length (length buffers))
+         (prev (mod (+ length (1- pos)) length)))
 
-    (when (<= (length buffers) 1)
+    (when (<= length 1)
       (user-error "Only buffer"))
 
-    (switch-to-buffer (nth (mod (+ (length buffers) (1- pos)) (length buffers)) buffers))))
+    (switch-to-buffer (nth prev buffers))))
 
 ;;; -- Submarine
 
