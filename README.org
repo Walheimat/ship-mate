@@ -79,14 +79,19 @@ Here's a =use-package= configuration example.
   ;; environment and bind useful commands.
   (ship-mate-dinghy-enable t)
 
-  ;; Used for `ship-mate-hidden-recompile'. If this is `t' the buffer
-  ;; of the resulting compilation is only shown after accepting a
-  ;; prompt.
-  (ship-mate-prompt-for-hidden-buffer nil)
+  ;; Used for `ship-mate-hidden-recompile'. The number is an idle
+  ;; delay until the user is prompted to show the result.
+  (ship-mate-prompt-for-hidden-buffer 2)
 
-  ;; Time in seconds to wait before prompting after compilation
-  ;; finished.
-  (ship-mate-prompt-for-hidden-buffer-idle-delay 2)
+  ;; Numeric prefix used to start a hidden compilation.
+  (ship-mate-hidden-compilation-prefix 3)
+
+  ;; Numeric prefix used to edit the environment before compilation
+  (ship-mate-edit-environment-compilation-prefix 5)
+
+  ;; Key map `ship-mate-subcommand-map' is bound to in
+  ;; `ship-mate-command-map'.
+  (ship-mate-subcommands-key "x")
 
   :bind-keymap
   ;; All commands created above are bound in this map automatically.
