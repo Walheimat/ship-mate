@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command `ship-mate-hide` bound to `C-c C-q` in
   `ship-mate-dinghy-mode`. It hides a running compilation like other
   hidden compilations.
+- The currently run command is now shown in the header in
+  `ship-mate-dinghy-mode`.
 
 ### Changed
 

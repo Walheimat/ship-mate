@@ -564,14 +564,45 @@ If it is already shown, just clear timer and buffer."
 
   (ship-mate-dinghy--reset-header-line-format))
 
-(defun ship-mate-dinghy--maybe-enable (&optional _process)
-  "Enable `ship-mate-dinghy-mode' if not disabled."
+(defvar-local ship-mate--command nil)
+
+(defun ship-mate-dinghy--maybe-enable (&optional process)
+  "Enable `ship-mate-dinghy-mode' if not disabled.
+
+If PROCESS is passed, set the name."
   (if (and ship-mate-dinghy-enable
            (ship-mate--command-buffer-p))
       (progn
+        (when process
+          (setq ship-mate--command (process-command process)))
+
         (setq ship-mate--last-compilation-type 'ship-mate)
+
         (ship-mate-dinghy-mode))
+
     (setq ship-mate--last-compilation-type 'other)))
+
+(defun ship-mate-dinghy--print-command ()
+  "Print the command.
+
+The printed command is just th"
+  (if (and ship-mate--command (listp ship-mate--command))
+
+      (let* ((rest (seq-drop-while (lambda (it) (string-match-p "^\\(\/\\|-\\)" it)) ship-mate--command))
+             (full-command (string-join ship-mate--command " "))
+             (likely-command (or (car-safe rest) full-command))
+
+             (max-len 20)
+             (likely-command (if (> (length likely-command) max-len)
+                                 (concat (substring likely-command 0 max-len)
+                                         "…")
+                               likely-command)))
+
+        (propertize likely-command
+                    'face 'mode-line-emphasis
+                    'help-echo full-command))
+
+    (propertize "?" 'face 'mode-line-inactive)))
 
 (defun ship-mate-dinghy--print-variables ()
   "Pretty-print environment variables."
@@ -592,12 +623,19 @@ If it is already shown, just clear timer and buffer."
 (defun ship-mate-dinghy--reset-header-line-format (&rest _args)
   "Set header line format.
 
-If BUFFER is non-nil, reset in buffer."
+Prints the command of the process and environment variables."
   (when ship-mate-dinghy-mode
     (setq-local header-line-format
-                (format "%s[%s]"
-                        (propertize "env" 'face 'mode-line)
-                        (ship-mate-dinghy--print-variables)))))
+                ;; Command.
+                (concat
+                 (format "%s[%s]"
+                         (propertize "cmd" 'face 'mode-line)
+                         (ship-mate-dinghy--print-command))
+                 " "
+                 ;; Environment
+                 (format "%s[%s]"
+                         (propertize "env" 'face 'mode-line)
+                         (ship-mate-dinghy--print-variables))))))
 
 ;;; -- Editing
 

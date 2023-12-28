@@ -665,7 +665,9 @@
       (bydi-was-called ship-mate-dinghy--reset-header-line-format))))
 
 (ert-deftest ship-mate-dinghy--maybe-enable ()
-  (bydi (ship-mate-dinghy-mode)
+  (bydi (ship-mate-dinghy-mode
+         (:watch ship-mate--command)
+         (:mock process-command :return '("usr/bin/sh" "-c" "make test")))
 
     (let ((ship-mate-dinghy-enable nil))
 
@@ -679,7 +681,12 @@
 
         (ship-mate-dinghy--maybe-enable)
 
-        (bydi-was-called ship-mate-dinghy-mode)))))
+        (bydi-was-called ship-mate-dinghy-mode)
+        (bydi-was-not-set ship-mate--command)
+
+        (ship-mate-dinghy--maybe-enable 'process)
+
+        (bydi-was-set-to ship-mate--command '("usr/bin/sh" "-c" "make test"))))))
 
 (ert-deftest ship-mate-dinghy--print-variables ()
   (let ((compilation-environment nil))
@@ -694,18 +701,33 @@
 
     (should (string= "active" (ship-mate-dinghy--print-variables)))))
 
+(ert-deftest ship-mate-dinghy--print-command ()
+  (let ((ship-mate--command nil))
+
+    (should (string= "?" (ship-mate-dinghy--print-command)))
+
+    (setq ship-mate--command '("/usr/bin/sh" "-c" "make test"))
+
+    (should (string= "make test" (ship-mate-dinghy--print-command)))
+
+    (setq ship-mate--command '("/usr/bin/sh" "-c" "/usr/bin/fish"))
+
+    (should (string= "/usr/bin/sh -c /usr/…" (ship-mate-dinghy--print-command)))))
+
 (ert-deftest ship-mate-dinghy--reset-header-line-format ()
-  (bydi ((:mock ship-mate-dinghy--print-variables :return "test"))
+  (bydi ((:mock ship-mate-dinghy--print-variables :return "test")
+         (:mock ship-mate-dinghy--print-command :return "make test"))
+
     (ert-with-test-buffer (:name "header")
       (setq-local ship-mate-dinghy-mode t)
 
       (ship-mate-dinghy--reset-header-line-format)
 
-      (should (string= header-line-format "env[test]"))
+      (should (string= header-line-format "cmd[make test] env[test]"))
 
       (ship-mate-dinghy--reset-header-line-format (current-buffer))
 
-      (should (string= header-line-format "env[test]")))))
+      (should (string= header-line-format "cmd[make test] env[test]")))))
 
 (ert-deftest ship-mate-refresh-history ()
   (bydi (ship-mate-command--create-history
