@@ -546,11 +546,11 @@ If it is already shown, just clear timer and buffer."
 (defvar ship-mate-dinghy-mode-map
   (let ((map (make-sparse-keymap)))
 
-    (define-key map "\C-c\C-e" #'ship-mate-edit-environment)
-    (define-key map "\C-c\C-h" #'ship-mate-edit-history)
-    (define-key map "\C-c\C-n" #'ship-mate-command-next-buffer)
-    (define-key map "\C-c\C-p" #'ship-mate-command-prev-buffer)
-    (define-key map "\C-c\C-q" #'ship-mate-hide)
+    (define-key map (kbd "C-c .") #'ship-mate-edit-environment)
+    (define-key map (kbd "C-c ,") #'ship-mate-edit-history)
+    (define-key map (kbd "C-c [") #'ship-mate-command-next-buffer)
+    (define-key map (kbd "C-c ]") #'ship-mate-command-prev-buffer)
+    (define-key map (kbd "C-c /") #'ship-mate-hide)
 
     map)
   "Map used in buffers that enable `ship-mate-dinghy-mode'.")
@@ -687,7 +687,7 @@ Sets MODE unless already set."
                "\\<ship-mate-environment-mode-map>\
 `\\[ship-mate-environment-apply]' applies and recompiles, \
 `\\[ship-mate-environment-clear]' clears all env variables, \
-`'\\[ship-mate-environment-abort]' reverts.")))
+`\\[ship-mate-environment-abort]' reverts.")))
 
 (defun ship-mate-environment--current-environment ()
   "Get the last environment for CMD or default."
@@ -808,7 +808,7 @@ This is set in buffer `ship-mate-environment--buffer-name'."
                "\\<ship-mate-history-mode-map>\
 `\\[ship-mate-history-apply]' applies, \
 `\\[ship-mate-history-clear]' clears the history, \
-`'\\[ship-mate-history-abort]' reverts.")))
+`\\[ship-mate-history-abort]' reverts.")))
 
 (defun ship-mate-history--edit ()
   "Edit the history of the current buffer."

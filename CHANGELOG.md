@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   should now return a plist on match, returning match, count and
   index. This is used during `ship-mate-command--update-history` to
   replace a matched entry if the match count is higher that two.
+- Bindings in `ship-mate-dinghy-mode-map` now adhere to **Key Binding
+  Conventions** (only binding to keys allocated for minor modes).
 
 ## [0.3.2]
 
