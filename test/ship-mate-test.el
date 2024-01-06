@@ -283,6 +283,23 @@
 
         (should (ship-mate-command--capture (lambda (&rest _) (current-buffer))))))))
 
+(ert-deftest ship-mate-command--capture--in-derived ()
+  :tags '(command)
+
+  (ert-with-test-buffer (:name "*ship-mate-in-comp*")
+
+    (let ((ship-mate--this-command 'test))
+
+      (bydi ((:ignore ship-mate--command-buffer-p)
+             (:always derived-mode-p)
+             (:spy ship-mate-command)
+             (:watch ship-mate--this-command))
+
+        (ship-mate-command--capture #'ignore)
+
+        (bydi-was-not-called ship-mate-command)
+        (bydi-was-not-set ship-mate--this-command)))))
+
 (ert-deftest ship-mate-create-command ()
   :tags '(user-facing command)
 

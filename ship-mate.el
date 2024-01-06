@@ -312,12 +312,20 @@ command again.
 As a last resort call `recompile'.
 
 EDIT is passed as-is to all invocations of RECOMPILE."
-  (if-let* (((ship-mate--command-buffer-p))
-            (cmd ship-mate--this-command)
-            (history (ship-mate-command--history ship-mate--this-command)))
-      (let ((compile-history (and history (ring-elements history))))
-        (with-current-buffer (funcall-interactively recompile edit)
-          (setq ship-mate--this-command cmd)))
+  (cond
+   ((ship-mate--command-buffer-p)
+    (let* ((cmd ship-mate--this-command)
+           (history (ship-mate-command--history ship-mate--this-command))
+           (compile-history (and history (ring-elements history))))
+
+      (with-current-buffer (funcall-interactively recompile edit)
+        (setq ship-mate--this-command cmd))))
+
+   ;; Don't break other derived modes.
+   ((derived-mode-p 'compilation-mode)
+    (funcall-interactively recompile edit))
+
+   (t
     (if-let* ((command compile-command)
               (history (and ship-mate--last-command
                             (ship-mate-command--history ship-mate--last-command)))
@@ -325,7 +333,7 @@ EDIT is passed as-is to all invocations of RECOMPILE."
 
         (ship-mate-command ship-mate--last-command edit)
 
-      (funcall-interactively recompile edit))))
+      (funcall-interactively recompile edit)))))
 
 (defun ship-mate-command--history (cmd)
   "Access history for CMD.
