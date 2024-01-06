@@ -22,7 +22,7 @@
   "Project-scoped compilation."
   :group 'ship-mate)
 
-;;; -- Customization
+;;;; Customization
 
 (defcustom ship-mate-compile-functions '(project-compile recompile)
   "Functions to advise to be project-scoped."
@@ -91,7 +91,7 @@ If this is nil, they aren't bound."
   :type '(choice (key :tag "The key to bind to")
                  (const :tag "Don't bind" nil)))
 
-;;; -- Variables
+;;;; Variables
 
 (defvar ship-mate-subcommand-map
   (let ((map (make-sparse-keymap)))
@@ -141,7 +141,7 @@ Ideally you set this in in your .dir-locals file to include
 variables executions should have.")
 (put 'ship-mate-environment 'safe-local-variable #'ship-mate-environment--valid-env-p)
 
-;;; -- Internal variables
+;;;; Internal variables
 
 (defvar ship-mate--command-history nil
   "The history of the currently executed command.")
@@ -162,7 +162,7 @@ This is set by `ship-mate-command'.")
 (defvar ship-mate--last-command nil
   "The symbol of the last executed command.")
 
-;;; -- Commands
+;;;; Commands
 
 (defun ship-mate-command (cmd &optional arg)
   "Run CMD for the current project.
@@ -425,7 +425,7 @@ unless EMPTY is t."
 
     (switch-to-buffer (nth prev buffers))))
 
-;;; -- Submarine
+;;;; Submarine
 
 (defvar ship-mate-submarine--in-progress nil)
 (defvar ship-mate-submarine--buffer nil)
@@ -549,7 +549,7 @@ If it is already shown, just clear timer and buffer."
 
     (seq-find (lambda (it) (eq ship-mate-submarine--buffer (window-buffer it))) windows)))
 
-;;; -- Dinghy mode
+;;;; Dinghy mode
 
 (defvar ship-mate-dinghy-mode-map
   (let ((map (make-sparse-keymap)))
@@ -645,7 +645,7 @@ Prints the command of the process and environment variables."
                          (propertize "env" 'face 'mode-line)
                          (ship-mate-dinghy--print-variables))))))
 
-;;; -- Editing
+;;;; Editing
 
 (defun ship-mate-edit--in-buffer (buffer-name elements mode)
   "Edit ELEMENTS in buffer BUFFER-NAME.
@@ -671,7 +671,7 @@ Sets MODE unless already set."
 
       (pop-to-buffer buffer nil t))))
 
-;;; -- Editing the environmanet
+;;;; Editing the environmanet
 
 (defvar ship-mate-environment--buffer-name "*ship-mate-edit-env*"
   "The name of the buffer used for `ship-mate-edit-environment'.")
@@ -791,7 +791,7 @@ This is set in buffer `ship-mate-environment--buffer-name'."
               (eq 2 (length (string-split it "="))))
             value))))
 
-;;; -- Editing history
+;;;; Editing history
 
 (defvar ship-mate-history--buffer-name "*ship-mate-edit-history*"
   "The name of the buffer used for `ship-mate-edit-history'.")
@@ -875,7 +875,7 @@ This is set in buffer `ship-mate-environment--buffer-name'."
   "Listify history buffer."
   (reverse (ship-mate--listify-buffer (get-buffer ship-mate-history--buffer-name))))
 
-;;; -- Utility
+;;;; Utility
 
 (defun ship-mate--listify-buffer (buffer)
   "Listify the content of BUFFER."
@@ -949,7 +949,7 @@ Optionally the PROJECT may be passed directly."
 
     (cdr-safe (assoc buffer collection))))
 
-;;; -- Global minor mode
+;;;; Global minor mode
 
 (defun ship-mate-mode--setup ()
   "Setup `ship-mate-mode'."
@@ -973,7 +973,7 @@ Optionally the PROJECT may be passed directly."
   (dolist (fun ship-mate-compile-functions)
     (advice-remove fun 'ship-mate-with-bounded-compilation)))
 
-;;; -- Lighter
+;;;; Lighter
 
 (defvar ship-mate-mode-lighter '((:eval (ship-mate-mode-lighter--title))
                                  (:eval (ship-mate-mode-lighter--hidden)))
@@ -1020,7 +1020,7 @@ Optionally the PROJECT may be passed directly."
   "Indicates a running hidden recompile."
   '(ship-mate-submarine--in-progress (:propertize "!" face mode-line-emphasis)))
 
-;;; -- API
+;;;; API
 
 ;;;###autoload
 (defun ship-mate-with-bounded-compilation (fun &rest args)

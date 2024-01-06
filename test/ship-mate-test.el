@@ -425,7 +425,7 @@
       (ship-mate-mode -1)
       (bydi-was-called ship-mate-mode--teardown))))
 
-;;; -- Env editing
+;;;; Env editing
 
 (ert-deftest ship-mate-environment--edit--errors-for-non-comp ()
   :tags '(user-facing env)
@@ -571,7 +571,7 @@
 
       (should-error (ship-mate-environment--edit-in-minibuffer nil)))))
 
-;;; -- Editing history
+;;;; Editing history
 
 (ert-deftest ship-mate-history--edit--errors-for-non-comp ()
   :tags '(user-facing history)
@@ -667,7 +667,7 @@
 
       (should-error (call-interactively 'ship-mate-edit-history)))))
 
-;;; -- Dinghy
+;;;; Dinghy
 
 (ert-deftest ship-mate-dinghy-mode ()
   (bydi (ship-mate-dinghy--reset-header-line-format)
@@ -919,7 +919,7 @@
     (should (equal (cons "Test [make test]" (current-buffer))
                    (ship-mate--completion-candidate (current-buffer))))))
 
-;;; -- Lighter
+;;;; Lighter
 
 (ert-deftest ship-mate-mode-lighter--function-segments ()
   :tags '(mode-line user-facing)
@@ -941,7 +941,7 @@
       (ship-mate-mode-lighter--menu)
       (bydi-was-called popup-menu))))
 
-;;; -- Hiding running compilations
+;;;; Hiding running compilations
 
 (ert-deftest ship-mate-hide ()
   :tags '(user-facing submarine)
