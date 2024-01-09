@@ -162,6 +162,11 @@ This is set by `ship-mate-command'.")
 (defvar ship-mate--last-command nil
   "The symbol of the last executed command.")
 
+(defvar ship-mate-command--fuzzy-match-ignore "^\\(\\|\s+\\|--\\)$"
+  "Regular expression used by `ship-mate-command--fuzzy-match'.
+
+Parts of a command matching this expression are ignored.")
+
 ;;;; Commands
 
 (defun ship-mate-command (cmd &optional arg)
@@ -261,7 +266,10 @@ and the index of the matched item."
                         (let* ((el-parts (string-split it " "))
                                (matches (seq-count
                                          (lambda (part)
-                                           (string-match-p part command))
+                                           (and (not (string-match-p
+                                                      ship-mate-command--fuzzy-match-ignore
+                                                      part))
+                                                (string-match-p part command)))
                                          el-parts)))
 
                           (when (> matches min-count)

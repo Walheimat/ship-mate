@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `recompile` is no longer captured in other modes derived from
   `compilation-mode`.
+- `ship-mate-command--fuzzy-match` no longer matches empty strings,
+  whitespace or `--`.
 
 ## [0.3.3]
 

@@ -239,10 +239,27 @@
       (should (equal (ring-elements fake-history)
                      '("make coverage FLAG=t" "make test" "make test FLAG=t")))
 
-      (ship-mate-command--update-history "make coverage FLAG=t CAPTURE=t")
+      (ship-mate-command--update-history "make coverage  FLAG=t CAPTURE=t")
 
       (should (equal (ring-elements fake-history)
-                     '("make coverage FLAG=t CAPTURE=t" "make test" "make test FLAG=t"))))))
+                     '("make coverage  FLAG=t CAPTURE=t" "make test" "make test FLAG=t")))
+
+      ;; Don't match empty parts
+      (ship-mate-command--update-history "something  coverage  different")
+
+      (should (equal (ring-elements fake-history)
+                     '("make coverage  FLAG=t CAPTURE=t" "make test" "make test FLAG=t")))
+
+      (ship-mate-command--update-history "make coverage -- FLAG=t CAPTURE=t")
+
+      (should (equal (ring-elements fake-history)
+                     '("make coverage -- FLAG=t CAPTURE=t" "make test" "make test FLAG=t")))
+
+      ;; Don't match deferred arg passing.
+      (ship-mate-command--update-history "coverage -- else")
+
+      (should (equal (ring-elements fake-history)
+                     '("make coverage -- FLAG=t CAPTURE=t" "make test" "make test FLAG=t"))))))
 
 (ert-deftest ship-mate-command--capture ()
   :tags '(command)
