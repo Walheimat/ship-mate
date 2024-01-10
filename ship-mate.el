@@ -97,6 +97,7 @@ If this is nil, they aren't bound."
   (let ((map (make-sparse-keymap)))
 
     (define-key map "r" #'ship-mate-hidden-recompile)
+    (define-key map "p" #'ship-mate-show-results)
     (define-key map "s" #'ship-mate-show-hidden)
     (define-key map "c" #'ship-mate-select-command)
     (define-key map "h" #'ship-mate-edit-history)
@@ -1050,6 +1051,13 @@ ARG is passed to the underlying command."
          current-prefix-arg))
 
   (ship-mate-command (intern cmd) arg))
+
+;;;###autoload
+(defun ship-mate-show-results (buffer)
+  "Pop to results BUFFER."
+  (interactive (list (ship-mate--complete-buffer "Show results for: ")))
+
+  (pop-to-buffer buffer))
 
 ;;;###autoload
 (cl-defmacro ship-mate-create-command (name &key key default)
