@@ -911,30 +911,38 @@
 
     (bydi-was-called ship-mate-submarine--recompile)))
 
-(ert-deftest ship-mate--command-buffers ()
-  (bydi (project-current
-         (:mock project-buffers :return '(a b c))
-         (:mock ship-mate--command-buffer-p :with (lambda (it) (eq it 'b))))
-
-    (should (equal '(b) (ship-mate--command-buffers)))))
-
 (ert-deftest ship-mate--complete-buffer ()
-  (bydi ((:mock completing-read :with (lambda (_ coll &rest _) (caar coll)))
-         (:mock ship-mate--command-buffers :return '(a b c))
-         (:mock ship-mate--completion-candidate :with (lambda (it) (cons (symbol-name it) it))))
+  :tags '(completion)
 
-    (should (eq 'a (ship-mate--complete-buffer "Test: ")))
+  (bydi ((:watch minibuffer-completion-table)
+         (:always ship-mate--command-buffer-predicate))
 
-    (bydi-was-called-with completing-read '("Test: " ...))))
+    (ert-simulate-keys '(?\C-m)
+      (ship-mate--complete-buffer "Some prompt: "))
 
-(ert-deftest ship-mate--completion-candidate ()
-  (ert-with-test-buffer (:name "completion candidate")
+    (bydi-was-set minibuffer-completion-table)))
 
-    (setq-local compilation-arguments '("make test")
-                ship-mate--this-command 'test)
+(ert-deftest ship-mate--command-buffer-predicate ()
+  :tags '(completion)
 
-    (should (equal (cons "Test [make test]" (current-buffer))
-                   (ship-mate--completion-candidate (current-buffer))))))
+  (ert-with-test-buffer (:name "buffer-pred")
+
+    (bydi ((:always project-current)
+           (:mock project-buffers :return (list (current-buffer))))
+
+      (should-not (ship-mate--command-buffer-predicate (cons "b" (current-buffer))))
+
+      (rename-buffer "*ship-mate-buffer-pred")
+
+      (should (ship-mate--command-buffer-predicate (cons "b" (current-buffer)))))))
+
+(ert-deftest ship-mate-show-results ()
+  (bydi ((:mock ship-mate--complete-buffer :return 'buffer)
+         pop-to-buffer)
+
+    (call-interactively 'ship-mate-show-results)
+
+    (bydi-was-called-with pop-to-buffer 'buffer)))
 
 ;;;; Lighter
 

@@ -929,33 +929,30 @@ Optionally the PROJECT may be passed directly."
 
     (string-match-p "\\*ship-mate" (buffer-name buffer))))
 
-(defun ship-mate--command-buffers ()
-  "Find all command buffers in the current project."
-  (seq-filter #'ship-mate--command-buffer-p (project-buffers (project-current))))
+(defun ship-mate--command-buffer-predicate (buffer)
+  "Predicate to check if BUFFER is a `ship-mate' buffer.
 
-(defun ship-mate--completion-candidate (buffer)
-  "Get a representation of BUFFER for completion."
-  (with-current-buffer buffer
-    (let ((command (or (car-safe compilation-arguments)
-                       "unknown"))
-          (this-command ship-mate--this-command))
+If the current prefix argument is non-nil, buffers from other
+projects are included."
+  (let* ((buffer (cdr buffer))
+         (project (project-current))
+         (project-buffers (and project (project-buffers project))))
 
-      (cons (format "%s [%s]"
-                    (capitalize (symbol-name this-command))
-                    (propertize command 'face 'italic))
-            buffer))))
+    (and (ship-mate--command-buffer-p buffer)
+         (or current-prefix-arg (memq buffer project-buffers)))))
 
 (defun ship-mate--complete-buffer (prompt)
-  "Complete `ship-mate' buffer using PROMPT."
-  (when-let* ((buffers (ship-mate--command-buffers))
-              (collection (mapcar #'ship-mate--completion-candidate buffers))
-              (buffer (completing-read
-                       prompt
-                       collection
-                       nil
-                       t)))
+  "Complete a `ship-mate' buffer using PROMPT."
+  (let ((rbts-completion-table (apply-partially
+                                #'completion-table-with-predicate
+                                #'internal-complete-buffer
+                                #'always
+                                nil)))
 
-    (cdr-safe (assoc buffer collection))))
+    (minibuffer-with-setup-hook
+        (lambda () (setq-local minibuffer-completion-table rbts-completion-table))
+
+      (get-buffer (read-buffer prompt nil t #'ship-mate--command-buffer-predicate)))))
 
 ;;;; Global minor mode
 
@@ -1134,7 +1131,7 @@ If BUFFER isn't a compilation buffer, this prompts to select one."
   (interactive
    (list (if (ship-mate--command-buffer-p)
              (current-buffer)
-           (ship-mate--complete-buffer "Edit environment for buffer: "))))
+           (ship-mate--complete-buffer "Edit history for buffer: "))))
 
   (unless buffer
     (user-error "No editable buffer"))
