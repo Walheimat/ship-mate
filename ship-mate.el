@@ -576,7 +576,9 @@ If it is already shown, just clear timer and buffer."
   "Map used in buffers that enable `ship-mate-dinghy-mode'.")
 
 (define-minor-mode ship-mate-dinghy-mode
-  "Minor mode to provide contextual information and bindings."
+  "Minor mode to provide contextual information and bindings.
+
+\\{ship-mate-dinghy-mode-map}"
   :lighter " smd"
 
   (unless (derived-mode-p 'compilation-mode)
@@ -700,7 +702,9 @@ Sets MODE unless already set."
   "Map used in buffer created by `ship-mate-edit-environment'.")
 
 (define-minor-mode ship-mate-environment-mode
-  "Minor mode to edit the environment."
+  "Minor mode to edit the environment.
+
+\\{ship-mate-environment-mode-map}"
   :lighter " sme"
   (setq-local header-line-format
               (substitute-command-keys
@@ -821,7 +825,9 @@ This is set in buffer `ship-mate-environment--buffer-name'."
   "Map used in buffer created by `ship-mate-edit-history'.")
 
 (define-minor-mode ship-mate-history-mode
-  "Minor mode to edit the history."
+  "Minor mode to edit the history.
+
+\\{ship-mate-history-mode-map}"
   :lighter " smh"
   (setq-local header-line-format
               (substitute-command-keys

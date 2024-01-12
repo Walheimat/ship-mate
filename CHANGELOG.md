@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unless the command using it was called with a prefix argument.
 - Command `ship-mate-show-results` to pop to a buffer. Bound to `p` in
   subcommands map.
+- Minor modes now include their map in their docstrings.
 
 ### Changed
 
