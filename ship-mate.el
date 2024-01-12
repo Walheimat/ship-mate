@@ -168,6 +168,9 @@ This is set by `ship-mate-command'.")
 
 Parts of a command matching this expression are ignored.")
 
+(defvar ship-mate--complete-for-all nil
+  "Whether buffer completion should include foreign buffers.")
+
 ;;;; Commands
 
 (defun ship-mate-command (cmd &optional arg)
@@ -940,7 +943,7 @@ projects are included."
          (project-buffers (and project (project-buffers project))))
 
     (and (ship-mate--command-buffer-p buffer)
-         (or current-prefix-arg (memq buffer project-buffers)))))
+         (or ship-mate--complete-for-all (memq buffer project-buffers)))))
 
 (defun ship-mate--complete-buffer (prompt)
   "Complete a `ship-mate' buffer using PROMPT."
@@ -948,7 +951,8 @@ projects are included."
                                 #'completion-table-with-predicate
                                 #'internal-complete-buffer
                                 #'always
-                                nil)))
+                                nil))
+        (ship-mate--complete-for-all current-prefix-arg))
 
     (minibuffer-with-setup-hook
         (lambda () (setq-local minibuffer-completion-table rbts-completion-table))

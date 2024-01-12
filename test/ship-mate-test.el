@@ -915,12 +915,20 @@
   :tags '(completion)
 
   (bydi ((:watch minibuffer-completion-table)
-         (:always ship-mate--command-buffer-predicate))
+         (:always ship-mate--command-buffer-predicate)
+         (:watch ship-mate--complete-for-all))
 
     (ert-simulate-keys '(?\C-m)
       (ship-mate--complete-buffer "Some prompt: "))
 
-    (bydi-was-set minibuffer-completion-table)))
+    (bydi-was-set-to ship-mate--complete-for-all nil t)
+    (bydi-was-set minibuffer-completion-table)
+
+    (ert-simulate-keys '(?\C-m)
+      (let ((current-prefix-arg t))
+        (funcall-interactively 'ship-mate--complete-buffer "Some prompt: ")))
+
+    (bydi-was-set-to ship-mate--complete-for-all t)))
 
 (ert-deftest ship-mate--command-buffer-predicate ()
   :tags '(completion)
