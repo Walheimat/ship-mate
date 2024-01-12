@@ -547,7 +547,10 @@ TIME is the time the process finished, STATUS its status."
   "Surface a hidden compilation early.
 
 If it is already shown, just clear timer and buffer."
-  (when-let ((buffer ship-mate-submarine--buffer))
+  (unless ship-mate-submarine--buffer
+    (user-error "No hidden buffer"))
+
+  (let ((buffer ship-mate-submarine--buffer))
 
     (ship-mate-submarine--clear)
     (setq ship-mate-submarine--buffer nil)

@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command `ship-mate-show-results` to pop to a buffer. Bound to `p` in
   subcommands map.
 - Minor modes now include their map in their docstrings.
+- Calling `ship-mate-show-hidden` signals an error if there is no
+  hidden buffer.
 
 ### Changed
 

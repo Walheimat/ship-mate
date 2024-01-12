@@ -884,11 +884,16 @@
 (ert-deftest ship-mate-submarine--surface ()
   :tags '(submarine)
 
-  (let ((ship-mate-submarine--buffer 'buffer))
+  (let ((ship-mate-submarine--buffer nil))
+
     (bydi (pop-to-buffer
            ship-mate-submarine--clear
            (:watch ship-mate-submarine--buffer)
            (:ignore ship-mate-submarine--ensure-no-ship-mate-buffers))
+
+      (should-error (ship-mate-submarine--surface))
+
+      (setq ship-mate-submarine--buffer 'buffer)
 
       (ship-mate-submarine--surface)
 
