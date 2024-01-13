@@ -967,7 +967,9 @@ Optionally the PROJECT may be passed directly."
 
 If the current prefix argument is non-nil, buffers from other
 projects are included."
-  (let* ((buffer (cdr buffer))
+  (let* ((buffer (if (consp buffer)
+                     (cdr buffer)
+                   buffer))
          (project (project-current))
          (project-buffers (and project (project-buffers project))))
 
@@ -986,6 +988,9 @@ is passed."
                                 nil))
         (ship-mate--complete-for-all current-prefix-arg)
         (predicate (or predicate #'ship-mate--command-buffer-predicate)))
+
+    (unless (seq-find predicate (buffer-list))
+      (user-error "No eligible `ship-mate' buffer exists"))
 
     (minibuffer-with-setup-hook
         (lambda () (setq-local minibuffer-completion-table rbts-completion-table))
@@ -1174,9 +1179,6 @@ If BUFFER isn't a compilation buffer, this prompts to select one."
              (current-buffer)
            (ship-mate--complete-buffer "Edit environment for buffer: "))))
 
-  (unless buffer
-    (user-error "No editable buffer"))
-
   (with-current-buffer buffer
     (ship-mate-environment--edit)))
 
@@ -1189,9 +1191,6 @@ If BUFFER isn't a compilation buffer, this prompts to select one."
    (list (if (ship-mate--command-buffer-p)
              (current-buffer)
            (ship-mate--complete-buffer "Edit history for buffer: "))))
-
-  (unless buffer
-    (user-error "No editable buffer"))
 
   (with-current-buffer buffer
     (ship-mate-history--edit)))

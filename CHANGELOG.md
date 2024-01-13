@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Buffer completion now uses `read-buffer`.
+- Buffer completion now signals an error if there is no eligible
+  buffer.
 
 ## [0.3.4]
 

@@ -590,10 +590,23 @@
 
 ;;;; Editing history
 
-(ert-deftest ship-mate-history--edit--errors-for-non-comp ()
+(ert-deftest ship-mate-edit-history--completes-for-foreign ()
   :tags '(user-facing history)
 
-  (should-error (ship-mate-history--edit)))
+  (bydi ((:mock ship-mate--complete-buffer :return (current-buffer))
+         (:ignore ship-mate--command-buffer-p)
+         ship-mate-history--edit)
+
+    (call-interactively 'ship-mate-edit-history)
+
+    (bydi-was-called ship-mate-history--edit)))
+
+(ert-deftest ship-mate-history-edit--errors-for-non-ship-mate ()
+  :tags '(user-facing history)
+
+  (bydi ((:ignore ship-mate--command-buffer-p))
+
+    (should-error (ship-mate-history--edit))))
 
 (ert-deftest ship-mate-history--creates-buffer ()
   :tags '(user-facing history)
@@ -678,11 +691,7 @@
 
       (call-interactively 'ship-mate-edit-history)
 
-      (bydi-was-called ship-mate-history--edit t)
-
-      (bydi-toggle-sometimes)
-
-      (should-error (call-interactively 'ship-mate-edit-history)))))
+      (bydi-was-called ship-mate-history--edit t))))
 
 ;;;; Dinghy
 
@@ -1062,12 +1071,11 @@
 
     (bydi-was-called ship-mate-submarine--hide)))
 
-
 (ert-deftest ship-mate--complete-buffer ()
   :tags '(completion)
 
   (bydi ((:watch minibuffer-completion-table)
-         (:always ship-mate--command-buffer-predicate)
+         (:sometimes ship-mate--command-buffer-predicate)
          (:watch ship-mate--complete-for-all))
 
     (ert-simulate-keys '(?\C-m)
@@ -1080,7 +1088,11 @@
       (let ((current-prefix-arg t))
         (funcall-interactively 'ship-mate--complete-buffer "Some prompt: ")))
 
-    (bydi-was-set-to ship-mate--complete-for-all t)))
+    (bydi-was-set-to ship-mate--complete-for-all t)
+
+    (bydi-toggle-sometimes)
+
+    (should-error (ship-mate--complete-buffer "Some prompt: "))))
 
 (ert-deftest ship-mate--command-buffer-predicate ()
   :tags '(completion)
@@ -1091,10 +1103,12 @@
            (:mock project-buffers :return (list (current-buffer))))
 
       (should-not (ship-mate--command-buffer-predicate (cons "b" (current-buffer))))
+      (should-not (ship-mate--command-buffer-predicate (current-buffer)))
 
       (rename-buffer "*ship-mate-buffer-pred")
 
-      (should (ship-mate--command-buffer-predicate (cons "b" (current-buffer)))))))
+      (should (ship-mate--command-buffer-predicate (cons "b" (current-buffer))))
+      (should (ship-mate--command-buffer-predicate (current-buffer))))))
 
 (ert-deftest ship-mate-show-results ()
   (bydi ((:mock ship-mate--complete-buffer :return 'buffer)
