@@ -171,6 +171,9 @@ Parts of a command matching this expression are ignored.")
 (defvar ship-mate--complete-for-all nil
   "Whether buffer completion should include foreign buffers.")
 
+(defvar-local ship-mate--hidden nil
+  "Indicates whether a buffer is currently hidden.")
+
 ;;;; Commands
 
 (defun ship-mate-command (cmd &optional arg)
@@ -439,16 +442,11 @@ unless EMPTY is t."
 
 ;;;; Submarine
 
-(defvar ship-mate-submarine--in-progress nil)
-(defvar ship-mate-submarine--buffer nil)
 (defvar ship-mate-submarine--timer nil)
-(defvar ship-mate-submarine--process nil)
+(defvar ship-mate-submarine--processes nil)
 
 (defun ship-mate-submarine--recompile ()
   "Recompile without a window."
-  (when ship-mate-submarine--in-progress
-    (user-error "Compilation in progress"))
-
   (unless (eq 'ship-mate ship-mate--last-compilation-type)
     (user-error (if (eq 'other ship-mate--last-compilation-type)
                     "Previous compilation wasn't a `ship-mate' compilation"
@@ -458,43 +456,51 @@ unless EMPTY is t."
 
     (ship-mate-submarine--run 'recompile)))
 
+(defun ship-mate-submarine--in-progress ()
+  "Check if a hidden compilation is in progress."
+  (not (seq-empty-p ship-mate-submarine--processes)))
+
 (defun ship-mate-submarine--run (exec)
   "Run EXEC in the background."
-  (ship-mate-submarine--ensure-no-ship-mate-buffers)
+  (ship-mate-submarine--ensure-no-hidden-buffers)
 
   (message "Running `%s' command in the background" ship-mate--current-command-name)
 
-  (let ((display-buffer-alist '(("\\*ship-mate" (display-buffer-no-window)))))
+  (let* ((display-buffer-alist '(("\\*ship-mate" (display-buffer-no-window))))
+         (buffer (funcall exec)))
 
-    (setq ship-mate-submarine--in-progress t
-          ship-mate-submarine--buffer (funcall exec))))
+    (with-current-buffer buffer
+      (setq ship-mate--hidden t))))
 
 (defun ship-mate-submarine--hide ()
   "Hide current compilation."
   (let* ((buffer (current-buffer))
-         (process (get-buffer-process buffer)))
-
-    (unless (ship-mate--command-buffer-p buffer)
-      (user-error "Can only hide `ship-mate' buffers"))
+         (process (ship-mate-submarine--get-process buffer)))
 
     (unless process
-      (user-error "Buffer has no process"))
+      (user-error "Can't get process from `%s'" (current-buffer)))
 
     (message "Continuing `%s' command in the background" ship-mate--this-command)
 
-    (setq ship-mate-submarine--buffer buffer
-          ship-mate-submarine--in-progress t)
+    (with-current-buffer buffer
+      (setq ship-mate--hidden t))
 
     (ship-mate-submarine--watch-process process)
 
     (quit-window)))
 
-(defun ship-mate-submarine--ensure-no-ship-mate-buffers ()
-  "Verify no `ship-mate' buffer is visible.
+(defun ship-mate-submarine--get-process (buffer)
+  "Get process for `ship-mate' BUFFER."
+  (and buffer
+       (ship-mate--command-buffer-p buffer)
+       (get-buffer-process buffer)))
+
+(defun ship-mate-submarine--ensure-no-hidden-buffers ()
+  "Verify no hidden `ship-mate' buffer is visible.
 
 If there are any, close them."
   (when-let ((windows (seq-filter
-                       (lambda (it) (buffer-local-value 'ship-mate--this-command (window-buffer it)))
+                       (lambda (it) (buffer-local-value 'ship-mate--hidden (window-buffer it)))
                        (window-list-1 nil nil t))))
 
     (dolist (win windows)
@@ -502,67 +508,81 @@ If there are any, close them."
 
 (defun ship-mate-submarine--check ()
   "Check on the recorded process."
-  (unless ship-mate-submarine--process
-    (user-error "No process"))
+  (ship-mate-submarine--clear-timer)
 
-  (unless (process-live-p ship-mate-submarine--process)
-    (let ((status (process-exit-status ship-mate-submarine--process)))
+  (dolist (process ship-mate-submarine--processes)
+    (let ((buffer (process-buffer process))
+          (status (process-exit-status process)))
+      (if (ship-mate-submarine--hidden-buffer-p buffer)
+          (unless (process-live-p process)
 
-      (ship-mate-submarine--clear)
+            (ship-mate-submarine--clear-process process)
 
-      (if ship-mate-prompt-for-hidden-buffer
-          (run-with-idle-timer ship-mate-prompt-for-hidden-buffer
-                               nil
-                               #'ship-mate-submarine--delayed-prompt
-                               (current-time)
-                               status)
-        (ship-mate-submarine--surface)))))
+            (if ship-mate-prompt-for-hidden-buffer
+                (run-with-idle-timer ship-mate-prompt-for-hidden-buffer
+                                     nil
+                                     #'ship-mate-submarine--delayed-prompt
+                                     (current-time)
+                                     status
+                                     buffer)
+              (ship-mate-submarine--surface buffer)))
+        (ship-mate-submarine--clear-process process)))))
 
-(defun ship-mate-submarine--delayed-prompt (time status)
-  "Show a prompt to pop to buffer indicating.
+(defun ship-mate-submarine--hidden-buffer-p (buffer)
+  "Check if BUFFER is a hidden buffer."
+  (buffer-local-value 'ship-mate--hidden buffer))
+
+(defun ship-mate-submarine--delayed-prompt (time status buffer)
+  "Show a prompt to pop to BUFFER indicating.
 
 TIME is the time the process finished, STATUS its status."
   (when-let* ((since (time-since time))
               (verb (if (eq 0 status) "finished successfully" (format "failed (exit status %d)" status)))
               (show (yes-or-no-p (format "Hidden compilation %s %.1fs ago. Show buffer?" verb (time-to-seconds since)))))
 
-    (ship-mate-submarine--surface)))
+    (ship-mate-submarine--surface buffer)))
 
 (defun ship-mate-submarine--watch-process (process)
   "Save PROCESS and set timer to check on it."
-  (when ship-mate-submarine--in-progress
-    (setq ship-mate-submarine--process process
-          ship-mate-submarine--timer (run-with-timer 0 0.1 #'ship-mate-submarine--check))))
+  (and-let* ((buffer (process-buffer process))
+             ((ship-mate--command-buffer-p buffer)))
 
-(defun ship-mate-submarine--clear ()
-  "Clear progress."
+    (unless (memq process ship-mate-submarine--processes)
+      (push process ship-mate-submarine--processes))
+
+    (unless ship-mate-submarine--timer
+      (setq ship-mate-submarine--timer (run-with-timer 0 0.1 #'ship-mate-submarine--check)))))
+
+(defun ship-mate-submarine--clear-process (process)
+  "Clear PROCESS.
+
+If this was the final process, stops the timer.."
+  (when (and process (memq process ship-mate-submarine--processes))
+    (setq ship-mate-submarine--processes (delete process ship-mate-submarine--processes)))
+
+  (ship-mate-submarine--clear-timer))
+
+(defun ship-mate-submarine--clear-timer ()
+  "Clear the timer if there are no more processes."
   (when ship-mate-submarine--timer
-    (cancel-timer ship-mate-submarine--timer))
+    (unless (ship-mate-submarine--in-progress)
+      (cancel-timer ship-mate-submarine--timer)
+      (setq ship-mate-submarine--timer nil))))
 
-  (setq ship-mate-submarine--timer nil
-        ship-mate-submarine--process nil
-        ship-mate-submarine--in-progress nil))
-
-(defun ship-mate-submarine--surface ()
-  "Surface a hidden compilation early.
+(defun ship-mate-submarine--surface (buffer)
+  "Surface hidden compilation BUFFER early.
 
 If it is already shown, just clear timer and buffer."
-  (unless ship-mate-submarine--buffer
+  (unless buffer
     (user-error "No hidden buffer"))
 
-  (let ((buffer ship-mate-submarine--buffer))
+  (ship-mate-submarine--clear-process (get-buffer-process buffer))
 
-    (ship-mate-submarine--clear)
-    (setq ship-mate-submarine--buffer nil)
+  (with-current-buffer buffer
+    (setq ship-mate--hidden nil))
 
-    (unless (ship-mate-submarine--buffer-visible-p)
-      (pop-to-buffer buffer))))
-
-(defun ship-mate-submarine--buffer-visible-p ()
-  "Check if the submarine buffer is visible."
-  (let ((windows (window-list-1 nil nil t)))
-
-    (seq-find (lambda (it) (eq ship-mate-submarine--buffer (window-buffer it))) windows)))
+  (unless (ship-mate--buffer-visible-p buffer)
+    (pop-to-buffer buffer)))
 
 ;;;; Dinghy mode
 
@@ -954,19 +974,29 @@ projects are included."
     (and (ship-mate--command-buffer-p buffer)
          (or ship-mate--complete-for-all (memq buffer project-buffers)))))
 
-(defun ship-mate--complete-buffer (prompt)
-  "Complete a `ship-mate' buffer using PROMPT."
+(defun ship-mate--complete-buffer (prompt &optional predicate)
+  "Complete a `ship-mate' buffer using PROMPT.
+
+This will set the predicate to command buffers unless PREDICATE
+is passed."
   (let ((rbts-completion-table (apply-partially
                                 #'completion-table-with-predicate
                                 #'internal-complete-buffer
                                 #'always
                                 nil))
-        (ship-mate--complete-for-all current-prefix-arg))
+        (ship-mate--complete-for-all current-prefix-arg)
+        (predicate (or predicate #'ship-mate--command-buffer-predicate)))
 
     (minibuffer-with-setup-hook
         (lambda () (setq-local minibuffer-completion-table rbts-completion-table))
 
-      (get-buffer (read-buffer prompt nil t #'ship-mate--command-buffer-predicate)))))
+      (get-buffer (read-buffer prompt nil t predicate)))))
+
+(defun ship-mate--buffer-visible-p (buffer)
+  "Check if the submarine BUFFER is visible."
+  (let ((windows (window-list-1 nil nil t)))
+
+    (seq-find (lambda (it) (eq buffer (window-buffer it))) windows)))
 
 ;;;; Global minor mode
 
@@ -1122,11 +1152,17 @@ it with the default value(s)."
 
   (ship-mate-submarine--recompile))
 
-(defun ship-mate-show-hidden ()
-  "Show a hidden compilation."
-  (interactive)
+(defun ship-mate-show-hidden (buffer)
+  "Show a hidden compilation BUFFER."
+  (interactive (list (if (eq 1 (length ship-mate-submarine--processes))
+                         (process-buffer (nth 0 ship-mate-submarine--processes))
+                       (let ((buffers (mapcar (lambda (it) (process-buffer it)) ship-mate-submarine--processes)))
 
-  (ship-mate-submarine--surface))
+                         (ship-mate--complete-buffer
+                          "Show hidden buffer: "
+                          (lambda (it) (memq (cdr it) buffers)))))))
+
+  (ship-mate-submarine--surface buffer))
 
 ;;;###autoload
 (defun ship-mate-edit-environment (buffer)

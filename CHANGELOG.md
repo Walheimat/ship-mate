@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minor modes now include their map in their docstrings.
 - Calling `ship-mate-show-hidden` signals an error if there is no
   hidden buffer.
+- It is now possible to have multiple hidden compilations running at
+  the same time.
 
 ### Changed
 
