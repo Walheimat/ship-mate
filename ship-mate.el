@@ -485,8 +485,6 @@ unless EMPTY is t."
     (with-current-buffer buffer
       (setq ship-mate--hidden t))
 
-    (ship-mate-submarine--watch-process process)
-
     (quit-window)))
 
 (defun ship-mate-submarine--get-process (buffer)
@@ -507,26 +505,31 @@ If there are any, close them."
       (quit-window nil win))))
 
 (defun ship-mate-submarine--check ()
-  "Check on the recorded process."
+  "Check on stopped processes.
+
+This will surface buffers of hidden processes. Others are just
+cleared."
   (ship-mate-submarine--clear-timer)
 
   (dolist (process ship-mate-submarine--processes)
+
     (let ((buffer (process-buffer process))
           (status (process-exit-status process)))
-      (if (ship-mate-submarine--hidden-buffer-p buffer)
-          (unless (process-live-p process)
 
-            (ship-mate-submarine--clear-process process)
+      (unless (process-live-p process)
+        (if (ship-mate-submarine--hidden-buffer-p buffer)
 
-            (if ship-mate-prompt-for-hidden-buffer
-                (run-with-idle-timer ship-mate-prompt-for-hidden-buffer
-                                     nil
-                                     #'ship-mate-submarine--delayed-prompt
-                                     (current-time)
-                                     status
-                                     buffer)
-              (ship-mate-submarine--surface buffer)))
-        (ship-mate-submarine--clear-process process)))))
+            (progn (ship-mate-submarine--clear-process process)
+                   (if ship-mate-prompt-for-hidden-buffer
+                       (run-with-idle-timer ship-mate-prompt-for-hidden-buffer
+                                            nil
+                                            #'ship-mate-submarine--delayed-prompt
+                                            (current-time)
+                                            status
+                                            buffer)
+                     (ship-mate-submarine--surface buffer)))
+
+          (ship-mate-submarine--clear-process process))))))
 
 (defun ship-mate-submarine--hidden-buffer-p (buffer)
   "Check if BUFFER is a hidden buffer."

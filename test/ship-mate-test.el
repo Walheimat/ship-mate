@@ -834,7 +834,6 @@
   (let ((ship-mate--this-command 'test))
 
     (bydi ((:othertimes ship-mate-submarine--get-process)
-           (:ignore ship-mate-submarine--watch-process)
            (:watch ship-mate--hidden)
            quit-window)
 
@@ -845,7 +844,6 @@
       (ert-with-test-buffer (:name "sub-hide")
         (shut-up (ship-mate-submarine--hide))
 
-        (bydi-was-called ship-mate-submarine--watch-process)
         (bydi-was-set-to ship-mate--hidden t)))))
 
 (ert-deftest ship-mate-submarine--get-process ()
