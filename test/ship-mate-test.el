@@ -881,6 +881,7 @@
   :tags '(submarine)
 
   (let ((ship-mate-submarine--processes nil))
+
     (bydi ((:ignore ship-mate-submarine--clear-timer)
            (:spy ship-mate-submarine--surface))
 
@@ -941,8 +942,8 @@
   (bydi ((:always yes-or-no-p)
          ship-mate-submarine--surface)
 
-    (ship-mate-submarine--delayed-prompt (current-time) 0 (current-buffer))
-    (ship-mate-submarine--delayed-prompt (current-time) 1 (current-buffer))
+    (ship-mate-submarine--delayed-prompt (current-time) 0 'process)
+    (ship-mate-submarine--delayed-prompt (current-time) 1 'process)
 
     (bydi-was-called-n-times ship-mate-submarine--surface 2)))
 
@@ -1015,13 +1016,14 @@
   (should-error (ship-mate-submarine--surface nil))
 
   (bydi (ship-mate-submarine--clear-process
+         (:mock process-buffer :return (current-buffer))
          (:othertimes ship-mate--buffer-visible-p)
          (:watch ship-mate--hidden)
          (:spy pop-to-buffer))
 
     (ert-with-test-buffer (:name "sub-surf")
 
-      (ship-mate-submarine--surface (current-buffer))
+      (ship-mate-submarine--surface 'process)
 
       (bydi-was-called ship-mate-submarine--clear-process)
       (bydi-was-set-to ship-mate--hidden nil)
@@ -1029,7 +1031,7 @@
 
       ;; Doesn't surface already visible buffer.
       (bydi-toggle-sometimes)
-      (ship-mate-submarine--surface (current-buffer))
+      (ship-mate-submarine--surface 'process)
       (bydi-was-not-called pop-to-buffer))))
 
 (ert-deftest ship-mate-show-hidden ()

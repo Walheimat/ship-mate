@@ -526,8 +526,8 @@ cleared."
                                             #'ship-mate-submarine--delayed-prompt
                                             (current-time)
                                             status
-                                            buffer)
-                     (ship-mate-submarine--surface buffer)))
+                                            process)
+                     (ship-mate-submarine--surface process)))
 
           (ship-mate-submarine--clear-process process))))))
 
@@ -535,15 +535,15 @@ cleared."
   "Check if BUFFER is a hidden buffer."
   (buffer-local-value 'ship-mate--hidden buffer))
 
-(defun ship-mate-submarine--delayed-prompt (time status buffer)
-  "Show a prompt to pop to BUFFER indicating.
+(defun ship-mate-submarine--delayed-prompt (time status process)
+  "Show a prompt to surface PROCESS.
 
 TIME is the time the process finished, STATUS its status."
   (when-let* ((since (time-since time))
               (verb (if (eq 0 status) "finished successfully" (format "failed (exit status %d)" status)))
               (show (yes-or-no-p (format "Hidden compilation %s %.1fs ago. Show buffer?" verb (time-to-seconds since)))))
 
-    (ship-mate-submarine--surface buffer)))
+    (ship-mate-submarine--surface process)))
 
 (defun ship-mate-submarine--watch-process (process)
   "Save PROCESS and set timer to check on it."
@@ -572,20 +572,22 @@ If this was the final process, stops the timer.."
       (cancel-timer ship-mate-submarine--timer)
       (setq ship-mate-submarine--timer nil))))
 
-(defun ship-mate-submarine--surface (buffer)
-  "Surface hidden compilation BUFFER early.
+(defun ship-mate-submarine--surface (process)
+  "Surface hidden compilation PROCESS.
 
 If it is already shown, just clear timer and buffer."
-  (unless buffer
-    (user-error "No hidden buffer"))
+  (unless process
+    (user-error "No process"))
 
-  (ship-mate-submarine--clear-process (get-buffer-process buffer))
+  (let ((buffer (process-buffer process)))
 
-  (with-current-buffer buffer
-    (setq ship-mate--hidden nil))
+    (ship-mate-submarine--clear-process process)
 
-  (unless (ship-mate--buffer-visible-p buffer)
-    (pop-to-buffer buffer)))
+    (with-current-buffer buffer
+      (setq ship-mate--hidden nil))
+
+    (unless (ship-mate--buffer-visible-p buffer)
+      (pop-to-buffer buffer))))
 
 ;;;; Dinghy mode
 
