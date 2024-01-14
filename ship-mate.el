@@ -477,7 +477,9 @@ unless EMPTY is t."
          (buffer (funcall exec)))
 
     (with-current-buffer buffer
-      (setq ship-mate--hidden t))))
+      (setq ship-mate--hidden t))
+
+    buffer))
 
 (defun ship-mate-submarine--hide ()
   "Hide current compilation."
