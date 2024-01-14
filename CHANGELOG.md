@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Buffer completion now uses `read-buffer`.
 - Buffer completion now signals an error if there is no eligible
   buffer.
+- Map `ship-mate-subcommand-map` now nests edit and show commands.
 
 ## [0.3.4]
 
