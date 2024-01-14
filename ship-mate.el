@@ -967,9 +967,7 @@ Optionally the PROJECT may be passed directly."
 
 If the current prefix argument is non-nil, buffers from other
 projects are included."
-  (let* ((buffer (if (consp buffer)
-                     (cdr buffer)
-                   buffer))
+  (let* ((buffer (ship-mate--safe-get-buffer buffer))
          (project (project-current))
          (project-buffers (and project (project-buffers project))))
 
@@ -1002,6 +1000,12 @@ is passed."
   (let ((windows (window-list-1 nil nil t)))
 
     (seq-find (lambda (it) (eq buffer (window-buffer it))) windows)))
+
+(defun ship-mate--safe-get-buffer (buffer)
+  "Get BUFFER safely."
+  (if (consp buffer)
+      (cdr buffer)
+    buffer))
 
 ;;;; Global minor mode
 
@@ -1165,7 +1169,7 @@ it with the default value(s)."
 
                          (ship-mate--complete-buffer
                           "Show hidden buffer: "
-                          (lambda (it) (memq (cdr it) buffers)))))))
+                          (lambda (it) (memq (ship-mate--safe-get-buffer it) buffers)))))))
 
   (ship-mate-submarine--surface buffer))
 
