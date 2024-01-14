@@ -1088,7 +1088,8 @@ is passed."
 
 (defun ship-mate-mode-lighter--hidden ()
   "Indicates a running hidden recompile."
-  '(ship-mate-submarine--in-progress (:propertize "!" face mode-line-emphasis)))
+  (when (ship-mate-submarine--in-progress)
+    '(:propertize "!" face mode-line-emphasis)))
 
 ;;;; API
 

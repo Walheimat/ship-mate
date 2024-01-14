@@ -1132,7 +1132,8 @@
   :tags '(mode-line user-facing)
 
   (should (ship-mate-mode-lighter--title))
-  (should (ship-mate-mode-lighter--hidden)))
+  (bydi ((:always ship-mate-submarine--in-progress))
+    (should (ship-mate-mode-lighter--hidden))))
 
 (ert-deftest ship-mate-mode-lighter--menu ()
   (defvar ship-mate-command-map)
