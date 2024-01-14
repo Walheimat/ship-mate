@@ -422,7 +422,7 @@ unless EMPTY is t."
          (next (mod (1+ pos) length)))
 
     (when (<= length 1)
-      (user-error "Only buffer"))
+      (user-error "There is no next buffer"))
 
     (switch-to-buffer (nth next buffers))))
 
@@ -436,7 +436,7 @@ unless EMPTY is t."
          (prev (mod (+ length (1- pos)) length)))
 
     (when (<= length 1)
-      (user-error "Only buffer"))
+      (user-error "There is no previous buffer"))
 
     (switch-to-buffer (nth prev buffers))))
 
@@ -478,7 +478,7 @@ unless EMPTY is t."
          (process (ship-mate-submarine--get-process buffer)))
 
     (unless process
-      (user-error "Can't get process from `%s'" (current-buffer)))
+      (user-error "Can't hide `%s' as it has no process (anymore)" (current-buffer)))
 
     (message "Continuing `%s' command in the background" ship-mate--this-command)
 
@@ -577,7 +577,7 @@ If this was the final process, stops the timer.."
 
 If it is already shown, just clear timer and buffer."
   (unless process
-    (user-error "No process"))
+    (user-error "Surfacing needs a process"))
 
   (let ((buffer (process-buffer process)))
 
@@ -610,7 +610,7 @@ If it is already shown, just clear timer and buffer."
   :lighter " smd"
 
   (unless (derived-mode-p 'compilation-mode)
-    (user-error "Can only be enabled in compilation buffers"))
+    (user-error "`ship-mate-dinghy-mode' can only be enabled in compilation buffers"))
 
   (ship-mate-dinghy--reset-header-line-format))
 
@@ -753,7 +753,7 @@ Sets MODE unless already set."
 (defun ship-mate-environment--edit ()
   "Edit environment in the current buffer."
   (unless (ship-mate--command-buffer-p (current-buffer))
-    (user-error "Can only edit command buffer"))
+    (user-error "Can only edit `ship-mate' command buffers"))
 
   (setq ship-mate-environment--target-buffer (current-buffer))
 
@@ -867,7 +867,7 @@ This is set in buffer `ship-mate-environment--buffer-name'."
 (defun ship-mate-history--edit ()
   "Edit the history of the current buffer."
   (unless (ship-mate--command-buffer-p (current-buffer))
-    (user-error "Can only edit command buffer"))
+    (user-error "Can only edit `ship-mate' command buffer"))
 
   (setq ship-mate-history--command (buffer-local-value 'ship-mate--this-command (current-buffer)))
 
@@ -993,7 +993,7 @@ is passed."
         (predicate (or predicate #'ship-mate--command-buffer-predicate)))
 
     (unless (seq-find predicate (buffer-list))
-      (user-error "No eligible `ship-mate' buffer exists"))
+      (user-error "No `ship-mate' command buffer satisfying predicate exists"))
 
     (minibuffer-with-setup-hook
         (lambda () (setq-local minibuffer-completion-table rbts-completion-table))
