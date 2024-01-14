@@ -1166,17 +1166,18 @@ it with the default value(s)."
 
   (ship-mate-submarine--recompile))
 
-(defun ship-mate-show-hidden (buffer)
-  "Show a hidden compilation BUFFER."
+(defun ship-mate-show-hidden (process)
+  "Show a hidden compilation PROCESS."
   (interactive (list (if (eq 1 (length ship-mate-submarine--processes))
-                         (process-buffer (nth 0 ship-mate-submarine--processes))
+                         (nth 0 ship-mate-submarine--processes)
+
                        (let ((buffers (mapcar (lambda (it) (process-buffer it)) ship-mate-submarine--processes)))
 
-                         (ship-mate--complete-buffer
-                          "Show hidden buffer: "
-                          (lambda (it) (memq (ship-mate--safe-get-buffer it) buffers)))))))
+                         (get-buffer-process (ship-mate--complete-buffer
+                                              "Show hidden buffer: "
+                                              (lambda (it) (memq (ship-mate--safe-get-buffer it) buffers))))))))
 
-  (ship-mate-submarine--surface buffer))
+  (ship-mate-submarine--surface process))
 
 ;;;###autoload
 (defun ship-mate-edit-environment (buffer)

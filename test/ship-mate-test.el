@@ -1038,21 +1038,21 @@
   :tags '(user-facing submarine)
 
   (bydi (ship-mate-submarine--surface
-         (:mock process-buffer :return 'buffer)
-         (:mock ship-mate--complete-buffer :with (lambda (_p l) (funcall l '(a . buffer)))))
+         (:mock ship-mate--complete-buffer :with (lambda (_p l) (funcall l '(a . buffer))))
+         (:mock process-buffer :return (current-buffer)))
 
     (let ((ship-mate-submarine--processes '(process)))
 
       (call-interactively 'ship-mate-show-hidden)
 
-      (bydi-was-called ship-mate-submarine--surface 'buffer)
+      (bydi-was-called ship-mate-submarine--surface 'process)
       (bydi-was-not-called ship-mate--complete-buffer)
 
       (setq ship-mate-submarine--processes '(a b))
 
       (call-interactively 'ship-mate-show-hidden)
 
-      (bydi-was-called ship-mate-submarine--surface 'buffer)
+      (bydi-was-called ship-mate-submarine--surface nil)
       (bydi-was-called ship-mate--complete-buffer))))
 
 (ert-deftest ship-mate-hidden-recompile ()
