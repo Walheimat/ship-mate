@@ -94,22 +94,17 @@ If this is nil, they aren't bound."
 ;;;; Variables
 
 (defvar ship-mate-subcommand-map
-  (let ((map (make-sparse-keymap))
-        (edit-map (make-sparse-keymap))
-        (show-map (make-sparse-keymap)))
+  (let ((map (make-sparse-keymap)))
 
     (define-key map "r" #'ship-mate-hidden-recompile)
     (define-key map "c" #'ship-mate-select-command)
 
-    (define-key map "s" (cons "show" show-map))
-    (define-key show-map "r" #'ship-mate-show-results)
-    (define-key show-map "h" #'ship-mate-show-hidden)
+    (define-key map "s" #'ship-mate-show-results)
+    (define-key map "h" #'ship-mate-show-hidden)
 
-
-    (define-key map "e" (cons "edit" edit-map))
-    (define-key edit-map "h" #'ship-mate-edit-history)
-    (define-key edit-map "H" #'ship-mate-refresh-history)
-    (define-key edit-map "e" #'ship-mate-edit-environment)
+    (define-key map "e" #'ship-mate-edit-history)
+    (define-key map "E" #'ship-mate-refresh-history)
+    (define-key map "n" #'ship-mate-edit-environment)
 
     map)
   "Command map for additional `ship-mate' commands.")

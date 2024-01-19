@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Buffer completion now offers only the current project's buffers
   unless the command using it was called with a prefix argument.
-- Command `ship-mate-show-results` to pop to a buffer. Bound to `p` in
+- Command `ship-mate-show-results` to pop to a buffer. Bound to `s` in
   subcommands map.
 - Minor modes now include their map in their docstrings.
 - Calling `ship-mate-show-hidden` signals an error if there is no
@@ -24,7 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Buffer completion now uses `read-buffer`.
 - Buffer completion now signals an error if there is no eligible
   buffer.
-- Map `ship-mate-subcommand-map` now nests edit and show commands.
 
 ## [0.3.4]
 
