@@ -1153,6 +1153,14 @@
 
     (should (ship-mate--buffer-visible-p (current-buffer)))))
 
+(ert-deftest ship-mate--warn ()
+  :tags '(user-facing)
+
+  (bydi display-warning
+    (ship-mate--warn "Test message")
+
+    (bydi-was-called-with display-warning '(ship-mate "Test message"))))
+
 ;;;; Lighter
 
 (ert-deftest ship-mate-mode-lighter--function-segments ()

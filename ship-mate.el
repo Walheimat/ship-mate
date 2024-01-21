@@ -1022,6 +1022,10 @@ is passed."
       (cdr buffer)
     buffer))
 
+(defun ship-mate--warn (message)
+  "Warn about MESSAGE."
+  (display-warning 'ship-mate message))
+
 ;;;; Global minor mode
 
 (defun ship-mate-mode--setup ()

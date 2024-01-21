@@ -16,6 +16,7 @@
 (dinghy-rope-setup-paths)
 (dinghy-rope-setup-undercover (list "ship-mate.el"))
 (dinghy-rope-setup-ert-runner)
+(dinghy-rope-setup-ert :increase-print-depth t)
 
 ;;; test-helper.el ends here
 
