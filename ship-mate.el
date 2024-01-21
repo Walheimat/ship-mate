@@ -17,6 +17,7 @@
 (require 'project)
 (require 'ring)
 (require 'compile)
+(require 'subr-x)
 
 (defgroup ship-mate nil
   "Project-scoped compilation."
@@ -418,6 +419,31 @@ unless EMPTY is t."
                    (equal default-directory
                           (buffer-local-value 'default-directory buffer)))
            collect buffer))
+
+(defun ship-mate-command--key-for-command (command &optional desired-key)
+  "Get a key that can be used to bind COMMAND.
+
+If DESIRED-KEY is passed, prefer that if possible. This will
+otherwise go through all eligible letters in COMMAND taking the
+first that isn't already bound."
+  (if (ship-mate-command--valid-key-p desired-key)
+
+      desired-key
+
+    (when-let ((letter (thread-last
+                         ""
+                         (string-split (symbol-name command))
+                         (seq-filter (lambda (it) (not (string-empty-p it))))
+                         (seq-drop-while (lambda (it) (not (ship-mate-command--valid-key-p it))))
+                         (car-safe))))
+
+      letter)))
+
+(defun ship-mate-command--valid-key-p (key)
+  "Check if KEY could be bound."
+  (and key
+       (key-valid-p key)
+       (not (keymap-lookup ship-mate-command-map key))))
 
 (defun ship-mate-command-next-buffer ()
   "Get the next buffer."
@@ -1135,15 +1161,16 @@ ARG is passed to the underlying command."
 (cl-defmacro ship-mate-create-command (name &key key default)
   "Create command NAME.
 
-The command will be bound in `ship-mate-command-map' using its
-initial unless KEY is provided. If DEFAULT is non-nil, set the
-initial value using it. If COMINT is t, make sure the command is
-run in `comint-mode' instead."
+The command will be bound in `ship-mate-command-map' using
+`ship-mate-command--key-for-command', preferring non-nil KEY.
+
+ If DEFAULT is non-nil, set the initial value using it. If COMINT
+is t, make sure the command is run in `comint-mode' instead."
   (declare (indent defun))
 
-  (let ((function-name (intern (format "ship-mate-%s" name)))
-        (default-var (intern (format "ship-mate-%s-default-cmd" name)))
-        (key (or key (substring (symbol-name name) 0 1))))
+  (let* ((function-name (intern (format "ship-mate-%s" name)))
+         (default-var (intern (format "ship-mate-%s-default-cmd" name)))
+         (key (ship-mate-command--key-for-command name key)))
 
     `(progn
        (defvar-local ,default-var ,default ,(format "Default for `%s'." function-name))
@@ -1161,7 +1188,10 @@ run in `comint-mode' instead."
                                  ',name
                                  ,(make-hash-table :test 'equal)))
 
-       (define-key ship-mate-command-map ,key ',function-name)
+       ,(if key
+            `(define-key ship-mate-command-map ,key ',function-name)
+          `(ship-mate--warn ,(format "Failed to find eligible key for `%s'" name)))
+
        (put ',default-var 'safe-local-variable #'ship-mate-command--valid-default-p))))
 
 ;;;###autoload

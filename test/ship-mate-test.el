@@ -334,27 +334,43 @@
 (ert-deftest ship-mate-create-command ()
   :tags '(user-facing command)
 
-  (bydi ((:mock make-hash-table :return 'hash-table))
-    (bydi-match-expansion
-     (ship-mate-create-command test)
-     '(progn
-        (defvar-local ship-mate-test-default-cmd nil "Default for `ship-mate-test'.")
-        (defun ship-mate-test (&optional arg) "Test the current project.\n\nSee `ship-mate-command' for behavior of ARG."
-               (interactive "P")
-               (ship-mate-command 'test arg))
-        (setq ship-mate-commands (plist-put ship-mate-commands 'test hash-table))
-        (define-key ship-mate-command-map "t" 'ship-mate-test)
-        (put 'ship-mate-test-default-cmd 'safe-local-variable #'ship-mate-command--valid-default-p)))
-    (bydi-match-expansion
-     (ship-mate-create-command test :key "o" :default "make all")
-     '(progn
-        (defvar-local ship-mate-test-default-cmd "make all" "Default for `ship-mate-test'.")
-        (defun ship-mate-test (&optional arg) "Test the current project.\n\nSee `ship-mate-command' for behavior of ARG."
-               (interactive "P")
-               (ship-mate-command 'test arg))
-        (setq ship-mate-commands (plist-put ship-mate-commands 'test hash-table))
-        (define-key ship-mate-command-map "o" 'ship-mate-test)
-        (put 'ship-mate-test-default-cmd 'safe-local-variable #'ship-mate-command--valid-default-p)))))
+  (let ((key "t"))
+
+    (bydi ((:mock make-hash-table :return 'hash-table)
+           (:mock ship-mate-command--key-for-command :return key))
+      (bydi-match-expansion
+       (ship-mate-create-command test)
+       '(progn
+          (defvar-local ship-mate-test-default-cmd nil "Default for `ship-mate-test'.")
+          (defun ship-mate-test (&optional arg) "Test the current project.\n\nSee `ship-mate-command' for behavior of ARG."
+                 (interactive "P")
+                 (ship-mate-command 'test arg))
+          (setq ship-mate-commands (plist-put ship-mate-commands 'test hash-table))
+          (define-key ship-mate-command-map "t" 'ship-mate-test)
+          (put 'ship-mate-test-default-cmd 'safe-local-variable #'ship-mate-command--valid-default-p)))
+
+      (bydi-match-expansion
+       (ship-mate-create-command test :key "C-o" :default "make all")
+       '(progn
+          (defvar-local ship-mate-test-default-cmd "make all" "Default for `ship-mate-test'.")
+          (defun ship-mate-test (&optional arg) "Test the current project.\n\nSee `ship-mate-command' for behavior of ARG."
+                 (interactive "P")
+                 (ship-mate-command 'test arg))
+          (setq ship-mate-commands (plist-put ship-mate-commands 'test hash-table))
+          (define-key ship-mate-command-map "t" 'ship-mate-test)
+          (put 'ship-mate-test-default-cmd 'safe-local-variable #'ship-mate-command--valid-default-p)))
+
+      (setq key nil)
+      (bydi-match-expansion
+       (ship-mate-create-command test)
+       '(progn
+          (defvar-local ship-mate-test-default-cmd nil "Default for `ship-mate-test'.")
+          (defun ship-mate-test (&optional arg) "Test the current project.\n\nSee `ship-mate-command' for behavior of ARG."
+                 (interactive "P")
+                 (ship-mate-command 'test arg))
+          (setq ship-mate-commands (plist-put ship-mate-commands 'test hash-table))
+          (ship-mate--warn "Failed to find eligible key for `test'")
+          (put 'ship-mate-test-default-cmd 'safe-local-variable #'ship-mate-command--valid-default-p))))))
 
 (ert-deftest ship-mate-command--buffers ()
   (let ((a (get-buffer-create "*ship-mate-a*"))
@@ -374,6 +390,26 @@
     (bydi ((:mock buffer-list :return (list a b c)))
 
       (should (eq (length (ship-mate-command--buffers)) 1)))))
+
+(defun ship-mate-test--keymap ()
+  "Get a keymap with a few things bound."
+  (let ((map (make-sparse-keymap)))
+
+    (define-key map "t" #'ignore)
+    (define-key map "s" #'ignore)
+    (define-key map "e" #'ignore)
+    (define-key map "o" #'ignore)
+
+    map))
+
+(ert-deftest ship-mate-command--key-for-command ()
+  :tags '(user-facing command)
+
+  (let ((ship-mate-command-map (ship-mate-test--keymap)))
+
+    (should (string= "u" (ship-mate-command--key-for-command 'test "u")))
+    (should-not (ship-mate-command--key-for-command 'test))
+    (should (string= "a" (ship-mate-command--key-for-command 'toast)))))
 
 (ert-deftest ship-mate-command--next-and-prev ()
   (let ((current 'b)

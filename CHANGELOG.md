@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - It is now possible to have multiple hidden compilations running at
   the same time.
 - Command `ship-mate-hide-visible` to hide a visible compilation.
+- Commands created with `ship-mate-create-command` now attempt to bind
+  using any letter that is part of the symbol name. If this fails, a
+  warning is displayed and no binding takes place.
 
 ### Changed
 
