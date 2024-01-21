@@ -207,7 +207,8 @@
   :tags '(command)
 
   (let ((fake-history (make-ring 3))
-        (ship-mate--last-command 'test))
+        (ship-mate--last-command 'test)
+        (ship-mate-command-history-size 3))
 
     (ring-insert fake-history "make test")
     (ring-insert fake-history "make coverage")
@@ -259,7 +260,20 @@
       (ship-mate-command--update-history "coverage -- else")
 
       (should (equal (ring-elements fake-history)
-                     '("make coverage -- FLAG=t CAPTURE=t" "make test" "make test FLAG=t"))))))
+                     '("make coverage -- FLAG=t CAPTURE=t" "make test" "make test FLAG=t")))
+
+
+      ;; Insert if match isn't good enough.
+      (ship-mate-command--update-history "make test FLAG=nil")
+
+      (should (equal (ring-elements fake-history)
+                     '("make test FLAG=nil" "make coverage -- FLAG=t CAPTURE=t" "make test")))
+
+      ;; Replace if good enough.
+      (ship-mate-command--update-history "make test FLAG=nil OTHER=t")
+
+      (should (equal (ring-elements fake-history)
+                     '("make test FLAG=nil OTHER=t" "make coverage -- FLAG=t CAPTURE=t" "make test"))))))
 
 (ert-deftest ship-mate-command--capture ()
   :tags '(command)

@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Buffer completion now uses `read-buffer`.
 - Buffer completion now signals an error if there is no eligible
   buffer.
+- History replacement now only happens if the history is full.
 
 ## [0.3.4]
 

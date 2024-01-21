@@ -301,9 +301,12 @@ and the index of the matched item."
 (defun ship-mate-command--update-history (command &rest _)
   "Update history using COMMAND.
 
-If COMMAND matches other commands of the last command category,
-replace the matched item or add it to the history based on the
-match count."
+If there is a match between COMMAND and the history of the last
+`ship-mate' command, the command is inserted into that history.
+
+If the history is already full and the quality of the match high
+enough, replace the matched recorded command instead of
+inserting."
   (and-let* (ship-mate--last-command
              (history (ship-mate-command--history ship-mate--last-command))
 
@@ -311,7 +314,8 @@ match count."
              (specs (funcall ship-mate-command-fuzzy-match-function command history)))
 
     (if (and (plistp specs)
-             (> (plist-get specs :count) replace-count))
+             (> (plist-get specs :count) replace-count)
+             (= (ring-size history) ship-mate-command-history-size))
         (progn
           (ring-remove history (plist-get specs :index))
           (ring-insert history command))
