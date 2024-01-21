@@ -1055,6 +1055,19 @@
       (bydi-was-called ship-mate-submarine--surface nil)
       (bydi-was-called ship-mate--complete-buffer))))
 
+(ert-deftest ship-mate-hide-visible ()
+  :tags '(user-facing submarine)
+
+  (let ((buffers (list (current-buffer))))
+
+    (bydi ((:mock ship-mate-command--buffers :return buffers)
+           (:always ship-mate--buffer-visible-p)
+           ship-mate-submarine--hide)
+
+      (ship-mate-hide-visible)
+
+      (bydi-was-called ship-mate-submarine--hide))))
+
 (ert-deftest ship-mate-hidden-recompile ()
   :tags '(user-facing submarine)
 
@@ -1118,7 +1131,7 @@
 
     (bydi-was-called-with pop-to-buffer 'buffer)))
 
-;;; Utiltiy
+;;; Utility
 
 (ert-deftest ship-mate--buffer-visible-p ()
   (ert-with-test-buffer (:name "visible")

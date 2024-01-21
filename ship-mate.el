@@ -97,10 +97,11 @@ If this is nil, they aren't bound."
   (let ((map (make-sparse-keymap)))
 
     (define-key map "r" #'ship-mate-hidden-recompile)
+    (define-key map "h" #'ship-mate-hide-visible)
     (define-key map "c" #'ship-mate-select-command)
 
     (define-key map "s" #'ship-mate-show-results)
-    (define-key map "h" #'ship-mate-show-hidden)
+    (define-key map "S" #'ship-mate-show-hidden)
 
     (define-key map "e" #'ship-mate-edit-history)
     (define-key map "E" #'ship-mate-refresh-history)
@@ -479,6 +480,7 @@ unless EMPTY is t."
 (defun ship-mate-submarine--hide ()
   "Hide current compilation."
   (let* ((buffer (current-buffer))
+         (window (get-buffer-window buffer))
          (process (ship-mate-submarine--get-process buffer)))
 
     (unless process
@@ -489,7 +491,7 @@ unless EMPTY is t."
     (with-current-buffer buffer
       (setq ship-mate--hidden t))
 
-    (quit-window)))
+    (quit-window nil window)))
 
 (defun ship-mate-submarine--get-process (buffer)
   "Get process for `ship-mate' BUFFER."
@@ -1005,7 +1007,7 @@ is passed."
       (get-buffer (read-buffer prompt nil t predicate)))))
 
 (defun ship-mate--buffer-visible-p (buffer)
-  "Check if the submarine BUFFER is visible."
+  "Check if the BUFFER is visible."
   (let ((windows (window-list-1 nil nil t)))
 
     (seq-find (lambda (it) (eq buffer (window-buffer it))) windows)))
@@ -1216,6 +1218,17 @@ If BUFFER isn't a compilation buffer, this prompts to select one."
   (interactive)
 
   (ship-mate-submarine--hide))
+
+(defun ship-mate-hide-visible ()
+  "Hide a visible `ship-mate' buffer."
+  (interactive)
+
+  (when-let ((visible (seq-find
+                       #'ship-mate--buffer-visible-p
+                       (ship-mate-command--buffers))))
+
+    (with-current-buffer visible
+      (ship-mate-submarine--hide))))
 
 ;;;###autoload
 (define-minor-mode ship-mate-mode

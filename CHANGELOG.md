@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   hidden buffer.
 - It is now possible to have multiple hidden compilations running at
   the same time.
+- Command `ship-mate-hide-visible` to hide a visible compilation.
 
 ### Changed
 
