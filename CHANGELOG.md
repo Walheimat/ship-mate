@@ -29,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Buffer completion now signals an error if there is no eligible
   buffer.
 - History replacement now only happens if the history is full.
+- All commands (including subcommands) are now bound in
+  `ship-mate-command-map`.
+
+### Removed
+
+- Variable `ship-mate-subcommand-map`.
 
 ## [0.3.4]
 
