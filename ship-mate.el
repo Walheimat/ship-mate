@@ -489,7 +489,7 @@ first that isn't already bound."
 (defun ship-mate-submarine--hide ()
   "Hide current compilation."
   (let* ((buffer (current-buffer))
-         (window (get-buffer-window buffer))
+         (window (get-buffer-window buffer t))
          (process (ship-mate-submarine--get-process buffer)))
 
     (unless process
@@ -816,7 +816,7 @@ Sets MODE unless already set."
 
 (defun ship-mate-environment--quit ()
   "Quit the editing."
-  (quit-window t (get-buffer-window ship-mate-environment--buffer-name))
+  (quit-window t (get-buffer-window ship-mate-environment--buffer-name t))
 
   (setq ship-mate-environment--target-buffer nil))
 
@@ -928,7 +928,7 @@ This is set in buffer `ship-mate-environment--buffer-name'."
 
 (defun ship-mate-history--quit ()
   "Quit the history editing buffer."
-  (quit-window t (get-buffer-window ship-mate-history--buffer-name))
+  (quit-window t (get-buffer-window ship-mate-history--buffer-name t))
 
   (setq ship-mate-history--command nil))
 
