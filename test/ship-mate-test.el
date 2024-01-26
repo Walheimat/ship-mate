@@ -833,24 +833,16 @@
 (ert-deftest ship-mate-submarine--recompile ()
   :tags '(submarine)
 
-  (let ((ship-mate--last-compilation-type 'other)
-        (ship-mate-submarine--processes '(process)))
+  (ert-with-test-buffer (:name "recompile")
+    (setq-local ship-mate--this-command 'test)
 
-    (should-error (ship-mate-submarine--recompile)))
-
-  (let ((ship-mate--last-compilation-type nil)
-        (ship-mate-submarine--processes '(process)))
-
-    (should-error (ship-mate-submarine--recompile)))
-
-  (let ((ship-mate--last-compilation-type 'ship-mate)
-        (ship-mate--last-command 'test))
-
-    (bydi (ship-mate-submarine--run)
+    (bydi ((:mock ship-mate--complete-buffer :return (current-buffer))
+           ship-mate-submarine--run
+           (:watch ship-mate--current-command-name))
 
       (ship-mate-submarine--recompile)
-
-      (bydi-was-called ship-mate-submarine--run))))
+      (bydi-was-set-to ship-mate--current-command-name 'test)
+      (bydi-was-called-with ship-mate-submarine--run 'recompile))))
 
 (ert-deftest ship-mate-submarine--in-progress ()
   :tags '(submarine)

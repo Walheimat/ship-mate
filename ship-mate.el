@@ -321,7 +321,11 @@ EDIT is passed as-is to all invocations of RECOMPILE."
            (compile-history (and history (ring-elements history))))
 
       (with-current-buffer (funcall-interactively recompile edit)
-        (setq ship-mate--this-command cmd))))
+
+        ;; Needs to be re-set explicitly.
+        (setq ship-mate--this-command cmd)
+
+        (current-buffer))))
 
    ;; Don't break other derived modes.
    ((derived-mode-p 'compilation-mode)
@@ -459,14 +463,11 @@ first that isn't already bound."
 
 (defun ship-mate-submarine--recompile ()
   "Recompile without a window."
-  (unless (eq 'ship-mate ship-mate--last-compilation-type)
-    (user-error (if (eq 'other ship-mate--last-compilation-type)
-                    "Previous compilation wasn't a `ship-mate' compilation"
-                  "No previous compilation")))
+  (when-let* ((buffer (ship-mate--complete-buffer "Recompile: "))
+              (ship-mate--current-command-name (buffer-local-value 'ship-mate--this-command buffer)))
 
-  (let ((ship-mate--current-command-name (symbol-name ship-mate--last-command)))
-
-    (ship-mate-submarine--run 'recompile)))
+    (with-current-buffer buffer
+      (ship-mate-submarine--run 'recompile))))
 
 (defun ship-mate-submarine--in-progress ()
   "Check if a hidden compilation is in progress."

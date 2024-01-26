@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Command `ship-mate-hidden-recompile` now allows selection of buffer
+  to recompile.
+
 ### Fixed
 
 - Hiding compilations within other frames works now.
