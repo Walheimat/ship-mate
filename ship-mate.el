@@ -461,14 +461,6 @@ first that isn't already bound."
 (defvar ship-mate-submarine--timer nil)
 (defvar ship-mate-submarine--processes nil)
 
-(defun ship-mate-submarine--recompile ()
-  "Recompile without a window."
-  (when-let* ((buffer (ship-mate--complete-buffer "Recompile: "))
-              (ship-mate--current-command-name (buffer-local-value 'ship-mate--this-command buffer)))
-
-    (with-current-buffer buffer
-      (ship-mate-submarine--run 'recompile))))
-
 (defun ship-mate-submarine--in-progress ()
   "Check if a hidden compilation is in progress."
   (not (seq-empty-p ship-mate-submarine--processes)))
@@ -1185,11 +1177,14 @@ it with the default value(s)."
 
   (ship-mate-command--create-history (intern cmd) clear))
 
-(defun ship-mate-hidden-recompile ()
-  "Recompile and show the buffer after compilation finishes."
-  (interactive)
+(defun ship-mate-hidden-recompile (buffer)
+  "Recompile BUFFER without raising it."
+  (interactive (list (ship-mate--complete-buffer "Recompile: ")))
 
-  (ship-mate-submarine--recompile))
+  (setq ship-mate--current-command-name (buffer-local-value 'ship-mate--this-command buffer))
+
+  (with-current-buffer buffer
+    (ship-mate-submarine--run 'recompile)))
 
 (defun ship-mate-show-hidden (process)
   "Show a hidden compilation PROCESS."

@@ -830,20 +830,6 @@
 
     (bydi-was-called-with ship-mate-command--create-history (list 'test nil))))
 
-(ert-deftest ship-mate-submarine--recompile ()
-  :tags '(submarine)
-
-  (ert-with-test-buffer (:name "recompile")
-    (setq-local ship-mate--this-command 'test)
-
-    (bydi ((:mock ship-mate--complete-buffer :return (current-buffer))
-           ship-mate-submarine--run
-           (:watch ship-mate--current-command-name))
-
-      (ship-mate-submarine--recompile)
-      (bydi-was-set-to ship-mate--current-command-name 'test)
-      (bydi-was-called-with ship-mate-submarine--run 'recompile))))
-
 (ert-deftest ship-mate-submarine--in-progress ()
   :tags '(submarine)
 
@@ -1076,6 +1062,21 @@
       (ship-mate-submarine--surface 'process)
       (bydi-was-not-called pop-to-buffer))))
 
+(ert-deftest ship-mate-hidden-recompile ()
+  :tags '(submarine user-facing)
+
+  (ert-with-test-buffer (:name "recompile")
+    (setq-local ship-mate--this-command 'test)
+
+    (bydi ((:mock ship-mate--complete-buffer :return (current-buffer))
+           ship-mate-submarine--run
+           (:watch ship-mate--current-command-name))
+
+      (call-interactively 'ship-mate-hidden-recompile)
+
+      (bydi-was-set-to ship-mate--current-command-name 'test)
+      (bydi-was-called-with ship-mate-submarine--run 'recompile))))
+
 (ert-deftest ship-mate-show-hidden ()
   :tags '(user-facing submarine)
 
@@ -1109,14 +1110,6 @@
       (ship-mate-hide-visible)
 
       (bydi-was-called ship-mate-submarine--hide))))
-
-(ert-deftest ship-mate-hidden-recompile ()
-  :tags '(user-facing submarine)
-
-  (bydi ship-mate-submarine--recompile
-    (ship-mate-hidden-recompile)
-
-    (bydi-was-called ship-mate-submarine--recompile)))
 
 (ert-deftest ship-mate-hide ()
   :tags '(user-facing submarine)
