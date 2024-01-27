@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command `ship-mate-hidden-recompile` now allows selection of buffer
   to recompile.
 
+### Changed
+
+- Text in lighter menu is now capitalized.
+
 ### Fixed
 
 - Hiding compilations within other frames works now.

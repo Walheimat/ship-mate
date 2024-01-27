@@ -1069,8 +1069,14 @@ is passed."
   (interactive)
 
   (let* ((map (make-sparse-keymap))
-         (rename (lambda (sym) (substring (symbol-name sym)
-                                          (1+ (length "ship-mate")))))
+         (rename (lambda (sym)
+                   (thread-first
+                     sym
+                     (symbol-name)
+                     (string-split "-")
+                     (seq-subseq 2)
+                     (string-join " ")
+                     (capitalize))))
          (bind (lambda (_event func)
                  (define-key-after map
                    (vector func)

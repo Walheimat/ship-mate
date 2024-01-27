@@ -1196,14 +1196,21 @@
 
   (let ((ship-mate-command-map (make-sparse-keymap)))
 
-    (defun ship-mate-test ()
-      nil)
+    (defun ship-mate-test () nil)
+    (defun ship-mate-something-else-exquisite () nil)
 
     (define-key ship-mate-command-map (kbd "t") 'ship-mate-test)
+    (define-key ship-mate-command-map (kbd "x") 'ship-mate-something-else-exquisite)
 
-    (bydi (popup-menu)
+    (bydi (popup-menu
+           (:spy define-key-after))
       (ship-mate-mode-lighter--menu)
-      (bydi-was-called popup-menu))))
+      (bydi-was-called popup-menu)
+      (bydi-was-called-nth-with define-key-after '(... (menu-item "Test" ship-mate-test)) 2)
+      (bydi-was-called-nth-with
+       define-key-after
+       '(... (menu-item "Something Else Exquisite" ship-mate-something-else-exquisite))
+       1))))
 
 ;;; ship-mate-test.el ends here
 
