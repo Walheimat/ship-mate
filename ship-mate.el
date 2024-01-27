@@ -89,16 +89,17 @@ nil, show immediately."
 (defvar ship-mate-command-map
   (let ((map (make-sparse-keymap)))
 
-    (define-key map (kbd ".") #'ship-mate-select-command)
-    (define-key map (kbd ",") #'ship-mate-hidden-recompile)
-    (define-key map (kbd "/") #'ship-mate-hide-visible)
+    (define-key map (kbd ",") #'ship-mate-edit-environment)
+    (define-key map (kbd ".") #'ship-mate-edit-history)
+    (define-key map (kbd ">") #'ship-mate-refresh-history)
 
-    (define-key map (kbd "!") #'ship-mate-show-results)
-    (define-key map (kbd "@") #'ship-mate-show-hidden)
+    (define-key map (kbd "/") #'ship-mate-hidden-recompile)
+    (define-key map (kbd "?") #'ship-mate-hide-visible)
 
-    (define-key map (kbd "%") #'ship-mate-edit-history)
-    (define-key map (kbd "^") #'ship-mate-refresh-history)
-    (define-key map (kbd "&") #'ship-mate-edit-environment)
+    (define-key map (kbd "!") #'ship-mate-select-command)
+
+    (define-key map (kbd "@") #'ship-mate-show-results)
+    (define-key map (kbd "#") #'ship-mate-show-hidden)
 
     map)
   "Command map for `ship-mate' commands.
@@ -602,11 +603,12 @@ If it is already shown, just clear timer and buffer."
 (defvar ship-mate-dinghy-mode-map
   (let ((map (make-sparse-keymap)))
 
-    (define-key map (kbd "C-c .") #'ship-mate-edit-environment)
-    (define-key map (kbd "C-c ,") #'ship-mate-edit-history)
+    (define-key map (kbd "C-c ,") #'ship-mate-edit-environment)
+    (define-key map (kbd "C-c .") #'ship-mate-edit-history)
+    (define-key map (kbd "C-c /") #'ship-mate-hide)
+
     (define-key map (kbd "C-c [") #'ship-mate-command-next-buffer)
     (define-key map (kbd "C-c ]") #'ship-mate-command-prev-buffer)
-    (define-key map (kbd "C-c /") #'ship-mate-hide)
 
     map)
   "Map used in buffers that enable `ship-mate-dinghy-mode'.")

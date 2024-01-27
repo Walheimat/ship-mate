@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Text in lighter menu is now capitalized.
+- The bindings in `ship-mate-command-map` and
+  `ship-mate-dinghy-mode-map` have been revised and harmonized.
 
 ### Fixed
 
