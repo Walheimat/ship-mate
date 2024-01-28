@@ -8,6 +8,6 @@
  (depends-on "undercover")
  (depends-on "compat"))
 
-(package "ship-mate" "0.4.0" "Project-scoped compilation")
+(package "ship-mate" "0.4.1" "Project-scoped compilation")
 
 (files "ship-mate.el")

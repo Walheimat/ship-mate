@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.4.1](https://github.com/Walheimat/ship-mate/compare/v0.4.0...v0.4.1) (2024-01-28)
+
+
+### Bug Fixes
+
+* **submarine:** get window for all frames when hiding ([8f475e9](https://github.com/Walheimat/ship-mate/commit/8f475e9df138f7262b87366cce799d5fa3867e62))
+
+
+### Features
+
+* **bindings:** harmonize bindings ([2889e29](https://github.com/Walheimat/ship-mate/commit/2889e297cfe932f187d22911403b2821e16faf56))
+* **ci:** add semantic-release ([7590684](https://github.com/Walheimat/ship-mate/commit/75906844fcd0ec792c7af1c136ee1ee7f36a1999))
+* **lighter:** capitalize names in lighter menu ([7d2e319](https://github.com/Walheimat/ship-mate/commit/7d2e3191692146fc11db819c9a0bf4984e5a666b))
+* **submarine:** complete buffer to recompile ([46af9fe](https://github.com/Walheimat/ship-mate/commit/46af9fe66494a13d35ca0319da22eac53ecba53a))
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
