@@ -158,6 +158,9 @@ Parts of a command matching this expression are ignored.")
 (defvar-local ship-mate--hidden nil
   "Indicates whether a buffer is currently hidden.")
 
+(defvar ship-mate-environment--regex "^\\([a-zA-Z_]\\{1,\\}[a-zA-Z0-9_]+\\)=\\(.+\\)$"
+  "Pattern matching an environment variable assignment.")
+
 ;;;; Commands
 
 (defun ship-mate-command (cmd &optional arg)
@@ -673,8 +676,8 @@ The printed command is just th"
                       'help-echo (string-join compilation-environment "; "))
         (propertize (mapconcat
                      (lambda (it)
-                       (let ((parts (split-string it "=")))
-                         (propertize (nth 0 parts) 'help-echo (format "Variable set to: %s" (nth 1 parts)))))
+                       (string-match ship-mate-environment--regex it)
+                       (propertize (match-string 1 it) 'help-echo (format "Variable set to: %s" (match-string 2 it))))
                      compilation-environment
                      " ")
                     'face 'mode-line-emphasis))
@@ -842,7 +845,7 @@ This is set in buffer `ship-mate-environment--buffer-name'."
        (or (null value)
            (seq-every-p
             (lambda (it)
-              (eq 2 (length (string-split it "="))))
+              (string-match-p ship-mate-environment--regex it))
             value))))
 
 ;;;; Editing history
