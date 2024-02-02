@@ -6,16 +6,14 @@ module.exports = {
             2,
             "always",
             [
-                "chore",
-                "ci",
-                "config",
-                "docs",
                 "feat",
                 "fix",
-                "improve",
                 "refac",
-                "style",
+                "improve",
                 "test",
+                "chore",
+                "docs",
+                "ci"
             ],
         ],
         "scope-case": [2, "always", ["lower-case", "kebab-case"]],
@@ -31,6 +29,6 @@ module.exports = {
         "footer-max-line-length": [2, "always", 70],
     },
     ignores: [
-        (commit) => commit.includes("fixup") || commit.includes("release"),
+        (commit) => commit.includes("fixup"),
     ],
 };
