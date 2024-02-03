@@ -375,21 +375,18 @@
 (ert-deftest ship-mate-command--buffers ()
   (let ((a (get-buffer-create "*ship-mate-a*"))
         (b (get-buffer-create "other"))
-        (c (get-buffer-create "*ship-mate-c*"))
-        (default-directory "/tmp/default"))
+        (c (get-buffer-create "*ship-mate-c*")))
 
-    (with-current-buffer a
-      (setq default-directory "/tmp/other"))
+    (bydi ((:mock project-buffers :return (list a b))
+           (:mock buffer-list :return (list a b c))
+           (:always project-current))
 
-    (with-current-buffer b
-      (setq default-directory "/tmp/default"))
+      (should (eq (length (ship-mate-command--buffers)) 1))
+      (should (eq (length (ship-mate-command--buffers t)) 2)))
 
-    (with-current-buffer c
-      (setq default-directory "/tmp/default"))
-
-    (bydi ((:mock buffer-list :return (list a b c)))
-
-      (should (eq (length (ship-mate-command--buffers)) 1)))))
+    (kill-buffer a)
+    (kill-buffer b)
+    (kill-buffer c)))
 
 (defun ship-mate-test--keymap ()
   "Get a keymap with a few things bound."

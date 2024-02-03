@@ -399,13 +399,18 @@ unless EMPTY is t."
       (and (listp val)
            (cl-every #'stringp val))))
 
-(defun ship-mate-command--buffers ()
-  "Get all `ship-mate' buffers in the current project."
-  (cl-loop for buffer in (buffer-list)
-           if (and (ship-mate--command-buffer-p buffer)
-                   (equal default-directory
-                          (buffer-local-value 'default-directory buffer)))
-           collect buffer))
+(defun ship-mate-command--buffers (&optional arg)
+  "Get all `ship-mate' buffers in the current project.
+
+If ARG is non-nil, this returns all `ship-mate' buffers."
+  (let ((buffers (if arg
+                     (buffer-list)
+                   (when-let ((project (project-current)))
+                     (project-buffers project)))))
+
+    (cl-loop for buffer in buffers
+             if (ship-mate--command-buffer-p buffer)
+             collect buffer)))
 
 (defun ship-mate-command--key-for-command (command &optional desired-key)
   "Get a key that can be used to bind COMMAND.
@@ -432,11 +437,13 @@ first that isn't already bound."
        (key-valid-p key)
        (not (keymap-lookup ship-mate-command-map key))))
 
-(defun ship-mate-command-next-buffer ()
-  "Get the next buffer."
-  (interactive)
+(defun ship-mate-command-next-buffer (&optional arg)
+  "Get the next buffer.
 
-  (let* ((buffers (ship-mate-command--buffers))
+ARG is passed to `ship-mate-command--buffers'."
+  (interactive "P")
+
+  (let* ((buffers (ship-mate-command--buffers arg))
          (length (length buffers))
          (pos (cl-position (current-buffer) buffers))
          (next (mod (1+ pos) length)))
@@ -446,11 +453,13 @@ first that isn't already bound."
 
     (switch-to-buffer (nth next buffers))))
 
-(defun ship-mate-command-prev-buffer ()
-  "Get the previous buffer."
-  (interactive)
+(defun ship-mate-command-prev-buffer (&optional arg)
+  "Get the previous buffer.
 
-  (let* ((buffers (ship-mate-command--buffers))
+ARG is passed to `ship-mate-command--buffers'."
+  (interactive "P")
+
+  (let* ((buffers (ship-mate-command--buffers arg))
          (pos (cl-position (current-buffer) buffers))
          (length (length buffers))
          (prev (mod (+ length (1- pos)) length)))
