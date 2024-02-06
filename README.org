@@ -56,6 +56,10 @@ Here's a =use-package= configuration example.
   ;; nice with commands created above.
   (ship-mate-mode)
 
+  ;; Mode used in `ship-mate' buffers to show information about the
+  ;; environment and bind useful commands.
+  (ship-mate-dinghy-global-mode)
+
   :custom
   ;; The functions to advise to maybe use the appropriate `ship-mate'
   ;; command instead.
@@ -74,10 +78,6 @@ Here's a =use-package= configuration example.
 
   ;; The function used to name `ship-mate' buffers.
   (ship-matecommand-buffer-name-function-generator #'ship-mate-command--buffer-name-function)
-
-  ;; Mode used in `ship-mate' buffers to show information about the
-  ;; environment and bind useful commands.
-  (ship-mate-dinghy-enable t)
 
   ;; Used for `ship-mate-hidden-recompile'. The number is an idle
   ;; delay until the user is prompted to show the result.
@@ -167,7 +167,8 @@ Beyond providing a per-project history, =ship-mate= commands also set
 the =compilation-save-buffers-predicate= to make sure you're only
 prompted to save buffers belonging to the project.
 
-You will also notice a header line. This header line is set by
+Provided you enable =ship-mate-dinghy-global-mode= you will also
+notice a header line. This header line is set by
 =ship-mate-dinghy-mode=. Its purpose is to bind commands and to show
 additional information like the currently used environment variables.
 You can disable this by setting =ship-mate-dinghy-enable= to =nil=.

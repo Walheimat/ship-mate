@@ -60,11 +60,6 @@ can be set to."
   :group 'ship-mate
   :type 'function)
 
-(defcustom ship-mate-dinghy-enable t
-  "Whether to enable `ship-mate-dinghy-mode' in buffers."
-  :group 'ship-mate
-  :type 'boolean)
-
 (defcustom ship-mate-prompt-for-hidden-buffer 2
   "Whether user should be prompted when hidden buffer is done.
 
@@ -160,6 +155,11 @@ Parts of a command matching this expression are ignored.")
 
 (defvar ship-mate-environment--regex "^\\([a-zA-Z_]\\{1,\\}[a-zA-Z0-9_]+\\)=\\(.+\\)$"
   "Pattern matching an environment variable assignment.")
+
+;;;;; Hooks
+
+(defvar ship-mate-environment-set-hook nil
+  "Function to call when the environment was set.")
 
 ;;;; Commands
 
@@ -613,104 +613,6 @@ If it is already shown, just clear timer and buffer."
     (unless (ship-mate--buffer-visible-p buffer)
       (pop-to-buffer buffer))))
 
-;;;; Dinghy mode
-
-(defvar ship-mate-dinghy-mode-map
-  (let ((map (make-sparse-keymap)))
-
-    (define-key map (kbd "C-c ,") #'ship-mate-edit-environment)
-    (define-key map (kbd "C-c .") #'ship-mate-edit-history)
-    (define-key map (kbd "C-c /") #'ship-mate-hide)
-
-    (define-key map (kbd "C-c [") #'ship-mate-command-next-buffer)
-    (define-key map (kbd "C-c ]") #'ship-mate-command-prev-buffer)
-
-    map)
-  "Map used in buffers that enable `ship-mate-dinghy-mode'.")
-
-(define-minor-mode ship-mate-dinghy-mode
-  "Minor mode to provide contextual information and bindings.
-
-\\{ship-mate-dinghy-mode-map}"
-  :lighter " smd"
-
-  (unless (derived-mode-p 'compilation-mode)
-    (user-error "`ship-mate-dinghy-mode' can only be enabled in compilation buffers"))
-
-  (ship-mate-dinghy--reset-header-line-format))
-
-(defvar-local ship-mate--command nil)
-
-(defun ship-mate-dinghy--maybe-enable (&optional process)
-  "Enable `ship-mate-dinghy-mode' if not disabled.
-
-If PROCESS is passed, set the name."
-  (if (and ship-mate-dinghy-enable
-           (ship-mate--command-buffer-p))
-      (progn
-        (when process
-          (setq ship-mate--command (process-command process)))
-
-        (setq ship-mate--last-compilation-type 'ship-mate)
-
-        (ship-mate-dinghy-mode))
-
-    (setq ship-mate--last-compilation-type 'other)))
-
-(defun ship-mate-dinghy--print-command ()
-  "Print the command.
-
-The printed command is just th"
-  (if (and ship-mate--command (listp ship-mate--command))
-
-      (let* ((rest (seq-drop-while (lambda (it) (string-match-p "^\\(\/\\|-\\)" it)) ship-mate--command))
-             (full-command (string-join ship-mate--command " "))
-             (likely-command (or (car-safe rest) full-command))
-
-             (max-len 20)
-             (likely-command (if (> (length likely-command) max-len)
-                                 (concat (substring likely-command 0 max-len)
-                                         "…")
-                               likely-command)))
-
-        (propertize likely-command
-                    'face 'mode-line-emphasis
-                    'help-echo full-command))
-
-    (propertize "?" 'face 'mode-line-inactive)))
-
-(defun ship-mate-dinghy--print-variables ()
-  "Pretty-print environment variables."
-  (if compilation-environment
-      (if (> (length compilation-environment) 3)
-          (propertize "active"
-                      'face 'mode-line-emphasis
-                      'help-echo (string-join compilation-environment "; "))
-        (propertize (mapconcat
-                     (lambda (it)
-                       (string-match ship-mate-environment--regex it)
-                       (propertize (match-string 1 it) 'help-echo (format "Variable set to: %s" (match-string 2 it))))
-                     compilation-environment
-                     " ")
-                    'face 'mode-line-emphasis))
-    (propertize "none" 'face 'mode-line-inactive)))
-
-(defun ship-mate-dinghy--reset-header-line-format (&rest _args)
-  "Set header line format.
-
-Prints the command of the process and environment variables."
-  (when ship-mate-dinghy-mode
-    (setq-local header-line-format
-                ;; Command.
-                (concat
-                 (format "%s[%s]"
-                         (propertize "cmd" 'face 'mode-line)
-                         (ship-mate-dinghy--print-command))
-                 " "
-                 ;; Environment
-                 (format "%s[%s]"
-                         (propertize "env" 'face 'mode-line)
-                         (ship-mate-dinghy--print-variables))))))
 
 ;;;; Editing
 
@@ -849,7 +751,7 @@ Sets MODE unless already set."
 This is set in buffer `ship-mate-environment--buffer-name'."
   (with-current-buffer ship-mate-environment--target-buffer
     (setq-local compilation-environment env)
-    (ship-mate-dinghy--reset-header-line-format)))
+    (run-hooks 'ship-mate-environment-set-hook)))
 
 (defun ship-mate-environment--valid-env-p (value)
   "Check if VALUE is a valid environment."
@@ -1048,7 +950,6 @@ is passed."
   (advice-add 'compilation-start :after #'ship-mate-command--update-history)
   (advice-add 'recompile :around #'ship-mate-command--capture)
 
-  (add-hook 'compilation-start-hook 'ship-mate-dinghy--maybe-enable)
   (add-hook 'compilation-start-hook 'ship-mate-submarine--watch-process)
 
   (dolist (fun ship-mate-compile-functions)
@@ -1059,7 +960,6 @@ is passed."
   (advice-remove 'compilation-start #'ship-mate-command--update-history)
   (advice-remove 'recompile #'ship-mate-command--capture)
 
-  (remove-hook 'compilation-start-hook 'ship-mate-dinghy--maybe-enable)
   (remove-hook 'compilation-start-hook 'ship-mate-submarine--watch-process)
 
   (dolist (fun ship-mate-compile-functions)
@@ -1271,12 +1171,10 @@ If BUFFER isn't a compilation buffer, this prompts to select one."
   "Minor-mode for project-scoped compilation.
 
 Enabling this mode will (1) advise `compilation-start' to update
-project-local histories, (2) advise `recompile' to read this
+project-local histories and (2) advise `recompile' to read this
 scoped history as well as make all functions in
 `ship-mate-compile-functions' bounded to the current
-project (will only ask you save buffers in that project) and (3)
-adds a hook `compilation-start-hook' to maybe enable
-`ship-mate-dinghy-mode'."
+project (will only ask you save buffers in that project)."
   :lighter ship-mate-mode-lighter
   :global t
   (if ship-mate-mode
