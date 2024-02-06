@@ -9,9 +9,13 @@
 (require 'ship-mate)
 
 (ert-deftest ship-mate--plist-keys--errors-if-invalid ()
+  :tags '(utility)
+
   (should-error (ship-mate--plist-keys '(:test a :best))))
 
 (ert-deftest ship-mate--plist-keys--extracts-keys ()
+  :tags '(utility)
+
   (should (equal '(:test :this :function) (ship-mate--plist-keys '(:test "whether" :this "hacky" :function "works")))))
 
 (ert-deftest ship-mate-environment--valid-env-p ()
@@ -137,6 +141,8 @@
       (bydi-was-not-set compilation-environment))))
 
 (ert-deftest ship-mate-command--compile--editing-env ()
+  :tags '(command)
+
   (let ((env '("TES=TING"))
         (edited '("MOC=KING"))
         (compilation-environment nil))
@@ -159,18 +165,9 @@
       (bydi-was-called ship-mate-environment--edit-in-minibuffer)
       (bydi-was-set-to compilation-environment '("MOC=KING")))))
 
-(ert-deftest ship-mate-command--compile--submarine ()
-  (bydi (ship-mate-submarine--run
-         (:ignore ship-mate-environment--current-environment)
-         (:mock prefix-numeric-value :return 3))
-
-    (ship-mate-command--compile 'test)
-    (let ((compilation-environment '("MOC=KING")))
-      (ship-mate-command--compile 'test))
-
-    (bydi-was-called-n-times ship-mate-submarine--run 2)))
-
 (ert-deftest ship-mate-environment--current-environment ()
+  :tags '(environment)
+
   (ert-with-test-buffer (:name "last-env")
 
     (setq-local compilation-environment '("TES=TING"))
@@ -199,6 +196,8 @@
         (should (string= "test make" (ring-ref history 1)))))))
 
 (ert-deftest ship-mate-command--valid-default-p ()
+  :tags '(command)
+
   (should (ship-mate-command--valid-default-p "test"))
   (should (ship-mate-command--valid-default-p '("test" "make")))
   (should-not (ship-mate-command--valid-default-p '("test" make))))
@@ -374,6 +373,8 @@
           (put 'ship-mate-test-default-cmd 'safe-local-variable #'ship-mate-command--valid-default-p))))))
 
 (ert-deftest ship-mate-command--buffers ()
+  :tags '(command)
+
   (let ((a (get-buffer-create "*ship-mate-a*"))
         (b (get-buffer-create "other"))
         (c (get-buffer-create "*ship-mate-c*")))
@@ -410,6 +411,8 @@
     (should (string= "a" (ship-mate-command--key-for-command 'toast)))))
 
 (ert-deftest ship-mate-command--next-and-prev ()
+  :tags '(command)
+
   (let ((current 'b)
         (buffers '(a b c)))
     (bydi ((:mock current-buffer :return current)
@@ -444,6 +447,8 @@
     (bydi-was-called-with ship-mate-command (list 'test nil))))
 
 (ert-deftest ship-mate--local-value ()
+  :tags '(utility)
+
   (ert-with-temp-file project
 
     (bydi ((:always project-current)
@@ -453,6 +458,8 @@
       (should (equal (ship-mate--local-value 'major-mode) 'text-mode)))))
 
 (ert-deftest ship-mate--read-command ()
+  :tags '(utility)
+
   (bydi ((:always completing-read)
          (:mock ship-mate--plist-keys :return '("one" "two")))
 
@@ -461,20 +468,22 @@
     (bydi-was-called-with completing-read '("Test: " ("one" "two") nil t))))
 
 (ert-deftest ship-mate-mode--setup ()
+  :tags '(mode-setup)
+
   (let ((ship-mate-compile-functions '(recompile)))
     (bydi ((:risky-mock advice-add :with always)
            (:risky-mock add-hook :with always))
       (ship-mate-mode--setup)
-      (bydi-was-called-n-times advice-add 3)
-      (bydi-was-called-n-times add-hook 1))))
+      (bydi-was-called-n-times advice-add 3))))
 
 (ert-deftest ship-mate-mode--teardown()
+  :tags '(mode-setup)
+
   (let ((ship-mate-compile-functions '(recompile)))
     (bydi ((:risky-mock advice-remove :with always)
            (:risky-mock remove-hook :with always))
       (ship-mate-mode--teardown)
-      (bydi-was-called-n-times advice-remove 3)
-      (bydi-was-called-n-times remove-hook 1))))
+      (bydi-was-called-n-times advice-remove 3))))
 
 (ert-deftest ship-mate-mode ()
   :tags '(user-facing)
@@ -491,6 +500,8 @@
       (bydi-was-called ship-mate-mode--teardown))))
 
 (ert-deftest ship-mate-environment--edit-in-minibuffer ()
+  :tags '(environment)
+
   (let ((read ""))
 
     (bydi ((:mock read-string :return read))
@@ -506,301 +517,14 @@
       (should-error (ship-mate-environment--edit-in-minibuffer nil)))))
 
 (ert-deftest ship-mate-refresh-history ()
+  :tags '(history)
+
   (bydi (ship-mate-command--create-history
          (:mock ship-mate--read-command :return "test"))
 
     (call-interactively 'ship-mate-refresh-history)
 
     (bydi-was-called-with ship-mate-command--create-history (list 'test nil))))
-
-(ert-deftest ship-mate-submarine--in-progress ()
-  :tags '(submarine)
-
-  (let ((ship-mate-submarine--processes nil))
-
-    (should-not (ship-mate-submarine--in-progress))
-
-    (push 'process ship-mate-submarine--processes)
-
-    (should (ship-mate-submarine--in-progress))))
-
-(ert-deftest ship-mate-submarine--run ()
-  :tags '(submarine)
-
-  (bydi ((:ignore ship-mate-submarine--ensure-no-hidden-buffers)
-         (:watch display-buffer-alist))
-
-    (ert-with-test-buffer (:name "sub-run")
-
-      (let ((ship-mate--current-command-name "test"))
-        (shut-up (ship-mate-submarine--run (lambda () (current-buffer)))))
-
-      (should (buffer-local-value 'ship-mate--hidden (current-buffer)))
-      (bydi-was-called ship-mate-submarine--ensure-no-hidden-buffers)
-      (bydi-was-set display-buffer-alist))))
-
-(ert-deftest ship-mate-submarine--hide ()
-  :tags '(submarine)
-
-  (let ((ship-mate--this-command 'test))
-
-    (bydi ((:othertimes ship-mate-submarine--get-process)
-           (:watch ship-mate--hidden)
-           quit-window)
-
-      (should-error (ship-mate-submarine--hide))
-
-      (bydi-toggle-sometimes)
-
-      (ert-with-test-buffer (:name "sub-hide")
-        (shut-up (ship-mate-submarine--hide))
-
-        (bydi-was-set-to ship-mate--hidden t)))))
-
-(ert-deftest ship-mate-submarine--get-process ()
-  :tags '(submarine)
-
-  (should-not (ship-mate-submarine--get-process nil))
-
-  (ert-with-test-buffer (:name "sub-proc")
-
-    (should-not (ship-mate-submarine--get-process (current-buffer)))
-
-    (bydi ((:spy get-buffer-process)
-           (:always ship-mate--command-buffer-p))
-
-      (ship-mate-submarine--get-process (current-buffer))
-
-      (bydi-was-called get-buffer-process))))
-
-(ert-deftest ship-mate-submarine--ensure-no-hidden-buffer ()
-  :tags '(submarine)
-
-  (ert-with-test-buffer (:name "sub-ensure")
-
-    (setq ship-mate--hidden t)
-
-    (bydi ((:spy quit-window))
-
-      (pop-to-buffer (current-buffer))
-
-      (ship-mate-submarine--ensure-no-hidden-buffers)
-
-      (bydi-was-called quit-window))))
-
-(ert-deftest ship-mate-submarine--check ()
-  :tags '(submarine)
-
-  (let ((ship-mate-submarine--processes nil))
-
-    (bydi ((:ignore ship-mate-submarine--clear-timer)
-           (:spy ship-mate-submarine--surface))
-
-      (ship-mate-submarine--check)
-
-      (bydi-was-called ship-mate-submarine--clear-timer)
-      (bydi-was-not-called ship-mate-submarine--surface)))
-
-  (let ((ship-mate-submarine--processes '(a b))
-        (ship-mate-prompt-for-hidden-buffer nil))
-
-    (ert-with-test-buffer (:name "sub-check")
-      (bydi ((:ignore ship-mate-submarine--clear-timer)
-             (:sometimes process-live-p)
-             (:mock process-buffer :return (current-buffer))
-             (:mock process-exit-status :return 'status)
-             (:sometimes ship-mate-submarine--hidden-buffer-p)
-             run-with-idle-timer
-             ship-mate-submarine--clear-process
-             ship-mate-submarine--surface)
-
-        ;; Process is live, won't surface.
-        (ship-mate-submarine--check)
-        (bydi-was-not-called ship-mate-submarine--surface)
-
-        (bydi-toggle-volatile 'process-live-p)
-
-        ;; Process is dead, will surface.
-        (ship-mate-submarine--check)
-        (bydi-was-called ship-mate-submarine--surface t)
-
-        ;; Runs with idle timer if set.
-        (setq ship-mate-prompt-for-hidden-buffer t)
-        (ship-mate-submarine--check)
-        (bydi-was-called ship-mate-submarine--clear-process t)
-        (bydi-was-not-called ship-mate-submarine--surface)
-        (bydi-was-called run-with-idle-timer t)
-
-        ;; Clears process if not a hidden buffer.
-        (bydi-toggle-volatile 'ship-mate-submarine--hidden-buffer-p)
-        (ship-mate-submarine--check)
-        (bydi-was-called ship-mate-submarine--clear-process)
-        (bydi-was-not-called ship-mate-submarine--surface)))))
-
-(ert-deftest ship-mate-submarine--hidden-buffer-p ()
-  :tags '(submarine)
-
-  (ert-with-test-buffer (:name "sub-hidden-p")
-    (should-not (ship-mate-submarine--hidden-buffer-p (current-buffer)))
-
-    (setq ship-mate--hidden t)
-
-    (should (ship-mate-submarine--hidden-buffer-p (current-buffer)))))
-
-(ert-deftest ship-mate-submarine--delayed-prompt ()
-  :tags '(submarine)
-
-  (bydi ((:always yes-or-no-p)
-         ship-mate-submarine--surface)
-
-    (ship-mate-submarine--delayed-prompt (current-time) 0 'process)
-    (ship-mate-submarine--delayed-prompt (current-time) 1 'process)
-
-    (bydi-was-called-n-times ship-mate-submarine--surface 2)))
-
-(ert-deftest ship-mate-submarine--watch-process ()
-  :tags '(submarine)
-
-  (let ((ship-mate-submarine--processes nil)
-        (ship-mate-submarine--timer))
-
-    (bydi (run-with-timer
-           (:mock process-buffer :return (current-buffer))
-           (:othertimes ship-mate--command-buffer-p)
-           (:watch ship-mate-submarine--timer)
-           (:watch ship-mate-submarine--processes))
-
-      (ship-mate-submarine--watch-process 'process)
-
-      (bydi-was-not-set ship-mate-submarine--timer)
-
-      (bydi-toggle-sometimes)
-
-      (ship-mate-submarine--watch-process 'process)
-
-      (bydi-was-called run-with-timer)
-      (bydi-was-set ship-mate-submarine--timer)
-      (bydi-was-set ship-mate-submarine--processes))))
-
-(ert-deftest ship-mate-submarine--clear-process ()
-  :tags '(submarine)
-
-  (let ((ship-mate-submarine--processes '(a c)))
-
-    (bydi (ship-mate-submarine--clear-timer
-           (:watch ship-mate-submarine--processes))
-
-      (ship-mate-submarine--clear-process 'b)
-
-      ;; Always clear timer, don't update processes for unknown
-      ;; processes.
-      (bydi-was-called ship-mate-submarine--clear-timer)
-      (bydi-was-not-set ship-mate-submarine--processes)
-
-      ;; Clear process.
-      (ship-mate-submarine--clear-process 'a)
-      (bydi-was-set ship-mate-submarine--processes))))
-
-(ert-deftest ship-mate-submarine--clear-timer ()
-  :tags '(submarine)
-
-  (let ((ship-mate-submarine--timer 'timer))
-
-    (bydi ((:sometimes ship-mate-submarine--in-progress)
-           cancel-timer
-           (:watch ship-mate-submarine--timer))
-
-      ;; Doesn't clear if in progress.
-      (ship-mate-submarine--clear-timer)
-      (bydi-was-not-called cancel-timer)
-      (bydi-was-not-set ship-mate-submarine--timer)
-
-      (bydi-toggle-sometimes)
-
-      (ship-mate-submarine--clear-timer)
-      (bydi-was-called cancel-timer)
-      (bydi-was-set ship-mate-submarine--timer))))
-
-(ert-deftest ship-mate-submarine--surface ()
-  :tags '(submarine user-facing)
-
-  (should-error (ship-mate-submarine--surface nil))
-
-  (bydi (ship-mate-submarine--clear-process
-         (:mock process-buffer :return (current-buffer))
-         (:othertimes ship-mate--buffer-visible-p)
-         (:watch ship-mate--hidden)
-         (:spy pop-to-buffer))
-
-    (ert-with-test-buffer (:name "sub-surf")
-
-      (ship-mate-submarine--surface 'process)
-
-      (bydi-was-called ship-mate-submarine--clear-process)
-      (bydi-was-set-to ship-mate--hidden nil)
-      (bydi-was-called pop-to-buffer t)
-
-      ;; Doesn't surface already visible buffer.
-      (bydi-toggle-sometimes)
-      (ship-mate-submarine--surface 'process)
-      (bydi-was-not-called pop-to-buffer))))
-
-(ert-deftest ship-mate-hidden-recompile ()
-  :tags '(submarine user-facing)
-
-  (ert-with-test-buffer (:name "recompile")
-    (setq-local ship-mate--this-command 'test)
-
-    (bydi ((:mock ship-mate--complete-buffer :return (current-buffer))
-           ship-mate-submarine--run
-           (:watch ship-mate--current-command-name))
-
-      (call-interactively 'ship-mate-hidden-recompile)
-
-      (bydi-was-set-to ship-mate--current-command-name 'test)
-      (bydi-was-called-with ship-mate-submarine--run 'recompile))))
-
-(ert-deftest ship-mate-show-hidden ()
-  :tags '(user-facing submarine)
-
-  (bydi (ship-mate-submarine--surface
-         (:mock ship-mate--complete-buffer :with (lambda (_p l) (funcall l '(a . buffer))))
-         (:mock process-buffer :return (current-buffer)))
-
-    (let ((ship-mate-submarine--processes '(process)))
-
-      (call-interactively 'ship-mate-show-hidden)
-
-      (bydi-was-called ship-mate-submarine--surface 'process)
-      (bydi-was-not-called ship-mate--complete-buffer)
-
-      (setq ship-mate-submarine--processes '(a b))
-
-      (call-interactively 'ship-mate-show-hidden)
-
-      (bydi-was-called ship-mate-submarine--surface nil)
-      (bydi-was-called ship-mate--complete-buffer))))
-
-(ert-deftest ship-mate-hide-visible ()
-  :tags '(user-facing submarine)
-
-  (let ((buffers (list (current-buffer))))
-
-    (bydi ((:mock ship-mate-command--buffers :return buffers)
-           (:always ship-mate--buffer-visible-p)
-           ship-mate-submarine--hide)
-
-      (ship-mate-hide-visible)
-
-      (bydi-was-called ship-mate-submarine--hide))))
-
-(ert-deftest ship-mate-hide ()
-  :tags '(user-facing submarine)
-
-  (bydi ship-mate-submarine--hide
-    (ship-mate-hide)
-
-    (bydi-was-called ship-mate-submarine--hide)))
 
 (ert-deftest ship-mate--complete-buffer ()
   :tags '(completion)
@@ -842,6 +566,8 @@
       (should (ship-mate--command-buffer-predicate (current-buffer))))))
 
 (ert-deftest ship-mate-show-results ()
+  :tags '(user-facing)
+
   (bydi ((:mock ship-mate--complete-buffer :return 'buffer)
          pop-to-buffer)
 
@@ -852,6 +578,8 @@
 ;;; Utility
 
 (ert-deftest ship-mate--buffer-visible-p ()
+  :tags '(utility)
+
   (ert-with-test-buffer (:name "visible")
     (pop-to-buffer (current-buffer))
 
@@ -867,14 +595,13 @@
 
 ;;;; Lighter
 
-(ert-deftest ship-mate-mode-lighter--function-segments ()
-  :tags '(mode-line user-facing)
+(ert-deftest ship-mate-mode-lighter--title ()
 
-  (should (ship-mate-mode-lighter--title))
-  (bydi ((:always ship-mate-submarine--in-progress))
-    (should (ship-mate-mode-lighter--hidden))))
+  (should (ship-mate-mode-lighter--title)))
 
 (ert-deftest ship-mate-mode-lighter--menu ()
+  :tags '(lighter)
+
   (defvar ship-mate-command-map)
 
   (let ((ship-mate-command-map (make-sparse-keymap)))

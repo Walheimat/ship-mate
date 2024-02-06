@@ -65,6 +65,10 @@ Here's a =use-package= configuration example.
   ;; `ship-mate-dinghy-map'.
   (ship-mate-edit-setup-bindings)
 
+  ;; Allows hidden compilations that resurface after completion or at
+  ;; will.
+  (ship-mate-submarine-mode)
+
   :custom
   ;; The functions to advise to maybe use the appropriate `ship-mate'
   ;; command instead.
@@ -84,12 +88,12 @@ Here's a =use-package= configuration example.
   ;; The function used to name `ship-mate' buffers.
   (ship-matecommand-buffer-name-function-generator #'ship-mate-command--buffer-name-function)
 
-  ;; Used for `ship-mate-hidden-recompile'. The number is an idle
-  ;; delay until the user is prompted to show the result.
-  (ship-mate-prompt-for-hidden-buffer 2)
+  ;; Used for `ship-mate-submarine-hidden-recompile'. The number is an
+  ;; idle delay until the user is prompted to show the result.
+  (ship-mate-submarine-prompt-for-hidden-buffer 2)
 
   ;; Numeric prefix used to start a hidden compilation.
-  (ship-mate-hidden-compilation-prefix 3)
+  (ship-mate-submarine-hidden-compilation-prefix 3)
 
   ;; Numeric prefix used to edit the environment before compilation
   (ship-mate-edit-environment-compilation-prefix 5)
@@ -192,20 +196,22 @@ advise functions yourself using advice combinator =:around=.
 to the history of a =ship-mate= command and to also update the history
 when using =recompile= or =compile= instead.
 
-You can also use command =ship-mate-hidden-recompile= which will run
-=recompile= but not display the buffer until the compilation has
-finished. After compilation and idle time of
-=ship-mate-prompt-for-hidden-buffer= seconds, you will be prompted to
-view the result. If you don't mind a sudden pop-up as soon as
-compilation finishes instead you can set
-=ship-mate-prompt-for-hidden-buffer= to =nil=.
+If you enable =ship-mate-submarine-mode= you can also use command
+=ship-mate-submarine-hidden-recompile= which will run =recompile= but
+not display the buffer until the compilation has finished. After
+compilation and idle time of
+=ship-mate-submarine-prompt-for-hidden-buffer= seconds, you will be
+prompted to view the result. If you don't mind a sudden pop-up as soon
+as compilation finishes instead you can set
+=ship-mate-submarine-prompt-for-hidden-buffer= to =nil=.
 
-In the same way you can type =C-c C-q= in a running =ship-mate= buffer
+In the same way you can type =C-c /= in a running =ship-mate= buffer
 to send it to the background and make it prompt when finished.
 
-You can also run a =ship-mate= command with numeric prefix 3 (or
-whatever =ship-mate-hidden-compilation-prefix= is set to) to run it in
-the same way.
+If the mode is enabled you can also run a =ship-mate= command with
+numeric prefix 3 (or whatever
+=ship-mate-submarine-hidden-compilation-prefix= is set to) to run it
+in the same way.
 
 From a =ship-mate= command buffer you can use
 =ship-mate-command-{next,prev}-buffer= to quickly switch between

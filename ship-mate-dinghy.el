@@ -26,8 +26,6 @@
 (defvar ship-mate-dinghy-mode-map
   (let ((map (make-sparse-keymap)))
 
-    (define-key map (kbd "C-c /") #'ship-mate-hide)
-
     (define-key map (kbd "C-c [") #'ship-mate-command-next-buffer)
     (define-key map (kbd "C-c ]") #'ship-mate-command-prev-buffer)
 
