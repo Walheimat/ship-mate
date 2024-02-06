@@ -213,7 +213,8 @@
     (ring-insert fake-history "make test")
     (ring-insert fake-history "make coverage")
 
-    (bydi ((:mock ship-mate-command--history :return fake-history))
+    (bydi ((:mock ship-mate-command--history :return fake-history)
+           (:always yes-or-no-p))
 
       (ship-mate-command--update-history "make new")
 

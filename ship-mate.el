@@ -290,8 +290,7 @@ If there is a match between COMMAND and the history of the last
 `ship-mate' command, the command is inserted into that history.
 
 If the history is already full and the quality of the match high
-enough, replace the matched recorded command instead of
-inserting."
+enough, prompt to instead replace the matched recorded command."
   (and-let* (ship-mate--last-command
              (history (ship-mate-command--history ship-mate--last-command))
 
@@ -300,7 +299,10 @@ inserting."
 
     (if (and (plistp specs)
              (> (plist-get specs :count) replace-count)
-             (= (ring-length history) ship-mate-command-history-size))
+             (= (ring-length history) ship-mate-command-history-size)
+             (yes-or-no-p (format "Replace `%s' with `%s'?"
+                                  (plist-get specs :match)
+                                  command)))
         (progn
           (ring-remove history (plist-get specs :index))
           (ring-insert history command))
