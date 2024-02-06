@@ -300,7 +300,7 @@ inserting."
 
     (if (and (plistp specs)
              (> (plist-get specs :count) replace-count)
-             (= (ring-size history) ship-mate-command-history-size))
+             (= (ring-length history) ship-mate-command-history-size))
         (progn
           (ring-remove history (plist-get specs :index))
           (ring-insert history command))
