@@ -60,6 +60,11 @@ Here's a =use-package= configuration example.
   ;; environment and bind useful commands.
   (ship-mate-dinghy-global-mode)
 
+  ;; If you want to bind `ship-mate-edit-history' and
+  ;; `ship-mate-edit-environment' in `ship-mate-command-map' and
+  ;; `ship-mate-dinghy-map'.
+  (ship-mate-edit-setup-bindings)
+
   :custom
   ;; The functions to advise to maybe use the appropriate `ship-mate'
   ;; command instead.
@@ -220,9 +225,10 @@ directly is that you can use =ship-mate-edit-environment= to
 conveniently edit the environment variables in a buffer to apply
 changes (if they're valid) or clear all variables.
 
-This command is automatically bound to =C-c C-e= in =ship-mate=
-command buffers. You can also call it from without which will prompt
-you to select the buffer for which to edit it.
+If you enable =ship-mate-dinghy-mode= this command is automatically
+bound to =C-c ,= in =ship-mate= command buffers. You can also call it
+from without which will prompt you to select the buffer for which to
+edit it.
 
 You can also run a =ship-mate= command with numeric prefix 5 (or
 whatever =ship-mate-edit-environment-prefix= is set to) to edit the

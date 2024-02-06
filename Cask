@@ -10,4 +10,4 @@
 
 (package "ship-mate" "0.4.1" "Project-scoped compilation")
 
-(files "ship-mate.el" "ship-mate-dinghy.el")
+(files "ship-mate.el" "ship-mate-dinghy.el" "ship-mate-edit.el")

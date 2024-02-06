@@ -14,7 +14,9 @@
 (setq byte-compile-warnings '(not not-unused))
 
 (dinghy-rope-setup-paths)
-(dinghy-rope-setup-undercover (list "ship-mate.el" "ship-mate-dinghy.el"))
+(dinghy-rope-setup-undercover (list "ship-mate.el"
+                                    "ship-mate-dinghy.el"
+                                    "ship-mate-edit.el"))
 (dinghy-rope-setup-ert-runner)
 (dinghy-rope-setup-ert :increase-print-depth t)
 

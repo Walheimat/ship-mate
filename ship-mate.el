@@ -84,8 +84,6 @@ nil, show immediately."
 (defvar ship-mate-command-map
   (let ((map (make-sparse-keymap)))
 
-    (define-key map (kbd ",") #'ship-mate-edit-environment)
-    (define-key map (kbd ".") #'ship-mate-edit-history)
     (define-key map (kbd ">") #'ship-mate-refresh-history)
 
     (define-key map (kbd "/") #'ship-mate-hidden-recompile)
@@ -613,84 +611,7 @@ If it is already shown, just clear timer and buffer."
     (unless (ship-mate--buffer-visible-p buffer)
       (pop-to-buffer buffer))))
 
-
-;;;; Editing
-
-(defun ship-mate-edit--in-buffer (buffer-name elements mode)
-  "Edit ELEMENTS in buffer BUFFER-NAME.
-
-Sets MODE unless already set."
-  (let* ((buffer (get-buffer-create buffer-name))
-         (length (length elements)))
-
-    (with-current-buffer buffer
-      (erase-buffer)
-
-      (seq-map-indexed
-       (lambda (it i)
-         (insert it)
-         (unless (eq i (1- length))
-           (insert "\n")))
-       elements)
-
-      (set-buffer-modified-p nil)
-
-      (unless (buffer-local-value mode (current-buffer))
-        (funcall mode))
-
-      (pop-to-buffer buffer nil t))))
-
-;;;; Editing the environmanet
-
-(defvar ship-mate-environment--buffer-name "*ship-mate-edit-env*"
-  "The name of the buffer used for `ship-mate-edit-environment'.")
-(defvar ship-mate-environment--target-buffer nil
-  "The buffer `ship-mate-edit-environment' was called from.")
-
-(defvar ship-mate-environment-mode-map
-  (let ((map (make-sparse-keymap)))
-
-    (define-key map "\C-c\C-c" #'ship-mate-environment-apply)
-    (define-key map "\C-c\C-q" #'ship-mate-environment-clear)
-    (define-key map "\C-c\C-k" #'ship-mate-environment-abort)
-    map)
-  "Map used in buffer created by `ship-mate-edit-environment'.")
-
-(define-minor-mode ship-mate-environment-mode
-  "Minor mode to edit the environment.
-
-\\{ship-mate-environment-mode-map}"
-  :lighter " sme"
-  (setq-local header-line-format
-              (substitute-command-keys
-               "\\<ship-mate-environment-mode-map>\
-`\\[ship-mate-environment-apply]' applies and recompiles, \
-`\\[ship-mate-environment-clear]' clears all env variables, \
-`\\[ship-mate-environment-abort]' reverts.")))
-
-(defun ship-mate-environment--current-environment ()
-  "Get the last environment for CMD or default."
-  (if-let* ((buffer-name (funcall compilation-buffer-name-function nil))
-            (buffer (get-buffer buffer-name)))
-
-      (buffer-local-value 'compilation-environment buffer)
-
-    (ship-mate--local-value 'ship-mate-environment)))
-
-(defun ship-mate-environment--edit ()
-  "Edit environment in the current buffer."
-  (unless (ship-mate--command-buffer-p (current-buffer))
-    (user-error "Can only edit `ship-mate' command buffers"))
-
-  (setq ship-mate-environment--target-buffer (current-buffer))
-
-  (ship-mate-environment--edit-in-buffer (buffer-local-value 'compilation-environment ship-mate-environment--target-buffer)))
-
-(defun ship-mate-environment--edit-in-buffer (environment)
-  "Create the buffer for editing the ENVIRONMENT."
-  (ship-mate-edit--in-buffer ship-mate-environment--buffer-name
-                             environment
-                             'ship-mate-environment-mode))
+;;;; Environment
 
 (defun ship-mate-environment--edit-in-minibuffer (environment)
   "Edit ENVIRONMENT in the minibuffer and return the result."
@@ -702,57 +623,6 @@ Sets MODE unless already set."
 
     recreated))
 
-(defun ship-mate-environment--validate ()
-  "Validate the current edit state."
-  (let ((new-state (ship-mate-environment--listify))
-        (warnings nil))
-
-    (unless (ship-mate-environment--valid-env-p new-state)
-      (push "Invalid assignments" warnings))
-
-    warnings))
-
-(defun ship-mate-environment--listify ()
-  "Listify the environment buffer."
-  (ship-mate--listify-buffer (get-buffer ship-mate-environment--buffer-name)))
-
-(defun ship-mate-environment-apply ()
-  "Apply the edited environment."
-  (interactive)
-
-  (when-let ((warnings (ship-mate-environment--validate)))
-    (user-error (string-join warnings ", ")))
-
-  (ship-mate-environment--set-environment (ship-mate-environment--listify))
-  (ship-mate-environment--quit))
-
-(defun ship-mate-environment--quit ()
-  "Quit the editing."
-  (quit-window t (get-buffer-window ship-mate-environment--buffer-name t))
-
-  (setq ship-mate-environment--target-buffer nil))
-
-(defun ship-mate-environment-abort ()
-  "Abort editing."
-  (interactive)
-
-  (ship-mate-environment--quit))
-
-(defun ship-mate-environment-clear ()
-  "Clear the environment."
-  (interactive)
-
-  (ship-mate-environment--set-environment nil)
-  (ship-mate-environment--quit))
-
-(defun ship-mate-environment--set-environment (env)
-  "Set `compilation-environment' to ENV.
-
-This is set in buffer `ship-mate-environment--buffer-name'."
-  (with-current-buffer ship-mate-environment--target-buffer
-    (setq-local compilation-environment env)
-    (run-hooks 'ship-mate-environment-set-hook)))
-
 (defun ship-mate-environment--valid-env-p (value)
   "Check if VALUE is a valid environment."
   (and (listp value)
@@ -762,100 +632,16 @@ This is set in buffer `ship-mate-environment--buffer-name'."
               (string-match-p ship-mate-environment--regex it))
             value))))
 
-;;;; Editing history
+(defun ship-mate-environment--current-environment ()
+  "Get the last environment for CMD or default."
+  (if-let* ((buffer-name (funcall compilation-buffer-name-function nil))
+            (buffer (get-buffer buffer-name)))
 
-(defvar ship-mate-history--buffer-name "*ship-mate-edit-history*"
-  "The name of the buffer used for `ship-mate-edit-history'.")
+      (buffer-local-value 'compilation-environment buffer)
 
-(defvar ship-mate-history--command nil
-  "The symbol of the command currently edited.")
-
-(defvar ship-mate-history-mode-map
-  (let ((map (make-sparse-keymap)))
-
-    (define-key map "\C-c\C-c" #'ship-mate-history-apply)
-    (define-key map "\C-c\C-q" #'ship-mate-history-clear)
-    (define-key map "\C-c\C-k" #'ship-mate-history-abort)
-    map)
-  "Map used in buffer created by `ship-mate-edit-history'.")
-
-(define-minor-mode ship-mate-history-mode
-  "Minor mode to edit the history.
-
-\\{ship-mate-history-mode-map}"
-  :lighter " smh"
-  (setq-local header-line-format
-              (substitute-command-keys
-               "\\<ship-mate-history-mode-map>\
-`\\[ship-mate-history-apply]' applies, \
-`\\[ship-mate-history-clear]' clears the history, \
-`\\[ship-mate-history-abort]' reverts.")))
-
-(defun ship-mate-history--edit ()
-  "Edit the history of the current buffer."
-  (unless (ship-mate--command-buffer-p (current-buffer))
-    (user-error "Can only edit `ship-mate' command buffer"))
-
-  (setq ship-mate-history--command (buffer-local-value 'ship-mate--this-command (current-buffer)))
-
-  (ship-mate-history--edit-in-buffer))
-
-(defun ship-mate-history--edit-in-buffer ()
-  "Edit the history in a buffer."
-  (let ((history (ship-mate-command--history ship-mate-history--command)))
-
-    (ship-mate-edit--in-buffer ship-mate-history--buffer-name
-                               (ring-elements history)
-                               'ship-mate-history-mode)))
-
-(defun ship-mate-history-apply ()
-  "Apply the edited history."
-  (interactive)
-
-  (ship-mate-history--set-history (ship-mate-history--listify))
-  (ship-mate-history--quit))
-
-(defun ship-mate-history-clear ()
-  "Clear the history."
-  (interactive)
-
-  (ship-mate-history--set-history nil)
-  (ship-mate-history--quit))
-
-(defun ship-mate-history-abort ()
-  "Abort editing history."
-  (interactive)
-
-  (ship-mate-history--quit))
-
-(defun ship-mate-history--set-history (new-elements)
-  "Set the edited history to include NEW-ELEMENTS."
-  (let ((history (ship-mate-command--history ship-mate-history--command)))
-
-    (ring-resize history 0)
-    (ring-resize history ship-mate-command-history-size)
-
-    (dolist (it new-elements)
-      (ring-insert history it))))
-
-(defun ship-mate-history--quit ()
-  "Quit the history editing buffer."
-  (quit-window t (get-buffer-window ship-mate-history--buffer-name t))
-
-  (setq ship-mate-history--command nil))
-
-(defun ship-mate-history--listify ()
-  "Listify history buffer."
-  (reverse (ship-mate--listify-buffer (get-buffer ship-mate-history--buffer-name))))
+    (ship-mate--local-value 'ship-mate-environment)))
 
 ;;;; Utility
-
-(defun ship-mate--listify-buffer (buffer)
-  "Listify the content of BUFFER."
-  (let* ((raw (with-current-buffer buffer
-                (buffer-string))))
-
-    (seq-filter (lambda (it) (not (string-empty-p it))) (string-split raw "\n"))))
 
 (defun ship-mate--plist-keys (plist)
   "Get all keys from PLIST."
@@ -1121,32 +907,6 @@ it with the default value(s)."
                                               (lambda (it) (memq (ship-mate--safe-get-buffer it) buffers))))))))
 
   (ship-mate-submarine--surface process))
-
-;;;###autoload
-(defun ship-mate-edit-environment (buffer)
-  "Edit the `compilation-environment' for BUFFER.
-
-If BUFFER isn't a compilation buffer, this prompts to select one."
-  (interactive
-   (list (if (ship-mate--command-buffer-p)
-             (current-buffer)
-           (ship-mate--complete-buffer "Edit environment for buffer: "))))
-
-  (with-current-buffer buffer
-    (ship-mate-environment--edit)))
-
-;;;###autoload
-(defun ship-mate-edit-history (buffer)
-  "Edit the history for BUFFER.
-
-If BUFFER isn't a compilation buffer, this prompts to select one."
-  (interactive
-   (list (if (ship-mate--command-buffer-p)
-             (current-buffer)
-           (ship-mate--complete-buffer "Edit history for buffer: "))))
-
-  (with-current-buffer buffer
-    (ship-mate-history--edit)))
 
 ;;;###autoload
 (defun ship-mate-hide ()
