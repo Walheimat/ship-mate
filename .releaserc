@@ -36,11 +36,11 @@
             },
             {
               "type": "refac",
-              "section": "Features"
+              "section": "Changes"
             },
             {
               "type": "improve",
-              "section": "Features"
+              "section": "Changes"
             },
             {
               "type": "chore",
