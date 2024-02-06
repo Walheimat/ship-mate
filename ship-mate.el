@@ -266,7 +266,8 @@ and the index of the matched item."
                                                 (string-match-p part command)))
                                          el-parts)))
 
-                          (when (> matches min-count)
+                          (when (and (not (string= it command))
+                                     (> matches min-count))
                             (setq top-matches matches)))))
              (match (seq-find matcher elements)))
 
