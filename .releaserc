@@ -1,7 +1,5 @@
 {
-  "branches": [
-    "trunk"
-  ],
+  "branches": ["trunk"],
   "repositoryUrl": "git@github.com:Walheimat/ship-mate.git",
   "plugins": [
     [
@@ -18,7 +16,7 @@
             "release": "patch"
           }
         ]
-      },
+      }
     ],
     [
       "@semantic-release/release-notes-generator",
@@ -76,6 +74,9 @@
         "assets": [
           "CHANGELOG.md",
           "ship-mate.el",
+          "ship-mate-edit.el",
+          "ship-mate-submarine.el",
+          "ship-mate-dinghy.el",
           "Cask",
           "Makefile"
         ]
