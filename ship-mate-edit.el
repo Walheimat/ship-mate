@@ -8,8 +8,8 @@
 
 ;;; Commentary:
 
-;; Allows editing environment and history in a separate buffer or in
-;; the minibuffer.
+;; Conveniently edit a command's environment and history in a separate
+;; buffer.
 
 ;;; Code:
 

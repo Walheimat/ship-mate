@@ -125,6 +125,8 @@ Prints the command of the process and environment variables."
   (remove-hook 'ship-mate-environment-set-hook 'ship-mate-dinghy--reset-header-line-format)
   (remove-hook 'compilation-start-hook 'ship-mate-dinghy--maybe-enable))
 
+;;;; API
+
 ;;;###autoload
 (define-minor-mode ship-mate-dinghy-global-mode
   "Sets up `ship-mate-dinghy' mode for all command buffers."
