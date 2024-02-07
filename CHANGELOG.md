@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.4.2](https://github.com/Walheimat/ship-mate/compare/v0.4.1...v0.4.2) (2024-02-07)
+
+
+### Bug Fixes
+
+* **buffers:** use project-buffers by default ([dce7919](https://github.com/Walheimat/ship-mate/commit/dce79195f0c7590080b59769708f48e98fea14d0))
+* **environment:** use regex to validate assignments ([328fe86](https://github.com/Walheimat/ship-mate/commit/328fe863cba7e3b4c2f4d2d7eb2d9249c46033e2))
+* **fuzzy:** check ring length not size before replacing ([fddc098](https://github.com/Walheimat/ship-mate/commit/fddc098aa524462983f6e5fe8ce5b33fcb057c69))
+* **fuzzy:** don't consider exact matches ([f0851f3](https://github.com/Walheimat/ship-mate/commit/f0851f3939c7afde6085e2ed98eb211570aa9794))
+
+
+### Changes
+
+* **fuzzy:** ask before replacing match ([a1acdfc](https://github.com/Walheimat/ship-mate/commit/a1acdfc25d5c2f064e4fab8be3f97d67a27b9c14))
+* **ship-mate-dinghy:** factor out into own module ([0c98501](https://github.com/Walheimat/ship-mate/commit/0c98501587d3cd54d86aa63169f504837910a116))
+* **ship-mate-edit:** factor out in-buffer editing ([32d6199](https://github.com/Walheimat/ship-mate/commit/32d61995e19fc9162cda88af5ce318376605823a))
+* **submarine:** factor out into own module ([d2ecf09](https://github.com/Walheimat/ship-mate/commit/d2ecf0960a729062b41ba38c7821e0ed067886eb))
+
 ## [0.4.1](https://github.com/Walheimat/ship-mate/compare/v0.4.0...v0.4.1) (2024-01-28)
 
 
