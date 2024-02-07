@@ -196,23 +196,6 @@ advise functions yourself using advice combinator =:around=.
 to the history of a =ship-mate= command and to also update the history
 when using =recompile= or =compile= instead.
 
-If you enable =ship-mate-submarine-mode= you can also use command
-=ship-mate-submarine-hidden-recompile= which will run =recompile= but
-not display the buffer until the compilation has finished. After
-compilation and idle time of
-=ship-mate-submarine-prompt-for-hidden-buffer= seconds, you will be
-prompted to view the result. If you don't mind a sudden pop-up as soon
-as compilation finishes instead you can set
-=ship-mate-submarine-prompt-for-hidden-buffer= to =nil=.
-
-In the same way you can type =C-c /= in a running =ship-mate= buffer
-to send it to the background and make it prompt when finished.
-
-If the mode is enabled you can also run a =ship-mate= command with
-numeric prefix 3 (or whatever
-=ship-mate-submarine-hidden-compilation-prefix= is set to) to run it
-in the same way.
-
 From a =ship-mate= command buffer you can use
 =ship-mate-command-{next,prev}-buffer= to quickly switch between
 command buffers of the same project (they're also bound in
@@ -226,23 +209,45 @@ set =compilation-environment= and is safe to set (checked by
 =ship-mate-environment--valid-env-p=). The initial value is local to
 the project.
 
-One benefit of doing this over using =compilation-environment=
-directly is that you can use =ship-mate-edit-environment= to
-conveniently edit the environment variables in a buffer to apply
-changes (if they're valid) or clear all variables.
-
-If you enable =ship-mate-dinghy-mode= this command is automatically
-bound to =C-c ,= in =ship-mate= command buffers. You can also call it
-from without which will prompt you to select the buffer for which to
-edit it.
-
 You can also run a =ship-mate= command with numeric prefix 5 (or
 whatever =ship-mate-edit-environment-prefix= is set to) to edit the
 environment in the minibuffer before executing it. This also works for
 recompilation.
 
-*** Setting the history
+*** Hiding and resurfacing compilations
 
-You can also call =ship-mate-edit-history= to edit a command's history
-(for that project) which works in the exact same way as the editing
-the environment described above.
+Sub-package =ship-mate-submarine= provides commands to temporarily
+hide running compilations or run them pre-hidden.  Enable
+=ship-mate-submarine-mode= for this.
+
+You can now use command =ship-mate-submarine-hidden-recompile= which
+will run =recompile= but not display the buffer until the compilation
+has finished. After compilation and idle time of
+=ship-mate-submarine-prompt-for-hidden-buffer= seconds, you will be
+prompted to view the result. If you don't mind a sudden pop-up as soon
+as compilation finishes instead you can set
+=ship-mate-submarine-prompt-for-hidden-buffer= to =nil=.
+
+In the same way you can now type =C-c /= or call
+=ship-mate-submarine-hide= in a running =ship-mate= buffer to send it
+to the background and make it prompt when finished. From outside you
+can call =ship-mate-submarine-hide-visible= to submerge a visible
+compilation (bound to =C-c ?= in the command map).
+
+You can also now run any =ship-mate= command with numeric prefix 3 (or
+whatever =ship-mate-submarine-hidden-compilation-prefix= is set to) to
+run it submerged from the beginning.
+
+To show a currently hidden compilation you can run
+=ship-mate-submarine-show-hidden= which will prompt you with a
+selection of submerged processes.
+
+*** Editing the environment and history
+
+Sub-package =ship-mate-edit= provides commands
+=ship-mate-edit-environment= and =ship-mate-edit-history= to
+conveniently edit the environment or command history in a buffer,
+apply the changes (if they're valid) or clear them.
+
+You may want to run =ship-mate-edit-setup-bindings= to create bindings
+in =ship-mate-command-map= and =ship-mate=dinghy-mode-map=.
