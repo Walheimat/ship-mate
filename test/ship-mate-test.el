@@ -83,7 +83,7 @@
       (bydi-was-called-with read-shell-command (list "Test project (Test Project): " "untest" 'ship-mate--command-history))
       (bydi-was-called-with compile '("test" nil))
 
-      (setq entered-command "best")
+      (setq entered-command "best ")
       (ship-mate-command 'test t)
       (bydi-was-called-with compile '("best" nil))
 

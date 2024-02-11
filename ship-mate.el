@@ -179,6 +179,8 @@ edit the environment first."
                          (if comint " interactively: " ": ")))
          (command (or (and (not arg) initial)
                       (read-shell-command prompt initial 'ship-mate--command-history)))
+         (command (when (stringp command)
+                    (string-trim command)))
 
          ;; Binding external variables.
          (default-directory (project-root current))
