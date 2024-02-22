@@ -65,6 +65,11 @@ can be set to."
   :group 'ship-mate
   :type 'integer)
 
+(defcustom ship-mate-other-project-prefix 4
+  "Numeric prefix for running the command in another project."
+  :group 'ship-mate
+  :type 'integer)
+
 ;;;; Variables
 
 (defvar ship-mate-command-map
@@ -153,11 +158,13 @@ with a prefix argument ARG.
 The `compilation-environment' is set from the project's
 `ship-mate-environment'.
 
-If the prefix argument ARG is 0, `comint-mode' will be used
-instead of `compile-mode'. If it is 5, the user is prompted to
-edit the environment first."
+Execution behavior varies by ARG. See the various
+`ship-mate-*-prefix' variables. By default 0 runs command using
+`comint', 3 runs the command hidden, 4 (the default) runs the
+command in another project and 5 lets you edit the environment
+first."
   (let* ((project-vc-name nil)
-         (current (project-current t))
+         (current (ship-mate-command--current-project arg))
          (root (project-root current))
          (name (project-name current))
          (project-buffers (project-buffers current))
@@ -201,6 +208,16 @@ edit the environment first."
         (setq ship-mate--this-command cmd))
 
       buffer)))
+
+(defun ship-mate-command--current-project (&optional arg)
+  "Get the current project.
+
+If ARG is the default prefix argument, this prompts for the
+project first."
+  (or (and (eq 4 (prefix-numeric-value arg))
+           (when-let ((dir (project-prompt-project-dir)))
+             (project--find-in-directory dir)))
+      (project-current t)))
 
 (defun ship-mate-command--compile (command &optional comint arg)
   "Compile COMMAND.

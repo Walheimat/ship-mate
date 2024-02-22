@@ -165,6 +165,20 @@
       (bydi-was-called ship-mate-environment--edit-in-minibuffer)
       (bydi-was-set-to compilation-environment '("MOC=KING")))))
 
+(ert-deftest ship-mate-command--current-project ()
+  (bydi ((:always project-current)
+         (:always project-prompt-project-dir)
+         (:always project--find-in-directory))
+
+    (should (ship-mate-command--current-project))
+
+    (bydi-was-called project-current t)
+
+    (should (ship-mate-command--current-project '(4)))
+
+    (bydi-was-not-called project-current)
+    (bydi-was-called project--find-in-directory)))
+
 (ert-deftest ship-mate-environment--current-environment ()
   :tags '(environment)
 
