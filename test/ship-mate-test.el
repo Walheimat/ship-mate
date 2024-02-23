@@ -174,7 +174,8 @@
 
     (bydi-was-called project-current t)
 
-    (should (ship-mate-command--current-project '(4)))
+    (let ((ship-mate-other-project-prefix 2))
+      (should (ship-mate-command--current-project '(2))))
 
     (bydi-was-not-called project-current)
     (bydi-was-called project--find-in-directory)))
