@@ -43,10 +43,11 @@
 (defcustom ship-mate-command-fuzzy-match-function #'ship-mate-command--fuzzy-match
   "Function to match a command against history entries.
 
-The function will be called with two arguments: the command to
-match against and the history of the last command category. On a
-match it should return a plist that includes MATCH, COUNT and
-INDEX (of matched item)."
+The function will be called with two arguments (as well as one
+optional argument): the command to match against and the history
+of the last command category (as well as whether a full match
+should count). On a match it should return a plist that includes
+MATCH, COUNT and INDEX (of matched item)."
   :group 'ship-mate
   :type 'function)
 
@@ -241,11 +242,13 @@ environment first."
 
       (apply ship-mate-command--executor (list exec)))))
 
-(defun ship-mate-command--fuzzy-match (command history)
+(defun ship-mate-command--fuzzy-match (command history &optional allow-full)
   "Match COMMAND against commands in HISTORY.
 
 If there is a match this returns a plist of match, match count
-and the index of the matched item."
+and the index of the matched item.
+
+If ALLOW-FULL is t, also count full matches."
   (and-let* ((elements (ring-elements history))
              (min-count 1)
              (top-matches 0)
@@ -259,7 +262,8 @@ and the index of the matched item."
                                                 (string-match-p part command)))
                                          el-parts)))
 
-                          (when (and (not (string= it command))
+                          (when (and (or allow-full
+                                         (not (string= it command)))
                                      (> matches min-count))
                             (setq top-matches matches)))))
              (match (seq-find matcher elements)))
@@ -335,7 +339,7 @@ EDIT is passed as-is to all invocations of RECOMPILE."
     (if-let* ((command compile-command)
               (history (and ship-mate--last-command
                             (ship-mate-command--history ship-mate--last-command)))
-              (matches (funcall ship-mate-command-fuzzy-match-function command history)))
+              (matches (funcall ship-mate-command-fuzzy-match-function command history t)))
 
         (ship-mate-command ship-mate--last-command edit)
 
