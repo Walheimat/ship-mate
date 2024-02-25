@@ -63,7 +63,7 @@ the executor of `ship-mate-command--compile'."
 
 (defun ship-mate-submarine--run (exec)
   "Run EXEC in the background."
-  (ship-mate-submarine--ensure-no-hidden-buffers)
+  (ship-mate-submarine--ensure-no-buffers)
 
   (message "Running `%s' command in the background" ship-mate--current-command-name)
 
@@ -97,13 +97,14 @@ the executor of `ship-mate-command--compile'."
        (ship-mate--command-buffer-p buffer)
        (get-buffer-process buffer)))
 
-(defun ship-mate-submarine--ensure-no-hidden-buffers ()
+(defun ship-mate-submarine--ensure-no-buffers ()
   "Verify no hidden `ship-mate' buffer is visible.
 
 If there are any, close them."
-  (when-let ((windows (seq-filter
-                       (lambda (it) (buffer-local-value 'ship-mate--hidden (window-buffer it)))
-                       (window-list-1 nil nil t))))
+  (when-let* ((var 'ship-mate--this-command)
+              (windows (seq-filter
+                        (lambda (it) (buffer-local-value var (window-buffer it)))
+                        (window-list-1 nil nil t))))
 
     (dolist (win windows)
       (quit-window nil win))))

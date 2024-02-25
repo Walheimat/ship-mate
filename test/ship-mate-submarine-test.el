@@ -37,7 +37,7 @@
 (ert-deftest ship-mate-submarine--run ()
   :tags '(submarine)
 
-  (bydi ((:ignore ship-mate-submarine--ensure-no-hidden-buffers)
+  (bydi ((:ignore ship-mate-submarine--ensure-no-buffers)
          (:watch display-buffer-alist))
 
     (ert-with-test-buffer (:name "sub-run")
@@ -46,7 +46,7 @@
         (shut-up (ship-mate-submarine--run (lambda () (current-buffer)))))
 
       (should (buffer-local-value 'ship-mate--hidden (current-buffer)))
-      (bydi-was-called ship-mate-submarine--ensure-no-hidden-buffers)
+      (bydi-was-called ship-mate-submarine--ensure-no-buffers)
       (bydi-was-set display-buffer-alist))))
 
 (ert-deftest ship-mate-submarine--hide ()
@@ -83,18 +83,18 @@
 
       (bydi-was-called get-buffer-process))))
 
-(ert-deftest ship-mate-submarine--ensure-no-hidden-buffer ()
+(ert-deftest ship-mate-submarine--ensure-no-buffers ()
   :tags '(submarine)
 
   (ert-with-test-buffer (:name "sub-ensure")
 
-    (setq ship-mate--hidden t)
+    (setq ship-mate--this-command 'test)
 
     (bydi ((:spy quit-window))
 
       (pop-to-buffer (current-buffer))
 
-      (ship-mate-submarine--ensure-no-hidden-buffers)
+      (ship-mate-submarine--ensure-no-buffers)
 
       (bydi-was-called quit-window))))
 
