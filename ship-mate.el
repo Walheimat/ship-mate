@@ -331,8 +331,9 @@ EDIT is passed as-is to all invocations of RECOMPILE."
 
         (current-buffer))))
 
-   ;; Don't break other derived modes.
-   ((derived-mode-p 'compilation-mode)
+   ;; Don't break other derived modes or non-projects.
+   ((or (derived-mode-p 'compilation-mode)
+        (not (project-current)))
     (funcall-interactively recompile edit))
 
    (t
