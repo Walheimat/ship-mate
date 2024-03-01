@@ -78,6 +78,7 @@ can be set to."
 
     (define-key map (kbd "!") #'ship-mate-select-command)
     (define-key map (kbd "@") #'ship-mate-show-results)
+    (define-key map (kbd "#") #'ship-mate-rerun-command)
     (define-key map (kbd ">") #'ship-mate-refresh-history)
 
     map)
@@ -125,6 +126,9 @@ This is set by `ship-mate-command'.")
 
 (defvar ship-mate--last-command nil
   "The symbol of the last executed command.")
+
+(defvar ship-mate--project-meta (make-hash-table :test 'equal)
+  "Map storing meta data per project.")
 
 (defvar ship-mate-command--fuzzy-match-ignore "^\\(\\|\s+\\|--\\)$"
   "Regular expression used by `ship-mate-command--fuzzy-match'.
@@ -195,7 +199,7 @@ command hidden and 5 lets you edit the environment first."
          (compilation-buffer-name-function (funcall ship-mate-command-buffer-name-function-generator lowercase)))
 
     ;; Record this as the last command.
-    (setq ship-mate--last-command cmd)
+    (ship-mate-command--record cmd current)
 
     ;; Amend history (don't extend).
     (ring-remove+insert+extend history command)
@@ -345,6 +349,24 @@ EDIT is passed as-is to all invocations of RECOMPILE."
         (ship-mate-command ship-mate--last-command edit)
 
       (funcall-interactively recompile edit)))))
+
+(defun ship-mate-command--record (cmd project)
+  "Record CMD as the latest command for PROJECT."
+  (setq ship-mate--last-command cmd)
+
+  (if-let ((meta (gethash project ship-mate--project-meta)))
+
+      (plist-put meta :last cmd)
+
+    (puthash project (list :last cmd) ship-mate--project-meta)))
+
+(defun ship-mate-command--last-command ()
+  "Get the last command for the current project."
+  (when-let* ((project (project-current))
+              (meta (gethash project ship-mate--project-meta))
+              (cmd (plist-get meta :last)))
+
+    cmd))
 
 (defun ship-mate-command--history (cmd)
   "Access history for CMD.
@@ -679,6 +701,17 @@ ARG is passed to the underlying command."
          current-prefix-arg))
 
   (ship-mate-command (intern cmd) arg))
+
+(defun ship-mate-rerun-command (cmd &optional arg)
+  "Re-run CMD.
+
+ARG is passed to the underlying command."
+  (interactive (list (ship-mate-command--last-command) current-prefix-arg))
+
+  (unless cmd
+    (user-error "Project has no previous command"))
+
+  (ship-mate-command cmd arg))
 
 ;;;###autoload
 (defun ship-mate-show-results (buffer)

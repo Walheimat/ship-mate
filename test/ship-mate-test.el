@@ -75,6 +75,7 @@
                                   (funcall compilation-save-buffers-predicate)
                                   (current-buffer)))
            (:mock read-shell-command :return entered-command)
+           ship-mate-command--record
            ship-mate-dinghy-mode)
 
       (setq entered-command "test")
@@ -104,6 +105,7 @@
            (:mock project--value-in-dir :return ship-mate-test-default-cmd)
            (:mock compile :return (current-buffer))
            (:mock read-shell-command :return entered-command)
+           ship-mate-command--record
            ship-mate-dinghy-mode)
 
       (ship-mate-command 'test)
@@ -127,7 +129,9 @@
            (:mock ship-mate-command--history :return history)
            (:mock ship-mate--local-value :return env)
            (:watch compilation-environment)
-           (:mock compile :return (current-buffer)))
+           (:mock compile :return (current-buffer))
+           ship-mate-dinghy-mode
+           ship-mate-command--record)
 
       (ship-mate-command 'test)
 
@@ -192,6 +196,20 @@
       (let ((compilation-buffer-name-function (lambda (_) (buffer-name))))
 
         (should (equal '("TES=TING") (ship-mate-environment--current-environment)))))))
+
+(ert-deftest ship-mate-command--record-and-retrieve-last-command ()
+  (let ((ship-mate--project-meta (make-hash-table :test 'equal)))
+
+    (bydi ((:watch ship-mate--last-command)
+           (:mock project-current :return "test-project"))
+
+      (ship-mate-command--record 'test "test-project")
+
+      (should (equal (ship-mate-command--last-command) 'test))
+
+      (ship-mate-command--record 'mock "test-project")
+
+      (should (equal (ship-mate-command--last-command) 'mock)))))
 
 (ert-deftest ship-mate-command--history--inserts-multiple ()
   :tags '(command)
@@ -478,6 +496,28 @@
     (call-interactively 'ship-mate-select-command)
 
     (bydi-was-called-with ship-mate-command (list 'test nil))))
+
+(ert-deftest ship-mate-rerun-command--calls-command ()
+  :tags '(user-facing command)
+
+  (bydi ((:mock ship-mate-command--last-command :return 'test)
+         ship-mate-command)
+
+    (call-interactively 'ship-mate-rerun-command)
+
+    (bydi-was-called ship-mate-command--last-command)
+    (bydi-was-called-with ship-mate-command '(test nil))))
+
+(ert-deftest ship-mate-rerun-command--errors-if-none-recorded ()
+  :tags '(user-facing command)
+
+  (bydi ((:mock ship-mate-command--last-command :return nil)
+         ship-mate-command)
+
+    (should-error (call-interactively 'ship-mate-rerun-command))
+
+    (bydi-was-called ship-mate-command--last-command)
+    (bydi-was-not-called 'ship-mate-command)))
 
 (ert-deftest ship-mate--local-value ()
   :tags '(utility)
