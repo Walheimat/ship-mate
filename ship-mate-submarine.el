@@ -215,8 +215,8 @@ If it is already shown, just clear timer and buffer."
   (let ((map ship-mate-command-map))
 
     (define-key map (kbd "/") #'ship-mate-submarine-hidden-recompile)
-    (define-key map (kbd "?") #'ship-mate-submarine-hide-visible)
-    (define-key map (kbd "#") #'ship-mate-submarine-show-hidden))
+    (define-key map (kbd ";") #'ship-mate-submarine-hide-visible)
+    (define-key map (kbd "'") #'ship-mate-submarine-show-hidden))
 
   (let ((map ship-mate-dinghy-mode-map))
 
@@ -233,8 +233,8 @@ If it is already shown, just clear timer and buffer."
   (let ((map ship-mate-command-map))
 
     (define-key map (kbd "/") nil)
-    (define-key map (kbd "?") nil)
-    (define-key map (kbd "#") nil))
+    (define-key map (kbd ";") nil)
+    (define-key map (kbd "'") nil))
 
   (let ((map ship-mate-dinghy-mode-map))
 
