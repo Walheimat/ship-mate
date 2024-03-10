@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.5.0](https://github.com/Walheimat/ship-mate/compare/v0.4.2...v0.5.0) (2024-03-10)
+
+
+### Features
+
+* **command:** ship-mate-rerun-command ([40f2690](https://github.com/Walheimat/ship-mate/commit/40f2690726cbf396c5aeb099b6adffc36a402435))
+
+
+### Bug Fixes
+
+* **command:** don't capture recompile outside of projects ([3834882](https://github.com/Walheimat/ship-mate/commit/383488220970ffc2ac61d5bc2194d0237de6a51e))
+* **command:** use custom var and set it to 2 ([0c34933](https://github.com/Walheimat/ship-mate/commit/0c34933be7367ad85ce5de6b9f185710204d9245))
+* **fuzzy:** allow full match when capturing ([37b748a](https://github.com/Walheimat/ship-mate/commit/37b748a8c85c6ff64da313ae4beba27a7480123d))
+* **submarine:** close any ship-mate buffer ([acf2a94](https://github.com/Walheimat/ship-mate/commit/acf2a948c24b72424231bd7bc6b46bd369db98dd))
+* **submarine:** use available bindings ([9695d78](https://github.com/Walheimat/ship-mate/commit/9695d780fc9529327c290a8fa24a124b53afd2c6))
+
+
+### Changes
+
+* **command:** string-trim commands ([2d274a7](https://github.com/Walheimat/ship-mate/commit/2d274a7d7676bdaad9a875896db0f637415a4d0f))
+* **command:** universal prefix forces project select ([ea029c9](https://github.com/Walheimat/ship-mate/commit/ea029c900655b41ec7f77f559a00b2682f519db4))
+
 ## [0.4.2](https://github.com/Walheimat/ship-mate/compare/v0.4.1...v0.4.2) (2024-02-07)
 
 
