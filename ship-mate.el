@@ -702,16 +702,17 @@ ARG is passed to the underlying command."
 
   (ship-mate-command (intern cmd) arg))
 
+;;;###autoload
 (defun ship-mate-rerun-command (cmd &optional arg)
-  "Re-run CMD.
+  "Re-run previous CMD.
 
-ARG is passed to the underlying command."
+ARG is passed to the underlying command. If there is no previous
+command, this runs `ship-mate-select-command'."
   (interactive (list (ship-mate-command--last-command) current-prefix-arg))
 
-  (unless cmd
-    (user-error "Project has no previous command"))
-
-  (ship-mate-command cmd arg))
+  (if cmd
+      (ship-mate-command cmd arg)
+    (call-interactively 'ship-mate-select-command)))
 
 ;;;###autoload
 (defun ship-mate-show-results (buffer)

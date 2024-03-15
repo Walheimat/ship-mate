@@ -508,16 +508,18 @@
     (bydi-was-called ship-mate-command--last-command)
     (bydi-was-called-with ship-mate-command '(test nil))))
 
-(ert-deftest ship-mate-rerun-command--errors-if-none-recorded ()
+(ert-deftest ship-mate-rerun-command--selects-if-none-recorded ()
   :tags '(user-facing command)
 
   (bydi ((:mock ship-mate-command--last-command :return nil)
-         ship-mate-command)
+         ship-mate-command
+         ship-mate-select-command)
 
-    (should-error (call-interactively 'ship-mate-rerun-command))
+    (call-interactively 'ship-mate-rerun-command)
 
     (bydi-was-called ship-mate-command--last-command)
-    (bydi-was-not-called 'ship-mate-command)))
+    (bydi-was-not-called ship-mate-command)
+    (bydi-was-called ship-mate-select-command)))
 
 (ert-deftest ship-mate--local-value ()
   :tags '(utility)
