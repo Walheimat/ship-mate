@@ -75,7 +75,7 @@
                                   (funcall compilation-save-buffers-predicate)
                                   (current-buffer)))
            (:mock read-shell-command :return entered-command)
-           ship-mate-command--record
+           ship-mate-command--record-last-command
            ship-mate-dinghy-mode)
 
       (setq entered-command "test")
@@ -105,7 +105,7 @@
            (:mock project--value-in-dir :return ship-mate-test-default-cmd)
            (:mock compile :return (current-buffer))
            (:mock read-shell-command :return entered-command)
-           ship-mate-command--record
+           ship-mate-command--record-last-command
            ship-mate-dinghy-mode)
 
       (ship-mate-command 'test)
@@ -131,7 +131,7 @@
            (:watch compilation-environment)
            (:mock compile :return (current-buffer))
            ship-mate-dinghy-mode
-           ship-mate-command--record)
+           ship-mate-command--record-last-command)
 
       (ship-mate-command 'test)
 
@@ -203,11 +203,11 @@
     (bydi ((:watch ship-mate--last-command)
            (:mock project-current :return "test-project"))
 
-      (ship-mate-command--record 'test "test-project")
+      (ship-mate-command--record-last-command 'test "test-project")
 
       (should (equal (ship-mate-command--last-command) 'test))
 
-      (ship-mate-command--record 'mock "test-project")
+      (ship-mate-command--record-last-command 'mock "test-project")
 
       (should (equal (ship-mate-command--last-command) 'mock)))))
 

@@ -199,7 +199,7 @@ command hidden and 5 lets you edit the environment first."
          (compilation-buffer-name-function (funcall ship-mate-command-buffer-name-function-generator lowercase)))
 
     ;; Record this as the last command.
-    (ship-mate-command--record cmd current)
+    (ship-mate-command--record-last-command cmd current)
 
     ;; Amend history (don't extend).
     (ring-remove+insert+extend history command)
@@ -350,7 +350,7 @@ EDIT is passed as-is to all invocations of RECOMPILE."
 
       (funcall-interactively recompile edit)))))
 
-(defun ship-mate-command--record (cmd project)
+(defun ship-mate-command--record-last-command (cmd project)
   "Record CMD as the latest command for PROJECT."
   (setq ship-mate--last-command cmd)
 
