@@ -198,20 +198,22 @@ command hidden and 5 lets you edit the environment first."
          (compilation-save-buffers-predicate (lambda () (memq (current-buffer) project-buffers)))
          (compilation-buffer-name-function (funcall ship-mate-command-buffer-name-function-generator lowercase)))
 
-    ;; Record this as the last command.
-    (ship-mate-command--record-last-command cmd current)
+    (when command
 
-    ;; Amend history (don't extend).
-    (ring-remove+insert+extend history command)
-    (puthash root history table)
+      ;; Record this as the last command.
+      (ship-mate-command--record-last-command cmd current)
 
-    ;; Compile and set command for buffer.
-    (let ((buffer (ship-mate-command--compile command comint arg)))
+      ;; Amend history (don't extend).
+      (ring-remove+insert+extend history command)
+      (puthash root history table)
 
-      (with-current-buffer buffer
-        (setq ship-mate--this-command cmd))
+      ;; Compile and set command for buffer.
+      (let ((buffer (ship-mate-command--compile command comint arg)))
 
-      buffer)))
+        (with-current-buffer buffer
+          (setq ship-mate--this-command cmd))
+
+        buffer))))
 
 (defun ship-mate-command--current-project (&optional arg)
   "Get the current project.
