@@ -188,7 +188,9 @@ command hidden and 5 lets you edit the environment first."
                          (capitalize ship-mate--current-command-name)
                          name
                          (if comint " interactively: " ": ")))
-         (command (or (and (not arg) initial)
+         (command (or (and (ship-mate-command--has-run-p cmd current)
+                           (not arg)
+                           initial)
                       (read-shell-command prompt initial 'ship-mate--command-history)))
          (command (when (stringp command)
                     (string-trim command)))
@@ -202,6 +204,9 @@ command hidden and 5 lets you edit the environment first."
 
       ;; Record this as the last command.
       (ship-mate-command--record-last-command cmd current)
+
+      ;; Mark the command as run
+      (ship-mate-command--mark-as-run cmd current)
 
       ;; Amend history (don't extend).
       (ring-remove+insert+extend history command)
@@ -351,6 +356,26 @@ EDIT is passed as-is to all invocations of RECOMPILE."
         (ship-mate-command ship-mate--last-command edit)
 
       (funcall-interactively recompile edit)))))
+
+(defun ship-mate-command--mark-as-run (cmd project)
+  "Mark CMD as having been run in PROJECT."
+  (if-let ((meta (gethash project ship-mate--project-meta))
+           (ran (plist-get meta :has-run)))
+
+      (progn
+        (unless (memq cmd ran)
+          (push cmd ran))
+
+        (plist-put meta :has-run ran))
+
+    (puthash project (list :has-run (list cmd)) ship-mate--project-meta)))
+
+(defun ship-mate-command--has-run-p (cmd project)
+  "Check if CMD has been run before in PROJECT."
+  (and-let* ((meta (gethash project ship-mate--project-meta))
+             (ran (plist-get meta :has-run)))
+
+    (memq cmd ran)))
 
 (defun ship-mate-command--record-last-command (cmd project)
   "Record CMD as the latest command for PROJECT."

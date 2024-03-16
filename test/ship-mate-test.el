@@ -76,10 +76,16 @@
                                   (current-buffer)))
            (:mock read-shell-command :return entered-command)
            ship-mate-command--record-last-command
+           ship-mate-command--mark-as-run
+           (:othertimes ship-mate-command--has-run-p)
            ship-mate-dinghy-mode)
+
+      (ship-mate-command 'test)
+      (bydi-was-called-with read-shell-command (list "Test project (Test Project): " "untest" 'ship-mate--command-history))
 
       (setq entered-command "test")
 
+      (bydi-toggle-volatile 'ship-mate-command--has-run-p)
       (ship-mate-command 'test t)
       (bydi-was-called-with read-shell-command (list "Test project (Test Project): " "untest" 'ship-mate--command-history))
       (bydi-was-called-with compile '("test" nil))
@@ -106,6 +112,8 @@
            (:mock compile :return (current-buffer))
            (:mock read-shell-command :return entered-command)
            ship-mate-command--record-last-command
+           ship-mate-command--mark-as-run
+           (:always ship-mate-command--has-run-p)
            ship-mate-dinghy-mode)
 
       (ship-mate-command 'test)
@@ -131,7 +139,9 @@
            (:watch compilation-environment)
            (:mock compile :return (current-buffer))
            ship-mate-dinghy-mode
-           ship-mate-command--record-last-command)
+           ship-mate-command--record-last-command
+           ship-mate-command--mark-as-run
+           (:always ship-mate-command--has-run-p))
 
       (ship-mate-command 'test)
 
@@ -197,7 +207,29 @@
 
         (should (equal '("TES=TING") (ship-mate-environment--current-environment)))))))
 
+(ert-deftest ship-mate-command--has-run-p ()
+  :tags '(meta)
+
+  (let ((ship-mate--project-meta (make-hash-table :test 'equal)))
+
+    (should-not (ship-mate-command--has-run-p 'test 'project))
+
+    (ship-mate-command--mark-as-run 'test 'project)
+
+    ;; Repeat to make sure no duplicates.
+    (ship-mate-command--mark-as-run 'test 'project)
+
+    (should (ship-mate-command--has-run-p 'test 'project))
+
+    (should-not (ship-mate-command--has-run-p 'mock 'project))
+
+    (ship-mate-command--mark-as-run 'mock 'project)
+
+    (should (ship-mate-command--has-run-p 'mock 'project))))
+
 (ert-deftest ship-mate-command--record-and-retrieve-last-command ()
+  :tags '(meta)
+
   (let ((ship-mate--project-meta (make-hash-table :test 'equal)))
 
     (bydi ((:watch ship-mate--last-command)
