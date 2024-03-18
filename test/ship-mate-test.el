@@ -271,13 +271,13 @@
   :tags '(command)
 
   (let ((fake-history (make-ring 3))
-        (ship-mate--last-command 'test)
         (ship-mate-command-history-size 3))
 
     (ring-insert fake-history "make test")
     (ring-insert fake-history "make coverage")
 
     (bydi ((:mock ship-mate-command--history :return fake-history)
+           (:mock ship-mate-command--last-command :return 'test)
            (:always yes-or-no-p))
 
       (ship-mate-command--update-history "make new")
@@ -345,13 +345,13 @@
 
   (let ((compile-history '("make test"))
         (compile-command "make best")
-        (ship-mate--last-command nil)
         (history (make-ring 2))
         (matches nil))
 
     (bydi ((:mock ship-mate-command--history :return history)
            (:mock ship-mate-command--fuzzy-match :return matches)
            (:mock ship-mate--local-value :return environment)
+           (:mock ship-mate-command--last-command :var last :initial nil)
            ship-mate-command)
 
       (ring-insert history "make history")
@@ -360,7 +360,7 @@
 
       (bydi-was-not-called ship-mate-command)
 
-      (setq ship-mate--last-command 'test
+      (setq last 'test
             matches '(:match "match" :count 1 :index 0))
 
       (ship-mate-command--capture #'ignore)

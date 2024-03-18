@@ -124,9 +124,6 @@ This is set by `ship-mate-command'.")
 (defvar ship-mate--current-command-name nil
   "The symbol name of the currently executed command.")
 
-(defvar ship-mate--last-command nil
-  "The symbol of the last executed command.")
-
 (defvar ship-mate--project-meta (make-hash-table :test 'equal)
   "Map storing meta data per project.")
 
@@ -299,8 +296,8 @@ If there is a match between COMMAND and the history of the last
 
 If the history is already full and the quality of the match high
 enough, prompt to instead replace the matched recorded command."
-  (and-let* (ship-mate--last-command
-             (history (ship-mate-command--history ship-mate--last-command))
+  (and-let* ((last (ship-mate-command--last-command))
+             (history (ship-mate-command--history last))
 
              (replace-count 2)
              (specs (funcall ship-mate-command-fuzzy-match-function command history)))
@@ -349,11 +346,12 @@ EDIT is passed as-is to all invocations of RECOMPILE."
 
    (t
     (if-let* ((command compile-command)
-              (history (and ship-mate--last-command
-                            (ship-mate-command--history ship-mate--last-command)))
+              (last (ship-mate-command--last-command))
+              (history (and last
+                            (ship-mate-command--history last)))
               (matches (funcall ship-mate-command-fuzzy-match-function command history t)))
 
-        (ship-mate-command ship-mate--last-command edit)
+        (ship-mate-command last edit)
 
       (funcall-interactively recompile edit)))))
 
@@ -379,8 +377,6 @@ EDIT is passed as-is to all invocations of RECOMPILE."
 
 (defun ship-mate-command--record-last-command (cmd project)
   "Record CMD as the latest command for PROJECT."
-  (setq ship-mate--last-command cmd)
-
   (if-let ((meta (gethash project ship-mate--project-meta)))
 
       (plist-put meta :last cmd)
