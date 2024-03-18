@@ -359,10 +359,10 @@ EDIT is passed as-is to all invocations of RECOMPILE."
 
 (defun ship-mate-command--mark-as-run (cmd project)
   "Mark CMD as having been run in PROJECT."
-  (if-let ((meta (gethash project ship-mate--project-meta))
-           (ran (plist-get meta :has-run)))
+  (if-let ((meta (gethash project ship-mate--project-meta)))
 
-      (progn
+      (let ((ran (plist-get meta :has-run)))
+
         (unless (memq cmd ran)
           (push cmd ran))
 
