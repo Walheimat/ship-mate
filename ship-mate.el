@@ -633,6 +633,11 @@ is passed."
   "Warn about MESSAGE."
   (display-warning 'ship-mate message))
 
+(defun ship-mate--ensure-in-project ()
+  "Signal an error if not in a project."
+  (unless (project-current)
+    (user-error "Not in a project!")))
+
 ;;;; Global minor mode
 
 (defun ship-mate-mode--setup ()
@@ -723,6 +728,8 @@ ARG is passed to the underlying command."
    (list (ship-mate--read-command "Select command: ")
          current-prefix-arg))
 
+  (ship-mate--ensure-in-project)
+
   (ship-mate-command (intern cmd) arg))
 
 ;;;###autoload
@@ -732,6 +739,8 @@ ARG is passed to the underlying command."
 ARG is passed to the underlying command. If there is no previous
 command, this runs `ship-mate-select-command'."
   (interactive (list (ship-mate-command--last-command) current-prefix-arg))
+
+  (ship-mate--ensure-in-project)
 
   (if cmd
       (ship-mate-command cmd arg)

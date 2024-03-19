@@ -524,6 +524,7 @@
   :tags '(user-facing command)
 
   (bydi ((:mock ship-mate--read-command :return "test")
+         (:always ship-mate--ensure-in-project)
          ship-mate-command)
     (call-interactively 'ship-mate-select-command)
 
@@ -533,6 +534,7 @@
   :tags '(user-facing command)
 
   (bydi ((:mock ship-mate-command--last-command :return 'test)
+         (:always ship-mate--ensure-in-project)
          ship-mate-command)
 
     (call-interactively 'ship-mate-rerun-command)
@@ -544,6 +546,7 @@
   :tags '(user-facing command)
 
   (bydi ((:mock ship-mate-command--last-command :return nil)
+         (:always ship-mate--ensure-in-project)
          ship-mate-command
          ship-mate-select-command)
 
@@ -699,6 +702,17 @@
     (ship-mate--warn "Test message")
 
     (bydi-was-called-with display-warning '(ship-mate "Test message"))))
+
+(ert-deftest ship-mate--ensure-in-project ()
+  :tags '(user-facing)
+
+  (bydi ((:sometimes project-current))
+
+    (ship-mate--ensure-in-project)
+
+    (bydi-toggle-volatile 'project-current)
+
+    (should-error (ship-mate--ensure-in-project))))
 
 ;;;; Lighter
 
