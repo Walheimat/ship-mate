@@ -185,8 +185,10 @@ command hidden and 5 lets you edit the environment first."
                          (capitalize ship-mate--current-command-name)
                          name
                          (if comint " interactively: " ": ")))
+         (prompt-var (intern (format "ship-mate-%s-prompt" cmd)))
          (command (or (and (ship-mate-command--has-run-p cmd current)
                            (not arg)
+                           (not (project--value-in-dir prompt-var root))
                            initial)
                       (read-shell-command prompt initial 'ship-mate--command-history)))
          (command (when (stringp command)
@@ -754,22 +756,27 @@ command, this runs `ship-mate-select-command'."
   (pop-to-buffer buffer))
 
 ;;;###autoload
-(cl-defmacro ship-mate-create-command (name &key key default)
+(cl-defmacro ship-mate-create-command (name &key key default prompt)
   "Create command NAME.
 
 The command will be bound in `ship-mate-command-map' using
 `ship-mate-command--key-for-command', preferring non-nil KEY.
 
  If DEFAULT is non-nil, set the initial value using it. If COMINT
-is t, make sure the command is run in `comint-mode' instead."
+is t, make sure the command is run in `comint-mode' instead.
+
+The value of PROMPT will be set to a variable that determines
+whether calling the command should always prompt."
   (declare (indent defun))
 
   (let* ((function-name (intern (format "ship-mate-%s" name)))
          (default-var (intern (format "ship-mate-%s-default-cmd" name)))
+         (prompt-var (intern (format "ship-mate-%s-prompt" name)))
          (key (ship-mate-command--key-for-command name key)))
 
     `(progn
        (defvar-local ,default-var ,default ,(format "Default for `%s'." function-name))
+       (defvar-local ,prompt-var ,prompt ,(format "Whether `%s' should prompt." function-name))
 
        (defun ,function-name (&optional arg)
          ,(concat (capitalize (symbol-name name))

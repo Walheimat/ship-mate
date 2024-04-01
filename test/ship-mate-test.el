@@ -60,6 +60,7 @@
   :tags '(command)
 
   (defvar ship-mate-test-default-cmd nil)
+  (defvar ship-mate-test-prompt nil)
 
   (let ((ship-mate-commands (list 'test (make-hash-table :test 'equal)))
         (ship-mate-test-default-cmd "untest")
@@ -100,6 +101,8 @@
 (ert-deftest ship-mate-command--only-inserted-once ()
   :tags '(command)
 
+  (defvar ship-mate-test-prompt nil)
+
   (let ((ship-mate-commands (list 'test (make-hash-table :test 'equal)))
         (ship-mate--command-history nil)
         (entered-command "test"))
@@ -123,6 +126,8 @@
 
 (ert-deftest ship-mate-command--no-let-bind-for-existing-env ()
   :tags '(command)
+
+  (defvar ship-mate-test-prompt nil)
 
   (let ((compilation-environment nil)
         (env nil)
@@ -425,6 +430,7 @@
        (ship-mate-create-command test)
        '(progn
           (defvar-local ship-mate-test-default-cmd nil "Default for `ship-mate-test'.")
+          (defvar-local ship-mate-test-prompt nil "Whether `ship-mate-test' should prompt.")
           (defun ship-mate-test (&optional arg) "Test the current project.\n\nSee `ship-mate-command' for behavior of ARG."
                  (interactive "P")
                  (ship-mate-command 'test arg))
@@ -433,9 +439,10 @@
           (put 'ship-mate-test-default-cmd 'safe-local-variable #'ship-mate-command--valid-default-p)))
 
       (bydi-match-expansion
-       (ship-mate-create-command test :key "C-o" :default "make all")
+       (ship-mate-create-command test :key "C-o" :default "make all" :prompt t)
        '(progn
           (defvar-local ship-mate-test-default-cmd "make all" "Default for `ship-mate-test'.")
+          (defvar-local ship-mate-test-prompt t "Whether `ship-mate-test' should prompt.")
           (defun ship-mate-test (&optional arg) "Test the current project.\n\nSee `ship-mate-command' for behavior of ARG."
                  (interactive "P")
                  (ship-mate-command 'test arg))
@@ -448,6 +455,7 @@
        (ship-mate-create-command test)
        '(progn
           (defvar-local ship-mate-test-default-cmd nil "Default for `ship-mate-test'.")
+          (defvar-local ship-mate-test-prompt nil "Whether `ship-mate-test' should prompt.")
           (defun ship-mate-test (&optional arg) "Test the current project.\n\nSee `ship-mate-command' for behavior of ARG."
                  (interactive "P")
                  (ship-mate-command 'test arg))
