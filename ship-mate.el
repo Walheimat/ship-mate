@@ -18,6 +18,7 @@
 (require 'ring)
 (require 'compile)
 (require 'subr-x)
+(require 'files-x)
 
 (defgroup ship-mate nil
   "Project-scoped compilation."
@@ -80,6 +81,7 @@ can be set to."
     (define-key map (kbd "@") #'ship-mate-show-results)
     (define-key map (kbd "#") #'ship-mate-rerun-command)
     (define-key map (kbd ">") #'ship-mate-refresh-history)
+    (define-key map (kbd "<") #'ship-mate-store-history-as-default)
 
     map)
   "Command map for `ship-mate' commands.
@@ -440,6 +442,18 @@ unless EMPTY is t."
     (puthash root new-history table)
 
     new-history))
+
+(defun ship-mate-command--store-history-as-default (cmd)
+  "Store history of CMD as default."
+  (when-let* ((history (ship-mate-command--existing-history cmd))
+              (elements (ring-elements history))
+              (variable (intern (format "ship-mate-%s-default-cmd" cmd)))
+              (conf (current-window-configuration)))
+
+    (modify-dir-local-variable nil variable elements 'add-or-replace)
+    (save-buffer)
+
+    (set-window-configuration conf)))
 
 (defun ship-mate-command--valid-default-p (val)
   "Check if VAL is a valid project command default."
@@ -807,6 +821,14 @@ it with the default value(s)."
                      current-prefix-arg))
 
   (ship-mate-command--create-history (intern cmd) clear))
+
+;;;###autoload
+(defun ship-mate-store-history-as-default (cmd)
+  "Store history for CMD."
+  (interactive (list (intern (ship-mate--read-command "Store command history: "))))
+
+  (unless (ship-mate-command--store-history-as-default cmd)
+    (user-error "Failed to store command history")))
 
 ;;;###autoload
 (define-minor-mode ship-mate-mode

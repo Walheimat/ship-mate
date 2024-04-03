@@ -156,7 +156,9 @@ appropriate variable in a =.dir-locals.el= file.
 #+end_src
 
 This would prep the history with four entries for this project
-(assuming the =.dir-locals.el= file exists at project root).
+(assuming the =.dir-locals.el= file exists at project root). Once a
+history exists you can also store it directly by calling
+=ship-mate-store-history-as-default=.
 
 The commands created in this way are automatically bound in map
 =ship-mate-command-map=. In our case since we didn't specify a key, it
