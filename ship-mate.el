@@ -443,10 +443,15 @@ unless EMPTY is t."
 
     new-history))
 
-(defun ship-mate-command--store-history-as-default (cmd)
-  "Store history of CMD as default."
+(defun ship-mate-command--store-history-as-default (cmd &optional edit-first)
+  "Store history of CMD as default.
+
+If optional EDIT-FIRST is t, the user is prompted to edit the
+history first."
   (when-let* ((history (ship-mate-command--existing-history cmd))
-              (elements (ring-elements history))
+              (elements (if edit-first
+                            (ship-mate-history--edit-in-minibuffer history)
+                          (ring-elements history)))
               (variable (intern (format "ship-mate-%s-default-cmd" cmd)))
               (conf (current-window-configuration)))
 
@@ -560,6 +565,16 @@ ARG is passed to `ship-mate-command--buffers'."
       (buffer-local-value 'compilation-environment buffer)
 
     (ship-mate--local-value 'ship-mate-environment)))
+
+;;;; History
+
+(defun ship-mate-history--edit-in-minibuffer (history)
+  "Edit HISTORY in minibuffer."
+  (let* ((elements (ring-elements history))
+         (combined (read-string "Edit history: " (string-join elements ";")))
+         (recreated (string-split combined ";" t)))
+
+    recreated))
 
 ;;;; Utility
 
@@ -823,11 +838,15 @@ it with the default value(s)."
   (ship-mate-command--create-history (intern cmd) clear))
 
 ;;;###autoload
-(defun ship-mate-store-history-as-default (cmd)
-  "Store history for CMD."
-  (interactive (list (intern (ship-mate--read-command "Store command history: "))))
+(defun ship-mate-store-history-as-default (cmd &optional arg)
+  "Store history for CMD.
 
-  (unless (ship-mate-command--store-history-as-default cmd)
+See `ship-mate-command--store-history-as-default' for the meaning
+of ARG."
+  (interactive (list (intern (ship-mate--read-command "Store command history: "))
+                     current-prefix-arg))
+
+  (unless (ship-mate-command--store-history-as-default cmd arg)
     (user-error "Failed to store command history")))
 
 ;;;###autoload

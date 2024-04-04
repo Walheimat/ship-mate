@@ -587,6 +587,7 @@
     (ring-insert ring "make coverage")
 
     (bydi ((:mock ship-mate-command--existing-history :return ring)
+           (:mock ship-mate-history--edit-in-minibuffer :return '("make best"))
            modify-dir-local-variable
            save-buffer
            set-window-configuration)
@@ -594,7 +595,25 @@
       (ship-mate-command--store-history-as-default 'test)
 
       (bydi-was-called-with modify-dir-local-variable
-        '(nil ship-mate-test-default-cmd ("make coverage" "make test") add-or-replace)))))
+        '(nil ship-mate-test-default-cmd ("make coverage" "make test") add-or-replace)
+        t)
+
+      (ship-mate-command--store-history-as-default 'test t)
+
+      (bydi-was-called-with modify-dir-local-variable
+        '(nil ship-mate-test-default-cmd ("make best") add-or-replace)))))
+
+(ert-deftest ship-mate-history--edit-in-minibuffer ()
+  :tags '(command history)
+
+  (let ((history (make-ring 2)))
+
+    (ring-insert history "make test")
+    (ring-insert history "make install")
+    (bydi ((:mock read-string :with (lambda (_ x) x)))
+
+      (should (equal '("make install" "make test")
+                     (ship-mate-history--edit-in-minibuffer history))))))
 
 (ert-deftest ship-mate--local-value ()
   :tags '(utility)
