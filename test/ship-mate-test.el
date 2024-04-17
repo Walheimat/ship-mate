@@ -25,6 +25,12 @@
   (should-not (ship-mate-environment--valid-env-p "hello=world"))
   (should-not (ship-mate-environment--valid-env-p '("hello=world" "test")))
   (should (ship-mate-environment--valid-env-p '("hello=world" "test=ing")))
+  (should (ship-mate-environment--valid-env-p '((test . ("hello=world" "test=ing")))))
+  (should (ship-mate-environment--valid-env-p '((test . ("hello=world"))
+                                                (mock . ("test=ing"))
+                                                (stub . nil)
+                                                (nil . ("world=hello")))))
+  (should-not (ship-mate-environment--valid-env-p '((test . ("hello=world" "testing")))))
   (should-not (ship-mate-environment--valid-env-p '("hello=world" "test=ing" ""))))
 
 (ert-deftest ship-mate-with-bounded-compilation ()
@@ -72,6 +78,7 @@
            (:mock project-name :return "Test Project")
            (:mock project-buffers :return (list (current-buffer)))
            (:mock project--value-in-dir :return ship-mate-test-default-cmd)
+           (:ignore ship-mate--local-value)
            (:mock compile :with (lambda (&rest _)
                                   (funcall compilation-save-buffers-predicate)
                                   (current-buffer)))
@@ -140,7 +147,7 @@
            (:mock project-root :return "/tmp/env")
            (:mock project-name :return "Test Project")
            (:mock ship-mate-command--history :return history)
-           (:mock ship-mate--local-value :return env)
+           (:mock ship-mate--local-value :return nil)
            (:watch compilation-environment)
            (:mock compile :return (current-buffer))
            ship-mate-dinghy-mode
@@ -171,14 +178,14 @@
            (:watch compilation-environment)
            compile)
 
-      (ship-mate-command--compile "make test")
+      (ship-mate-command--compile 'test "make test")
 
       (bydi-was-called ship-mate-environment--current-environment t)
       (bydi-was-not-called ship-mate-environment--edit-in-minibuffer)
       (bydi-was-set-to compilation-environment '("TES=TING") t)
 
       (setq compilation-environment env)
-      (ship-mate-command--compile "make test" nil '(5))
+      (ship-mate-command--compile 'test "make test" nil '(5))
 
       (bydi-was-not-called ship-mate-environment--current-environment)
       (bydi-was-called ship-mate-environment--edit-in-minibuffer)
@@ -206,11 +213,29 @@
 
     (setq-local compilation-environment '("TES=TING"))
 
-    (bydi (ship-mate--local-value)
+    (let ((compilation-buffer-name-function (lambda (_) (buffer-name))))
+
+      (should (equal '("TES=TING") (ship-mate-environment--current-environment 'test)))))
+
+  (ert-with-test-buffer (:name "last-env")
+
+    (setq-local compilation-environment nil)
+
+    (let ((compilation-buffer-name-function (lambda (_) (buffer-name))))
+
+      (bydi ((:mock ship-mate--local-value :return '("TES=TING")))
+        (should (equal '("TES=TING") (ship-mate-environment--current-environment 'test))))))
+
+  (ert-with-test-buffer (:name "last-env")
+
+    (setq-local compilation-environment nil)
+
+    (bydi ((:mock ship-mate--local-value :return '((test . ("TES=TING")) (nil . ("MOC=KING")))))
 
       (let ((compilation-buffer-name-function (lambda (_) (buffer-name))))
 
-        (should (equal '("TES=TING") (ship-mate-environment--current-environment)))))))
+        (should (equal '("MOC=KING") (ship-mate-environment--current-environment 'mock)))
+        (should (equal '("TES=TING") (ship-mate-environment--current-environment 'test)))))))
 
 (ert-deftest ship-mate-command--has-run-p ()
   :tags '(meta)

@@ -214,7 +214,7 @@ command hidden and 5 lets you edit the environment first."
       (puthash root history table)
 
       ;; Compile and set command for buffer.
-      (let ((buffer (ship-mate-command--compile command comint arg)))
+      (let ((buffer (ship-mate-command--compile cmd command comint arg)))
 
         (with-current-buffer buffer
           (setq ship-mate--this-command cmd))
@@ -231,14 +231,14 @@ project first."
              (project--find-in-directory dir)))
       (project-current t)))
 
-(defun ship-mate-command--compile (command &optional comint arg)
-  "Compile COMMAND.
+(defun ship-mate-command--compile (cmd command &optional comint arg)
+  "Compile COMMAND in the context of CMD.
 
 This uses `comint-mode' if COMINT is t.
 
 If optional ARG is 5, the user is prompted to edit the
 environment first."
-  (let* ((env (or compilation-environment (ship-mate-environment--current-environment)))
+  (let* ((env (or compilation-environment (ship-mate-environment--current-environment cmd)))
          (exec (lambda () (compile command comint)))
          (edited (if (eq ship-mate-edit-environment-prefix (prefix-numeric-value arg))
                      (ship-mate-environment--edit-in-minibuffer env)
@@ -550,21 +550,37 @@ ARG is passed to `ship-mate-command--buffers'."
 
 (defun ship-mate-environment--valid-env-p (value)
   "Check if VALUE is a valid environment."
-  (and (listp value)
-       (or (null value)
-           (seq-every-p
-            (lambda (it)
-              (string-match-p ship-mate-environment--regex it))
-            value))))
+  (let ((matcher (apply-partially #'string-match-p ship-mate-environment--regex)))
 
-(defun ship-mate-environment--current-environment ()
+    (and (listp value)
+         (or (null value)
+             ;; Only providing default
+             (and (seq-every-p 'stringp value)
+                  (seq-every-p matcher value))
+             ;; Providing per-command
+             (and-let* ((values (mapcar #'cdr-safe value))
+                        (values (delq nil values)))
+
+               (seq-every-p 'listp values)
+
+               (seq-every-p
+                (lambda (val)
+                  (seq-every-p matcher val))
+                values))))))
+
+(defun ship-mate-environment--current-environment (cmd)
   "Get the last environment for CMD or default."
   (if-let* ((buffer-name (funcall compilation-buffer-name-function nil))
-            (buffer (get-buffer buffer-name)))
+            (buffer (get-buffer buffer-name))
+            (local (buffer-local-value 'compilation-environment buffer)))
 
-      (buffer-local-value 'compilation-environment buffer)
+      local
 
-    (ship-mate--local-value 'ship-mate-environment)))
+    (when-let ((env (ship-mate--local-value 'ship-mate-environment)))
+
+      (or (alist-get cmd env)
+          (alist-get nil env)
+          env))))
 
 ;;;; History
 

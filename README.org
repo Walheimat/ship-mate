@@ -211,6 +211,10 @@ set =compilation-environment= and is safe to set (checked by
 =ship-mate-environment--valid-env-p=). The initial value is local to
 the project.
 
+You can also set an environment per command by using an association
+list where the key is the command symbol and the value a list
+considered valid by =ship-mate-environment--valid-env-p=.
+
 You can also run a =ship-mate= command with numeric prefix 5 (or
 whatever =ship-mate-edit-environment-prefix= is set to) to edit the
 environment in the minibuffer before executing it. This also works for
