@@ -112,6 +112,7 @@
 
   (let ((ship-mate-commands (list 'test (make-hash-table :test 'equal)))
         (ship-mate--command-history nil)
+        (ship-mate-test-default-cmd nil)
         (entered-command "test"))
 
     (bydi ((:always project-current)
@@ -306,67 +307,65 @@
     (ring-insert fake-history "make test")
     (ring-insert fake-history "make coverage")
 
-    (bydi ((:mock ship-mate-command--history :return fake-history)
-           (:mock ship-mate-command--last-command :return 'test)
-           (:always yes-or-no-p))
+    (bydi ((:mock ship-mate-command--history :return fake-history))
 
-      (ship-mate-command--update-history "make new")
+      (ship-mate-command--update-history 'test "make new")
 
       (should (equal (ring-elements fake-history)
                      '("make coverage" "make test")))
 
-      (ship-mate-command--update-history "make test FLAG=t")
+      (ship-mate-command--update-history 'test "make test FLAG=t")
 
       (should (equal (ring-elements fake-history)
                      '("make test FLAG=t" "make coverage" "make test")))
 
-      (ship-mate-command--update-history "make way")
+      (ship-mate-command--update-history 'test "make way")
 
       (should (equal (ring-elements fake-history)
                      '("make test FLAG=t" "make coverage" "make test")))
 
-      (ship-mate-command--update-history "make test")
+      (ship-mate-command--update-history 'test "make test")
 
       (should (equal (ring-elements fake-history)
                      '("make test" "make test FLAG=t" "make coverage")))
 
-      (ship-mate-command--update-history "make coverage FLAG=t")
+      (ship-mate-command--update-history 'test "make coverage FLAG=t")
 
 
       (should (equal (ring-elements fake-history)
                      '("make coverage FLAG=t" "make test" "make test FLAG=t")))
 
-      (ship-mate-command--update-history "make coverage  FLAG=t CAPTURE=t")
+      (ship-mate-command--update-history 'test "make coverage  FLAG=t CAPTURE=t")
 
       (should (equal (ring-elements fake-history)
                      '("make coverage  FLAG=t CAPTURE=t" "make test" "make test FLAG=t")))
 
       ;; Don't match empty parts
-      (ship-mate-command--update-history "something  coverage  different")
+      (ship-mate-command--update-history 'test "something  coverage  different")
 
       (should (equal (ring-elements fake-history)
                      '("make coverage  FLAG=t CAPTURE=t" "make test" "make test FLAG=t")))
 
-      (ship-mate-command--update-history "make coverage -- FLAG=t CAPTURE=t")
+      (ship-mate-command--update-history 'test "make coverage -- FLAG=t CAPTURE=t")
 
       (should (equal (ring-elements fake-history)
                      '("make coverage -- FLAG=t CAPTURE=t" "make test" "make test FLAG=t")))
 
       ;; Don't match deferred arg passing.
-      (ship-mate-command--update-history "coverage -- else")
+      (ship-mate-command--update-history 'test "coverage -- else")
 
       (should (equal (ring-elements fake-history)
                      '("make coverage -- FLAG=t CAPTURE=t" "make test" "make test FLAG=t")))
 
 
       ;; Insert if match isn't good enough.
-      (ship-mate-command--update-history "make test FLAG=nil")
+      (ship-mate-command--update-history 'test "make test FLAG=nil")
 
       (should (equal (ring-elements fake-history)
                      '("make test FLAG=nil" "make coverage -- FLAG=t CAPTURE=t" "make test")))
 
       ;; Replace if good enough.
-      (ship-mate-command--update-history "make test FLAG=nil OTHER=t")
+      (ship-mate-command--update-history 'test "make test FLAG=nil OTHER=t")
 
       (should (equal (ring-elements fake-history)
                      '("make test FLAG=nil OTHER=t" "make coverage -- FLAG=t CAPTURE=t" "make test"))))))
@@ -387,42 +386,56 @@
 
     (test-remake-ring fake-history)
 
-    (bydi ((:mock ship-mate-command--history :return fake-history)
-           (:mock ship-mate-command--last-command :return 'test)
-           (:always yes-or-no-p))
+    (bydi ((:mock ship-mate-command--history :return fake-history))
 
-      (ship-mate-command--update-history "make mock three gamma")
+      (ship-mate-command--update-history t "make mock three gamma")
 
       (should (equal (ring-elements fake-history)
                      '("make mock three gamma" "yield mock three gamma" "do coverage two beta")))
 
       (test-remake-ring fake-history)
 
-      (ship-mate-command--update-history "yield mock")
+      (ship-mate-command--update-history t "yield mock")
 
       (should (equal (ring-elements fake-history)
                      '("yield mock" "yield mock three gamma" "do coverage two beta")))
 
       (test-remake-ring fake-history)
 
-      (ship-mate-command--update-history "yield two beta")
+      (ship-mate-command--update-history t "yield two beta")
 
       (should (equal (ring-elements fake-history)
                      '("yield mock three gamma" "do coverage two beta" "make test one alpha")))
 
       (test-remake-ring fake-history)
 
-      (ship-mate-command--update-history "mock three")
+      (ship-mate-command--update-history t "mock three")
 
       (should (equal (ring-elements fake-history)
                      '("yield mock three gamma" "do coverage two beta" "make test one alpha")))
 
       (test-remake-ring fake-history)
 
-      (ship-mate-command--update-history "test one alpha")
+      (ship-mate-command--update-history t "test one alpha")
 
       (should (equal (ring-elements fake-history)
                      '("test one alpha" "yield mock three gamma" "do coverage two beta"))))))
+
+(ert-deftest ship-mate-command--capture-history ()
+  :tags '(command history)
+
+  (bydi ((:othertimes ship-mate-command--last-command)
+         ship-mate-command--update-history)
+
+    (ship-mate-command--capture-history "make test")
+
+    (bydi-was-not-called ship-mate-command--update-history)
+
+    (bydi-toggle-volatile 'ship-mate-command--last-command)
+
+    (ship-mate-command--capture-history "make test" 'blah)
+
+    (bydi-was-called ship-mate-command--update-history)))
 
 (ert-deftest ship-mate-command--capture ()
   :tags '(command)

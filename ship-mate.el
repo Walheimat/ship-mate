@@ -217,7 +217,7 @@ command hidden and 5 lets you edit the environment first."
       (ship-mate-command--mark-as-run cmd current)
 
       ;; Amend history (don't extend).
-      (ring-remove+insert+extend history command)
+      (ship-mate-command--update-history cmd command t)
       (puthash root history table)
 
       ;; Compile and set command for buffer.
@@ -307,7 +307,7 @@ If ALLOW-FULL is t, also count full matches."
 
     (lambda (_major-mode) name)))
 
-(defun ship-mate-command--update-history (command &rest _)
+(defun ship-mate-command--capture-history (command &rest _)
   "Update history using COMMAND.
 
 If there is a match between COMMAND and the history of the last
@@ -315,22 +315,42 @@ If there is a match between COMMAND and the history of the last
 
 If the history is already full and the quality of the match high
 enough, prompt to instead replace the matched recorded command."
-  (and-let* ((last (ship-mate-command--last-command))
-             (history (ship-mate-command--history last))
+  (and-let* ((last (ship-mate-command--last-command)))
 
-             (replace-count 3)
-             (specs (funcall ship-mate-command-fuzzy-match-function command history)))
+    (ship-mate-command--update-history last command nil)))
 
-    (if (and (plistp specs)
-             (>= (plist-get specs :count) replace-count)
-             (= (ring-length history) ship-mate-command-history-size))
-        (progn
-          (ring-remove history (plist-get specs :index))
-          (ring-insert history command))
+(defun ship-mate-command--update-history (cmd command &optional always-insert)
+  "Update history of CMD using COMMAND.
 
-      (when (and (plistp specs)
-                 (>= (plist-get specs :count) 2))
-        (ring-remove+insert+extend history command)))))
+This uses the fuzzy matcher
+`ship-mate-command-fuzzy-match-function' to establish how (or if
+at all) COMMAND should be inserted. If ALWAYS-INSERT is t,
+COMMAND will be inserted even if there is no match."
+  (and-let* ((history (ship-mate-command--history cmd)))
+
+    (let ((specs (funcall ship-mate-command-fuzzy-match-function command history)))
+
+      (if (and specs
+               (plistp specs)
+               (>= (plist-get specs :count) 3)
+               (= (ring-length history) ship-mate-command-history-size))
+          (progn
+            (ship-mate-log-debug
+             "Replacing `%s' with `%s' in history of `%s'"
+             (plist-get specs :match)
+             command
+             cmd)
+            (ring-remove history (plist-get specs :index))
+            (ring-insert history command))
+
+        (when (or always-insert
+                  (and specs
+                       (plistp specs)
+                       (>= (plist-get specs :count) 2)))
+          (unless (ring-member history command)
+            (ship-mate-log-debug "Inserting `%s' into history of `%s'" command cmd))
+
+          (ring-remove+insert+extend history command))))))
 
 (defun ship-mate-command--capture (recompile &optional edit)
   "Only call RECOMPILE conditionally.
@@ -752,7 +772,7 @@ is passed."
 
 (defun ship-mate-mode--setup ()
   "Setup `ship-mate-mode'."
-  (advice-add 'compilation-start :after #'ship-mate-command--update-history)
+  (advice-add 'compilation-start :after #'ship-mate-command--capture-history)
   (advice-add 'recompile :around #'ship-mate-command--capture)
 
   (dolist (fun ship-mate-compile-functions)
@@ -760,7 +780,7 @@ is passed."
 
 (defun ship-mate-mode--teardown ()
   "Tear down `ship-mate-mode'."
-  (advice-remove 'compilation-start #'ship-mate-command--update-history)
+  (advice-remove 'compilation-start #'ship-mate-command--capture-history)
   (advice-remove 'recompile #'ship-mate-command--capture)
 
   (dolist (fun ship-mate-compile-functions)
