@@ -72,6 +72,11 @@ can be set to."
   :group 'ship-mate
   :type 'integer)
 
+(defcustom ship-mate-log t
+  "Whether `ship-mate' should log to a buffer."
+  :group 'ship-mate
+  :type 'boolean)
+
 ;;;; Variables
 
 (defvar ship-mate-command-map
@@ -144,6 +149,8 @@ Parts of a command matching this expression are ignored.")
   "Pattern matching an environment variable assignment.")
 
 (defvar ship-mate-command--executor 'funcall)
+
+(defvar ship-mate-log--buffer-name "*ship-mate-log*")
 
 ;;;;; Hooks
 
@@ -598,6 +605,55 @@ ARG is passed to `ship-mate-command--buffers'."
          (recreated (string-split combined ";" t)))
 
     recreated))
+
+;;;; Logging
+
+(defvar ship-mate-log-mode-map
+  (let ((map (make-sparse-keymap)))
+
+    (define-key map "q" 'quit-window))
+  "Map used in `ship-mate-log-mode'.")
+
+(define-minor-mode ship-mate-log-mode
+  "Minor mode for logs."
+  :global nil
+  (read-only-mode))
+
+(defun ship-mate-log--get-buffer ()
+  "Get the log buffer."
+  (if-let* ((buf (get-buffer ship-mate-log--buffer-name)))
+      buf
+    (with-current-buffer (get-buffer-create ship-mate-log--buffer-name)
+
+      (ship-mate-log-mode)
+
+      (current-buffer))))
+
+(defun ship-mate-log--log (level face fmt &rest args)
+  "Log to the log buffer.
+
+This will format FMT using ARGS indicating LEVEL. The message
+will be propertized using FACE."
+  (when ship-mate-log
+    (with-current-buffer (ship-mate-log--get-buffer)
+      (let ((inhibit-read-only t)
+            (level (upcase (symbol-name level)))
+            (message (apply 'format fmt args)))
+
+        (goto-char (point-max))
+        (insert (propertize (format "[%-5s]: %s\n" level message) 'face face))))))
+
+(defun ship-mate-log-info (fmt &rest args)
+  "Log message on info level.
+
+See `ship-mate-log--log' for the meaning of FMT and ARGS."
+  (apply 'ship-mate-log--log (append (list 'info 'default fmt) args)))
+
+(defun ship-mate-log-debug (fmt &rest args)
+  "Log message on debug level.
+
+See `ship-mate-log--log' for the meaning of FMT and ARGS."
+  (apply 'ship-mate-log--log (append (list 'debug 'shadow fmt) args)))
 
 ;;;; Utility
 

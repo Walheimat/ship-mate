@@ -881,6 +881,32 @@
        '(... (menu-item "Something Else Exquisite" ship-mate-something-else-exquisite))
        1))))
 
+;;;; Logging
+
+(defvar logfile (ert-resource-file "logfile.txt"))
+
+(ert-deftest ship-mate-log ()
+  :tags '(logging)
+
+  (let ((expected)
+        (actual))
+
+    (with-temp-buffer
+      (insert-file-contents logfile)
+      (setq expected (buffer-string)))
+
+    (ert-with-test-buffer (:name "test-buffer")
+
+      (let ((ship-mate-log--buffer-name (buffer-name))
+            (contents))
+
+        (ship-mate-log-info "Hello %s" "there")
+        (ship-mate-log-debug "I'm %s testing %s" "just" 'this)
+
+        (setq actual (buffer-string))))
+
+    (should (string= actual expected))))
+
 ;;; ship-mate-test.el ends here
 
 ;; Local Variables:
