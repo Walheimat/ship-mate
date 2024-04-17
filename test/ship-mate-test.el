@@ -371,6 +371,59 @@
       (should (equal (ring-elements fake-history)
                      '("make test FLAG=nil OTHER=t" "make coverage -- FLAG=t CAPTURE=t" "make test"))))))
 
+(ert-deftest ship-mate-command--update-history--congruence ()
+  :tags '(command)
+
+  (defun test-remake-ring (ring)
+    "Remake RING."
+    (ring-resize ring 0)
+    (ring-resize ring 3)
+    (ring-insert ring "make test one alpha")
+    (ring-insert ring "do coverage two beta")
+    (ring-insert ring "yield mock three gamma"))
+
+  (let ((fake-history (make-ring 3))
+        (ship-mate-command-history-size 3))
+
+    (test-remake-ring fake-history)
+
+    (bydi ((:mock ship-mate-command--history :return fake-history)
+           (:mock ship-mate-command--last-command :return 'test)
+           (:always yes-or-no-p))
+
+      (ship-mate-command--update-history "make mock three gamma")
+
+      (should (equal (ring-elements fake-history)
+                     '("make mock three gamma" "yield mock three gamma" "do coverage two beta")))
+
+      (test-remake-ring fake-history)
+
+      (ship-mate-command--update-history "yield mock")
+
+      (should (equal (ring-elements fake-history)
+                     '("yield mock" "yield mock three gamma" "do coverage two beta")))
+
+      (test-remake-ring fake-history)
+
+      (ship-mate-command--update-history "yield two beta")
+
+      (should (equal (ring-elements fake-history)
+                     '("yield mock three gamma" "do coverage two beta" "make test one alpha")))
+
+      (test-remake-ring fake-history)
+
+      (ship-mate-command--update-history "mock three")
+
+      (should (equal (ring-elements fake-history)
+                     '("yield mock three gamma" "do coverage two beta" "make test one alpha")))
+
+      (test-remake-ring fake-history)
+
+      (ship-mate-command--update-history "test one alpha")
+
+      (should (equal (ring-elements fake-history)
+                     '("test one alpha" "yield mock three gamma" "do coverage two beta"))))))
+
 (ert-deftest ship-mate-command--capture ()
   :tags '(command)
 

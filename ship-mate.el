@@ -262,6 +262,7 @@ and the index of the matched item.
 
 If ALLOW-FULL is t, also count full matches."
   (and-let* ((elements (ring-elements history))
+             (first-segment (string-trim (nth 0 (string-split command " "))))
              (matcher (lambda (it idx)
                         (let* ((el-parts (string-split it " "))
                                (matches (seq-count
@@ -271,6 +272,10 @@ If ALLOW-FULL is t, also count full matches."
                                                       part))
                                                 (string-match-p part command)))
                                          el-parts)))
+
+                          ;; Lacking congruence reduces count.
+                          (when (not (string= first-segment (nth 0 el-parts)))
+                            (setq matches (1- matches)))
 
                           (if (and (or allow-full
                                        (not (string= it command))))
@@ -320,7 +325,7 @@ enough, prompt to instead replace the matched recorded command."
           (ring-insert history command))
 
       (when (and (plistp specs)
-                 (> (plist-get specs :count) 1))
+                 (>= (plist-get specs :count) 2))
         (ring-remove+insert+extend history command)))))
 
 (defun ship-mate-command--capture (recompile &optional edit)
