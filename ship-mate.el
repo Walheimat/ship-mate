@@ -129,7 +129,7 @@ This is set by `ship-mate-command'.")
 (defvar ship-mate--project-meta (make-hash-table :test 'equal)
   "Map storing meta data per project.")
 
-(defvar ship-mate-command--fuzzy-match-ignore "^\\(\\|\s+\\|--\\)$"
+(defvar ship-mate-command--fuzzy-match-ignore "^\\(\\|\s+\\|--\\|.\\)$"
   "Regular expression used by `ship-mate-command--fuzzy-match'.
 
 Parts of a command matching this expression are ignored.")
