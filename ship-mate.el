@@ -262,9 +262,7 @@ and the index of the matched item.
 
 If ALLOW-FULL is t, also count full matches."
   (and-let* ((elements (ring-elements history))
-             (min-count 1)
-             (top-matches 0)
-             (matcher (lambda (it)
+             (matcher (lambda (it idx)
                         (let* ((el-parts (string-split it " "))
                                (matches (seq-count
                                          (lambda (part)
@@ -274,16 +272,21 @@ If ALLOW-FULL is t, also count full matches."
                                                 (string-match-p part command)))
                                          el-parts)))
 
-                          (when (and (or allow-full
-                                         (not (string= it command)))
-                                     (> matches min-count))
-                            (setq top-matches matches)))))
-             (match (seq-find matcher elements)))
+                          (if (and (or allow-full
+                                       (not (string= it command))))
+                              (list :index idx :matches matches :value it)
+                            (list :index idx :matches 0 :value it)))))
+             (matches (seq-map-indexed matcher elements))
+             (sorted (seq-sort
+                      (lambda (a b) (> (plist-get a :matches)
+                                  (plist-get b :matches)))
+                      matches))
+             (top-match (nth 0 sorted)))
 
     (list
-     :match match
-     :count top-matches
-     :index (ring-member history match))))
+     :match (plist-get top-match :value)
+     :count (plist-get top-match :matches)
+     :index (ring-member history (plist-get top-match :value)))))
 
 (defun ship-mate-command--buffer-name-function (project)
   "Return a function to name the compilation buffer for PROJECT."
@@ -303,11 +306,11 @@ enough, prompt to instead replace the matched recorded command."
   (and-let* ((last (ship-mate-command--last-command))
              (history (ship-mate-command--history last))
 
-             (replace-count 2)
+             (replace-count 3)
              (specs (funcall ship-mate-command-fuzzy-match-function command history)))
 
     (if (and (plistp specs)
-             (> (plist-get specs :count) replace-count)
+             (>= (plist-get specs :count) replace-count)
              (= (ring-length history) ship-mate-command-history-size)
              (yes-or-no-p (format "Replace `%s' with `%s'?"
                                   (plist-get specs :match)
@@ -316,7 +319,9 @@ enough, prompt to instead replace the matched recorded command."
           (ring-remove history (plist-get specs :index))
           (ring-insert history command))
 
-      (ring-remove+insert+extend history command))))
+      (when (and (plistp specs)
+                 (> (plist-get specs :count) 1))
+        (ring-remove+insert+extend history command)))))
 
 (defun ship-mate-command--capture (recompile &optional edit)
   "Only call RECOMPILE conditionally.

@@ -332,6 +332,7 @@
 
       (ship-mate-command--update-history "make coverage FLAG=t")
 
+
       (should (equal (ring-elements fake-history)
                      '("make coverage FLAG=t" "make test" "make test FLAG=t")))
 
