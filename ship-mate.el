@@ -316,10 +316,7 @@ enough, prompt to instead replace the matched recorded command."
 
     (if (and (plistp specs)
              (>= (plist-get specs :count) replace-count)
-             (= (ring-length history) ship-mate-command-history-size)
-             (yes-or-no-p (format "Replace `%s' with `%s'?"
-                                  (plist-get specs :match)
-                                  command)))
+             (= (ring-length history) ship-mate-command-history-size))
         (progn
           (ring-remove history (plist-get specs :index))
           (ring-insert history command))
