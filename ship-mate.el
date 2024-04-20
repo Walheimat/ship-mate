@@ -631,7 +631,9 @@ ARG is passed to `ship-mate-command--buffers'."
 (defvar ship-mate-log-mode-map
   (let ((map (make-sparse-keymap)))
 
-    (define-key map "q" 'quit-window))
+    (define-key map "q" 'quit-window)
+
+    map)
   "Map used in `ship-mate-log-mode'.")
 
 (define-minor-mode ship-mate-log-mode
