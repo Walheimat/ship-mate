@@ -87,6 +87,7 @@ can be set to."
     (define-key map (kbd "#") #'ship-mate-rerun-command)
     (define-key map (kbd ">") #'ship-mate-refresh-history)
     (define-key map (kbd "<") #'ship-mate-store-history-as-default)
+    (define-key map (kbd "%") #'ship-mate-show-logs)
 
     map)
   "Command map for `ship-mate' commands.
@@ -964,6 +965,15 @@ project (will only ask you save buffers in that project)."
   (if ship-mate-mode
       (ship-mate-mode--setup)
     (ship-mate-mode--teardown)))
+
+;;;###autoload
+(defun ship-mate-show-logs ()
+  "Show the logs."
+  (interactive)
+
+  (let ((buffer (ship-mate-log--get-buffer)))
+
+    (pop-to-buffer buffer)))
 
 (provide 'ship-mate)
 

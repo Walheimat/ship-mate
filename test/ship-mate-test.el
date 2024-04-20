@@ -920,6 +920,16 @@
 
     (should (string= actual expected))))
 
+(ert-deftest ship-mate-show-logs ()
+  :tags '(logging)
+
+  (bydi ((:mock ship-mate-log--get-buffer :return (current-buffer))
+         (:spy pop-to-buffer))
+
+    (ship-mate-show-logs)
+
+    (bydi-was-called-with pop-to-buffer (current-buffer))))
+
 ;;; ship-mate-test.el ends here
 
 ;; Local Variables:
