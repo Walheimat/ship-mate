@@ -102,6 +102,9 @@ Here's a =use-package= configuration example.
   ;; `ship-mate-command-map'.
   (ship-mate-subcommands-key "x")
 
+  ;; Whether significant actions `ship-mate' makes should be logged.
+  (ship-mate-log t)
+
   :bind-keymap
   ;; All commands created above are bound in this map automatically.
   (("C-c p" . ship-mate-command-map)))
@@ -196,7 +199,11 @@ advise functions yourself using advice combinator =:around=.
 =ship-mate= uses the function in
 =ship-mate-command-fuzzy-match-function= to check if a command belongs
 to the history of a =ship-mate= command and to also update the history
-when using =recompile= or =compile= instead.
+when using =recompile= or =compile= instead. For normal
+=ship-mate-command= invocations entries in the history are also
+replaced instead of pushed out for good matches. You can check the
+behavior using =ship-mate-show-logs= (provided =ship-mate-log= is
+=t=).
 
 From a =ship-mate= command buffer you can use
 =ship-mate-command-{next,prev}-buffer= to quickly switch between
