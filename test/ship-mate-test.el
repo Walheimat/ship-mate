@@ -442,13 +442,16 @@
 
   (let ((compile-history '("make test"))
         (compile-command "make best")
+        (compilation-arguments nil)
         (history (make-ring 2))
         (matches nil))
 
-    (bydi ((:mock ship-mate-command--history :return history)
+    (bydi ((:othertimes ship-mate--command-buffer-p)
+           (:mock ship-mate-command--history :return history)
            (:mock ship-mate-command--fuzzy-match :return matches)
            (:mock ship-mate--local-value :return environment)
            (:mock ship-mate-command--last-command :var last :initial nil)
+           ship-mate-command--update-history
            ship-mate-command)
 
       (ring-insert history "make history")
@@ -462,7 +465,17 @@
 
       (ship-mate-command--capture #'ignore)
 
-      (bydi-was-called ship-mate-command))))
+      (bydi-was-called ship-mate-command)
+
+      (bydi-toggle-volatile 'ship-mate--command-buffer-p)
+
+      (setq compilation-arguments '("make recompile")
+            ship-mate--this-command 'test)
+
+      (ship-mate-command--capture (lambda (&rest _) (current-buffer)))
+
+      (bydi-was-called-with ship-mate-command--update-history
+        '(test "make recompile" t)))))
 
 (ert-deftest ship-mate-command--capture--in-compilation-buffer ()
   :tags '(command)

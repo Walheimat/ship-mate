@@ -373,6 +373,10 @@ EDIT is passed as-is to all invocations of RECOMPILE."
 
       (with-current-buffer (funcall-interactively recompile edit)
 
+        ;; Update history.
+        (when-let ((command (car-safe compilation-arguments)))
+          (ship-mate-command--update-history cmd command t))
+
         ;; Needs to be re-set explicitly.
         (setq ship-mate--this-command cmd)
 
