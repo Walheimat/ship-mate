@@ -35,6 +35,8 @@
 
       (ert-with-test-buffer (:name "*ship-mate-maybe*")
 
+        (setq ship-mate--this-command 'test)
+
         (ship-mate-dinghy--maybe-enable)
 
         (bydi-was-called ship-mate-dinghy-mode)

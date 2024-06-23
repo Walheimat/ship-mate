@@ -577,7 +577,8 @@
 
     (bydi ((:mock project-buffers :return (list a b))
            (:mock buffer-list :return (list a b c))
-           (:always project-current))
+           (:always project-current)
+           (:mock ship-mate--command-buffer-p :with (lambda (it) (string-match-p "*ship-mate" (buffer-name it)))))
 
       (should (eq (length (ship-mate-command--buffers)) 1))
       (should (eq (length (ship-mate-command--buffers t)) 2)))
@@ -835,6 +836,8 @@
       (should-not (ship-mate--command-buffer-predicate (current-buffer)))
 
       (rename-buffer "*ship-mate-buffer-pred")
+
+      (setq ship-mate--this-command 'test)
 
       (should (ship-mate--command-buffer-predicate (cons "b" (current-buffer))))
       (should (ship-mate--command-buffer-predicate (current-buffer))))))

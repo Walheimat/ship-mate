@@ -719,7 +719,8 @@ Optionally the PROJECT may be passed directly."
   "Check if BUFFER is a `ship-mate-command' buffer."
   (let ((buffer (or buffer (current-buffer))))
 
-    (string-match-p "\\*ship-mate" (buffer-name buffer))))
+    (and (string-match-p "\\*ship-mate" (buffer-name buffer))
+         (not (null ship-mate--this-command)))))
 
 (defun ship-mate--command-buffer-predicate (buffer)
   "Predicate to check if BUFFER is a `ship-mate' buffer.
