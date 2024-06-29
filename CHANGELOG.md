@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.6.0](https://github.com/Walheimat/ship-mate/compare/v0.5.0...v0.6.0) (2024-06-29)
+
+
+### Features
+
+* **cmd:** variable that governs prompting ([09aea92](https://github.com/Walheimat/ship-mate/commit/09aea9209c622e0fdbb10ac296f22d062ac012ce))
+* **command:** ship-mate-store-history ([3accc94](https://github.com/Walheimat/ship-mate/commit/3accc942f6ddafa6aa7ac4523aae80c1adde5e79))
+* **environment:** allow setting environment per command ([f47f514](https://github.com/Walheimat/ship-mate/commit/f47f514a88e73fd43e092727579c74801101a269))
+* **logging:** add and bind ship-mate-show-logs ([5ded9b5](https://github.com/Walheimat/ship-mate/commit/5ded9b543963a47c9d73c91f7c89d4b99d99490b))
+* **logging:** add logging ([ad97d64](https://github.com/Walheimat/ship-mate/commit/ad97d642a91282e9499b70899da61d506f458d04))
+
+
+### Bug Fixes
+
+* **command:** don't overwrite meta data when marking ([06acee7](https://github.com/Walheimat/ship-mate/commit/06acee7fe5d40ee7aff79c5d0beaaca6ccbf12d0))
+* **command:** don't record if command is nil ([b5ec1da](https://github.com/Walheimat/ship-mate/commit/b5ec1da10e4c7c20398304b715d3552f750cb1f0))
+* **command:** require this-command to be non-nil ([7a2b86f](https://github.com/Walheimat/ship-mate/commit/7a2b86fdcb3b796532913cb7bcd37ccfd55e7201))
+* **command:** update history during recompile in ship-mate buffers ([733f06f](https://github.com/Walheimat/ship-mate/commit/733f06f6dd83df4ef79c9e76be0ff635c817d368))
+* **fuzzy:** actually return the top matches ([dddb648](https://github.com/Walheimat/ship-mate/commit/dddb6485adf26d9f4def3367e0449b5789947b1a))
+* **fuzzy:** don't match single period ([aebcf38](https://github.com/Walheimat/ship-mate/commit/aebcf382ca8b41f2592599e260873cceed8a9351))
+* **logging:** return map, not binding ([b85a8cb](https://github.com/Walheimat/ship-mate/commit/b85a8cb666df98902771f53dd182b41d4eb3f95c))
+
+
+### Changes
+
+* **command:** allow editing history before storage ([437160b](https://github.com/Walheimat/ship-mate/commit/437160bb1c724f4706dd1db5fa9fa95a7d029894))
+* **command:** always use update-history ([ab4e641](https://github.com/Walheimat/ship-mate/commit/ab4e641e1da17f856d4e56edc9346ef0a4b71cda))
+* **command:** disallow select and rerun outside of projects ([d1a3c3d](https://github.com/Walheimat/ship-mate/commit/d1a3c3df5593141a754cab1a33149774aada10d3))
+* **command:** prompt on first run ([44d400b](https://github.com/Walheimat/ship-mate/commit/44d400b08e09f6333bcde770e161be386824026d))
+* **command:** replace ship-mate--last-command ([65ae963](https://github.com/Walheimat/ship-mate/commit/65ae96345a667cc1c9c785a1a0dd72a5557473bf))
+* **command:** ship-mate-command--{record=>record-last-command} ([d414539](https://github.com/Walheimat/ship-mate/commit/d4145392be4164692a56673cec968164bc52a98e))
+* **fuzzy:** give penalty for initial incongruence ([e2658b9](https://github.com/Walheimat/ship-mate/commit/e2658b9e6f5fcb08ddbd319db143917657092a33))
+* **history:** don't prompt for replacing ([2fbedf4](https://github.com/Walheimat/ship-mate/commit/2fbedf40af0f1a5654af5b7d9861f4d7190f0c4f))
+* **rerun-command:** select command if there is no prev command ([2e9678a](https://github.com/Walheimat/ship-mate/commit/2e9678a239c507097d08de941504557ccfb0f050))
+
 ## [0.5.0](https://github.com/Walheimat/ship-mate/compare/v0.4.2...v0.5.0) (2024-03-10)
 
 
