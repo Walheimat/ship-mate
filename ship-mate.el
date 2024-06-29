@@ -608,7 +608,12 @@ ARG is passed to `ship-mate-command--buffers'."
                 values))))))
 
 (defun ship-mate-environment--current-environment (cmd)
-  "Get the last environment for CMD or default."
+  "Get the last environment for CMD or default.
+
+This is the currently set `compilation-environment' if it's
+non-nil. Otherwise it is either the local value of
+`ship-mate-environment' of the current CMD or the global
+value (corresponding to nil)."
   (if-let* ((buffer-name (funcall compilation-buffer-name-function nil))
             (buffer (get-buffer buffer-name))
             (local (buffer-local-value 'compilation-environment buffer)))
