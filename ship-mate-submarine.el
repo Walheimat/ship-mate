@@ -47,7 +47,7 @@ See `ship-mate-command--compile' for the meaning of ARGS.
 
 If the prefix argument is 3, use `ship-mate-submarine--run' as
 the executor of `ship-mate-command--compile'."
-  (let* ((prefix-arg (nth 2 args))
+  (let* ((prefix-arg (nth 3 args))
          (sub (eq
                ship-mate-submarine-hidden-compilation-prefix
                (prefix-numeric-value prefix-arg)))

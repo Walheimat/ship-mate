@@ -13,13 +13,13 @@
 
   (bydi ((:watch ship-mate-command--executor))
 
-    (ship-mate-submarine--maybe-run #'ignore nil nil nil)
+    (ship-mate-submarine--maybe-run #'ignore 'test "make test" nil 1)
 
     (bydi-was-set-to ship-mate-command--executor 'funcall)
 
     (let ((ship-mate-submarine-hidden-compilation-prefix 3))
 
-      (ship-mate-submarine--maybe-run #'ignore nil nil 3)
+      (ship-mate-submarine--maybe-run #'ignore 'test "make test" nil 3)
 
       (bydi-was-set-to ship-mate-command--executor 'ship-mate-submarine--run))))
 
