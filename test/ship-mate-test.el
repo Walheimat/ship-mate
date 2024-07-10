@@ -192,6 +192,17 @@
       (bydi-was-called ship-mate-environment--edit-in-minibuffer)
       (bydi-was-set-to compilation-environment '("MOC=KING")))))
 
+(ert-deftest ship-mate-command--reserve ()
+  :tags '(command)
+
+  (bydi ((:watch ship-mate--reserved))
+
+    (ert-with-test-buffer (:name "reserve")
+
+      (ship-mate-command--reserve)
+
+      (bydi-was-set-to ship-mate--reserved t))))
+
 (ert-deftest ship-mate-command--current-project ()
   (bydi ((:always project-current)
          (:always project-prompt-project-dir)
@@ -823,6 +834,17 @@
     (bydi-toggle-sometimes)
 
     (should-error (ship-mate--complete-buffer "Some prompt: "))))
+
+(ert-deftest ship-mate--command-buffer-p--check-for-reserved ()
+  :tags '(command)
+
+  (ert-with-test-buffer (:name "*ship-mate-reserved*")
+
+    (should-not (ship-mate--command-buffer-p))
+
+    (ship-mate-command--reserve)
+
+    (should (ship-mate--command-buffer-p))))
 
 (ert-deftest ship-mate--command-buffer-predicate ()
   :tags '(completion)

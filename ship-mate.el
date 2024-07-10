@@ -129,6 +129,9 @@ This is either nil, `ship-mate' or `other'.")
 
 This is set by `ship-mate-command'.")
 
+(defvar-local ship-mate--reserved nil
+  "Marker set to indicate the compilation was started by `ship-mate'.")
+
 (defvar ship-mate--current-command-name nil
   "The symbol name of the currently executed command.")
 
@@ -207,7 +210,8 @@ command hidden and 5 lets you edit the environment first."
          ;; Binding external variables.
          (default-directory (project-root current))
          (compilation-save-buffers-predicate (lambda () (memq (current-buffer) project-buffers)))
-         (compilation-buffer-name-function (funcall ship-mate-command-buffer-name-function-generator lowercase)))
+         (compilation-buffer-name-function (funcall ship-mate-command-buffer-name-function-generator lowercase))
+         (compilation-process-setup-function #'ship-mate-command--reserve))
 
     (when command
 
@@ -228,6 +232,10 @@ command hidden and 5 lets you edit the environment first."
           (setq ship-mate--this-command cmd))
 
         buffer))))
+
+(defun ship-mate-command--reserve ()
+  "Reserve the current buffer for `ship-mate'."
+  (setq ship-mate--reserved t))
 
 (defun ship-mate-command--current-project (&optional arg)
   "Get the current project.
@@ -725,7 +733,8 @@ Optionally the PROJECT may be passed directly."
   (let ((buffer (or buffer (current-buffer))))
 
     (and (string-match-p "\\*ship-mate" (buffer-name buffer))
-         (not (null ship-mate--this-command)))))
+         (or (not (null ship-mate--this-command))
+             ship-mate--reserved))))
 
 (defun ship-mate--command-buffer-predicate (buffer)
   "Predicate to check if BUFFER is a `ship-mate' buffer.
