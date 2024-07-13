@@ -242,12 +242,15 @@
 
     (setq-local compilation-environment nil)
 
-    (bydi ((:mock ship-mate--local-value :return '((test . ("TES=TING")) (nil . ("MOC=KING")))))
+    (bydi ((:mock ship-mate--local-value :return '((test . ("TES=TING" "MOC=CA"))
+                                                   (nil . ("MOC=KING" "RE=SEARCH"))
+                                                   (research . ("LAB=BING")))))
 
       (let ((compilation-buffer-name-function (lambda (_) (buffer-name))))
 
-        (should (equal '("MOC=KING") (ship-mate-environment--current-environment 'mock)))
-        (should (equal '("TES=TING") (ship-mate-environment--current-environment 'test)))))))
+        (should (equal '("MOC=KING" "RE=SEARCH") (ship-mate-environment--current-environment 'mock)))
+        (should (equal '("TES=TING" "MOC=CA" "RE=SEARCH") (ship-mate-environment--current-environment 'test)))
+        (should (equal '("LAB=BING" "MOC=KING" "RE=SEARCH") (ship-mate-environment--current-environment 'research)))))))
 
 (ert-deftest ship-mate-command--has-run-p ()
   :tags '(meta)

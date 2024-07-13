@@ -619,9 +619,12 @@ ARG is passed to `ship-mate-command--buffers'."
   "Get the last environment for CMD or default.
 
 This is the currently set `compilation-environment' if it's
-non-nil. Otherwise it is either the local value of
-`ship-mate-environment' of the current CMD or the global
-value (corresponding to nil)."
+non-nil.
+
+Otherwise the result is based on the local value of
+`ship-mate-environment'. If it was defined per-command, the common
+environment (denoted by nil) and the command's environment are merged.
+If it's a plain list, it is used for all commands."
   (if-let* ((buffer-name (funcall compilation-buffer-name-function nil))
             (buffer (get-buffer buffer-name))
             (local (buffer-local-value 'compilation-environment buffer)))
@@ -630,9 +633,26 @@ value (corresponding to nil)."
 
     (when-let ((env (ship-mate--local-value 'ship-mate-environment)))
 
-      (or (alist-get cmd env)
-          (alist-get nil env)
-          env))))
+      (if (and (alist-get nil env)
+               (alist-get cmd env))
+
+          (let ((keys)
+                (combined (append (alist-get cmd env) (alist-get nil env)))
+                (merged))
+
+            (dolist (item combined)
+
+              (let ((key (car-safe (string-split item "="))))
+
+                (unless (member key keys)
+                  (push item merged)
+                  (push key keys))))
+
+            (reverse merged))
+
+        (or (alist-get cmd env)
+            (alist-get nil env)
+            env)))))
 
 ;;;; History
 
