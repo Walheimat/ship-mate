@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.1](https://github.com/Walheimat/ship-mate/compare/v0.6.0...v0.6.1) (2024-07-13)
+
+
+### Bug Fixes
+
+* **command:** add setup function to reserve buffers ([a17a304](https://github.com/Walheimat/ship-mate/commit/a17a304fd617630e1bdcef11fc110e9a213962d3))
+* **submarine:** adapt to new compile signature ([ebb52c7](https://github.com/Walheimat/ship-mate/commit/ebb52c7aad498aa72f1d03ea81287ed020b25070))
+
 ## [0.6.0](https://github.com/Walheimat/ship-mate/compare/v0.5.0...v0.6.0) (2024-06-29)
 
 
