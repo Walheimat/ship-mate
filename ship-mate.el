@@ -377,7 +377,8 @@ EDIT is passed as-is to all invocations of RECOMPILE."
    ((ship-mate--command-buffer-p)
     (let* ((cmd ship-mate--this-command)
            (history (ship-mate-command--history ship-mate--this-command))
-           (compile-history (and history (ring-elements history))))
+           (compile-history (and history (ring-elements history)))
+           (compilation-process-setup-function #'ship-mate-command--reserve))
 
       (with-current-buffer (funcall-interactively recompile edit)
 

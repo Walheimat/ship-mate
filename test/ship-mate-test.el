@@ -465,6 +465,7 @@
            (:mock ship-mate-command--fuzzy-match :return matches)
            (:mock ship-mate--local-value :return environment)
            (:mock ship-mate-command--last-command :var last :initial nil)
+           (:watch compilation-process-setup-function)
            ship-mate-command--update-history
            ship-mate-command)
 
@@ -487,6 +488,8 @@
             ship-mate--this-command 'test)
 
       (ship-mate-command--capture (lambda (&rest _) (current-buffer)))
+
+      (bydi-was-set-to compilation-process-setup-function #'ship-mate-command--reserve)
 
       (bydi-was-called-with ship-mate-command--update-history
         '(test "make recompile" t)))))
