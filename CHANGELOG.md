@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.2](https://github.com/Walheimat/ship-mate/compare/v0.6.1...v0.6.2) (2024-08-24)
+
+
+### Bug Fixes
+
+* **command:** bind setup function when capturing recompile ([83983dc](https://github.com/Walheimat/ship-mate/commit/83983dc11d0a7eb5d606cfce28f64dffdfdd0004))
+* **command:** check variables with buffer set ([e2a5e81](https://github.com/Walheimat/ship-mate/commit/e2a5e817319bb8cb5288d5df1111a3fc859cd6a5))
+
+
+### Changes
+
+* **environment:** share common environment for specific commands ([2e4f26c](https://github.com/Walheimat/ship-mate/commit/2e4f26c97327f127ad85fb7aedfd3c5cc0b9c3f6))
+
 ## [0.6.1](https://github.com/Walheimat/ship-mate/compare/v0.6.0...v0.6.1) (2024-07-13)
 
 
