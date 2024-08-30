@@ -132,7 +132,7 @@
 
       (call-interactively 'ship-mate-edit-environment)
 
-      (bydi-was-called ship-mate-edit-environment--internal t)
+      (bydi-was-called ship-mate-edit-environment--internal :clear t)
 
       (setq buffer nil)
 
@@ -185,7 +185,7 @@
 
     (ship-mate-edit-history-abort)
 
-    (bydi-was-called ship-mate-edit-history--quit t)
+    (bydi-was-called ship-mate-edit-history--quit :clear t)
     (bydi-was-not-called ship-mate-edit-history--set-history)
 
     (ship-mate-edit-history-apply)
@@ -241,7 +241,7 @@
 
       (call-interactively 'ship-mate-edit-history)
 
-      (bydi-was-called ship-mate-edit-history--internal t))))
+      (bydi-was-called ship-mate-edit-history--internal :clear t))))
 
 (ert-deftest ship-mate-edit-setup-bindings ()
   :tags '(user-facing edit)

@@ -132,14 +132,14 @@
 
         ;; Process is dead, will surface.
         (ship-mate-submarine--check)
-        (bydi-was-called ship-mate-submarine--surface t)
+        (bydi-was-called ship-mate-submarine--surface :clear t)
 
         ;; Runs with idle timer if set.
         (setq ship-mate-submarine-prompt-for-hidden-buffer t)
         (ship-mate-submarine--check)
-        (bydi-was-called ship-mate-submarine--clear-process t)
+        (bydi-was-called ship-mate-submarine--clear-process :clear t)
         (bydi-was-not-called ship-mate-submarine--surface)
-        (bydi-was-called run-with-idle-timer t)
+        (bydi-was-called run-with-idle-timer :clear t)
 
         ;; Clears process if not a hidden buffer.
         (bydi-toggle-volatile 'ship-mate-submarine--hidden-buffer-p)
@@ -248,7 +248,7 @@
 
       (bydi-was-called ship-mate-submarine--clear-process)
       (bydi-was-set-to ship-mate--hidden nil)
-      (bydi-was-called pop-to-buffer t)
+      (bydi-was-called pop-to-buffer :clear t)
 
       ;; Doesn't surface already visible buffer.
       (bydi-toggle-sometimes)
@@ -333,14 +333,14 @@
 
       (call-interactively 'ship-mate-submarine-show-hidden)
 
-      (bydi-was-called ship-mate-submarine--surface 'process)
+      (bydi-was-called ship-mate-submarine--surface)
       (bydi-was-not-called ship-mate--complete-buffer)
 
       (setq ship-mate-submarine--processes '(a b))
 
       (call-interactively 'ship-mate-submarine-show-hidden)
 
-      (bydi-was-called ship-mate-submarine--surface nil)
+      (bydi-was-called ship-mate-submarine--surface)
       (bydi-was-called ship-mate--complete-buffer))))
 
 (ert-deftest ship-mate-hide-visible ()

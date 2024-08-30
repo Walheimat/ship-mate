@@ -203,9 +203,9 @@
 
       (ship-mate-command--compile 'test "make test")
 
-      (bydi-was-called ship-mate-environment--current-environment t)
+      (bydi-was-called ship-mate-environment--current-environment :clear t)
       (bydi-was-not-called ship-mate-environment--edit-in-minibuffer)
-      (bydi-was-set-to compilation-environment '("TES=TING") t)
+      (bydi-was-set-to compilation-environment '("TES=TING") :clear t)
 
       (setq compilation-environment env)
       (ship-mate-command--compile 'test "make test" nil '(5))
@@ -232,7 +232,7 @@
 
     (should (ship-mate-command--current-project))
 
-    (bydi-was-called project-current t)
+    (bydi-was-called project-current :clear t)
 
     (let ((ship-mate-other-project-prefix 2))
       (should (ship-mate-command--current-project '(2))))
@@ -754,7 +754,7 @@
 
       (bydi-was-called-with modify-dir-local-variable
         '(nil ship-mate-test-default-cmd ("make coverage" "make test") add-or-replace)
-        t)
+        :clear t)
 
       (ship-mate-command--store-history-as-default 'test t)
 
@@ -863,7 +863,7 @@
     (ert-simulate-keys '(?\C-m)
       (ship-mate--complete-buffer "Some prompt: "))
 
-    (bydi-was-set-to ship-mate--complete-for-all nil t)
+    (bydi-was-set-to ship-mate--complete-for-all nil :clear t)
     (bydi-was-set minibuffer-completion-table)
 
     (ert-simulate-keys '(?\C-m)
