@@ -114,6 +114,11 @@ Ideally you set this in in your .dir-locals file to include
 variables executions should have.")
 (put 'ship-mate-environment 'safe-local-variable #'ship-mate-environment--valid-env-p)
 
+(defvar ship-mate-multiple nil
+  "Commands that may have multiple buffers.
+
+See `ship-mate-create-command'.")
+
 ;;;; Internal variables
 
 (defvar ship-mate--command-history nil
@@ -310,11 +315,21 @@ If ALLOW-FULL is t, also count full matches."
      :index (ring-member history (plist-get top-match :value)))))
 
 (defun ship-mate-command--buffer-name-function (project)
-  "Return a function to name the compilation buffer for PROJECT."
+  "Return a function to name the compilation buffer for PROJECT.
+
+If the command allows for multiple buffers, this will create a new
+buffer if the base buffer has a running process."
   (let* ((cmd (or ship-mate--current-command-name "compile"))
          (name (format "*ship-mate-%s-%s*" cmd project)))
 
-    (lambda (_major-mode) name)))
+    (if (member cmd ship-mate-multiple)
+        (lambda (_major-mode)
+          (or (and-let* ((base (get-buffer name))
+                         (process (get-buffer-process base))
+                         ((process-live-p process)))
+                (generate-new-buffer-name name))
+              name))
+      (lambda (_major-mode) name))))
 
 (defun ship-mate-command--capture-history (command &rest _)
   "Update history using COMMAND.
@@ -928,7 +943,7 @@ command, this runs `ship-mate-select-command'."
   (pop-to-buffer buffer))
 
 ;;;###autoload
-(cl-defmacro ship-mate-create-command (name &key key default prompt)
+(cl-defmacro ship-mate-create-command (name &key key default prompt multiple)
   "Create command NAME.
 
 The command will be bound in `ship-mate-command-map' using
@@ -938,7 +953,10 @@ The command will be bound in `ship-mate-command-map' using
 is t, make sure the command is run in `comint-mode' instead.
 
 The value of PROMPT will be set to a variable that determines
-whether calling the command should always prompt."
+whether calling the command should always prompt.
+
+if MULTIPLE is t, there may be multiple compilation buffers for this
+command."
   (declare (indent defun))
 
   (let* ((function-name (intern (format "ship-mate-%s" name)))
@@ -947,27 +965,32 @@ whether calling the command should always prompt."
          (key (ship-mate-command--key-for-command name key)))
 
     `(progn
-       (defvar-local ,default-var ,default ,(format "Default for `%s'." function-name))
-       (defvar-local ,prompt-var ,prompt ,(format "Whether `%s' should prompt." function-name))
+       ,@(delq
+          nil
+          `((defvar-local ,default-var ,default ,(format "Default for `%s'." function-name))
+            (defvar-local ,prompt-var ,prompt ,(format "Whether `%s' should prompt." function-name))
 
-       (defun ,function-name (&optional arg)
-         ,(concat (capitalize (symbol-name name))
-                  " the current project.\n\n"
-                  "See `ship-mate-command' for behavior of ARG.")
-         (interactive "P")
+            (defun ,function-name (&optional arg)
+              ,(concat (capitalize (symbol-name name))
+                       " the current project.\n\n"
+                       "See `ship-mate-command' for behavior of ARG.")
+              (interactive "P")
 
-         (ship-mate-command ',name arg))
+              (ship-mate-command ',name arg))
 
-       (setq ship-mate-commands (plist-put
-                                 ship-mate-commands
-                                 ',name
-                                 ,(make-hash-table :test 'equal)))
+            (setq ship-mate-commands (plist-put
+                                      ship-mate-commands
+                                      ',name
+                                      ,(make-hash-table :test 'equal)))
 
-       ,(if key
-            `(define-key ship-mate-command-map ,key ',function-name)
-          `(ship-mate--warn ,(format "Failed to find eligible key for `%s'" name)))
+            ,(when (and multiple (not (memq name ship-mate-multiple)))
+               `(push ,(symbol-name name) ship-mate-multiple))
 
-       (put ',default-var 'safe-local-variable #'ship-mate-command--valid-default-p))))
+            ,(if key
+                 `(define-key ship-mate-command-map ,key ',function-name)
+               `(ship-mate--warn ,(format "Failed to find eligible key for `%s'" name)))
+
+            (put ',default-var 'safe-local-variable #'ship-mate-command--valid-default-p))))))
 
 ;;;###autoload
 (defun ship-mate-refresh-history (cmd &optional clear)

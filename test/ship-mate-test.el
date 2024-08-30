@@ -62,6 +62,28 @@
   (let ((fun (ship-mate-command--buffer-name-function "test")))
     (should (string-equal (funcall fun 'test-mode) "*ship-mate-compile-test*"))))
 
+(ert-deftest ship-mate-command--multiple-buffer-names ()
+  :tags '(command)
+
+  (let ((ship-mate--current-command-name "test")
+        (ship-mate-multiple '("test"))
+        (fun nil))
+
+    (bydi ((:spy get-buffer)
+           (:always get-buffer-process)
+           (:always process-live-p)
+           (:mock generate-new-buffer-name :return "generated"))
+
+      (bydi-when get-buffer
+                 :called-with (list "*ship-mate-test-test*")
+                 :then-return (current-buffer)
+                 :once t)
+
+      (setq fun (ship-mate-command--buffer-name-function "test"))
+
+      (should (string= "generated" (funcall fun 'test)))
+      (should (string= "*ship-mate-test-test*" (funcall fun 'test))))))
+
 (ert-deftest ship-mate-command ()
   :tags '(command)
 
@@ -569,6 +591,19 @@
                  (interactive "P")
                  (ship-mate-command 'test arg))
           (setq ship-mate-commands (plist-put ship-mate-commands 'test hash-table))
+          (define-key ship-mate-command-map "t" 'ship-mate-test)
+          (put 'ship-mate-test-default-cmd 'safe-local-variable #'ship-mate-command--valid-default-p)))
+
+      (bydi-match-expansion
+       (ship-mate-create-command test :multiple t)
+       '(progn
+          (defvar-local ship-mate-test-default-cmd nil "Default for `ship-mate-test'.")
+          (defvar-local ship-mate-test-prompt nil "Whether `ship-mate-test' should prompt.")
+          (defun ship-mate-test (&optional arg) "Test the current project.\n\nSee `ship-mate-command' for behavior of ARG."
+                 (interactive "P")
+                 (ship-mate-command 'test arg))
+          (setq ship-mate-commands (plist-put ship-mate-commands 'test hash-table))
+          (push "test" ship-mate-multiple)
           (define-key ship-mate-command-map "t" 'ship-mate-test)
           (put 'ship-mate-test-default-cmd 'safe-local-variable #'ship-mate-command--valid-default-p)))
 

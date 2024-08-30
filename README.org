@@ -49,7 +49,7 @@ Here's a =use-package= configuration example.
   (ship-mate-create-command build :default "make")
   (ship-mate-create-command install :default "make install")
   (ship-mate-create-command clean :default "make clean")
-  (ship-mate-create-command execute)
+  (ship-mate-create-command execute :multiple t)
   (ship-mate-create-command test :default '("make test" "make coverage"))
 
   ;; This mode sets up `compilation-start' and `recompile' to play
@@ -137,6 +137,14 @@ all projects. You can also pass multiple defaults.
 
 #+begin_src emacs-lisp
 (ship-mate-create-command test :default ("make test" "make test-all"))
+#+end_src
+
+Normally, a command may only have a single buffer per project. If you
+have long running commands you can use =:multiple= to have more than
+one. If the default buffer has no process it will be re-used.
+
+#+begin_src emacs-lisp
+(ship-mate-create-command execute :multiple t)
 #+end_src
 
 If you run the command with =C-u= (the universal argument) you will be
