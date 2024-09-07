@@ -154,7 +154,7 @@ Parts of a command matching this expression are ignored.")
 (defvar-local ship-mate--hidden nil
   "Indicates whether a buffer is currently hidden.")
 
-(defvar ship-mate-environment--regex "^\\([a-zA-Z_]\\{1,\\}[a-zA-Z0-9_]+\\)=\\(.+\\)$"
+(defvar ship-mate-environment--regex "^\\([a-zA-Z_]\\{1,\\}[a-zA-Z0-9_]+\\)=\\(.+\\)?$"
   "Pattern matching an environment variable assignment.")
 
 (defvar ship-mate-command--executor 'funcall)
