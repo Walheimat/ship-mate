@@ -47,7 +47,8 @@
         (bydi-was-set-to ship-mate-dinghy--command '("usr/bin/sh" "-c" "make test"))))))
 
 (ert-deftest ship-mate-dinghy--print-variables ()
-  (let ((compilation-environment nil))
+  (let ((compilation-environment nil)
+        (ship-mate-dinghy-max-env-len 10))
 
     (should (string= "none" (ship-mate-dinghy--print-variables)))
 
@@ -57,10 +58,11 @@
 
     (setq compilation-environment '("TES=TING" "MOC=KING" "TRY=ING" "MY=BEST"))
 
-    (should (string= "active" (ship-mate-dinghy--print-variables)))))
+    (should (string= "TES MOC… +" (ship-mate-dinghy--print-variables)))))
 
 (ert-deftest ship-mate-dinghy--print-command ()
-  (let ((ship-mate-dinghy--command nil))
+  (let ((ship-mate-dinghy--command nil)
+        (ship-mate-dinghy-max-cmd-len 20))
 
     (should (string= "?" (ship-mate-dinghy--print-command)))
 
@@ -70,7 +72,7 @@
 
     (setq ship-mate-dinghy--command '("/usr/bin/sh" "-c" "/usr/bin/fish"))
 
-    (should (string= "/usr/bin/sh -c /usr/…" (ship-mate-dinghy--print-command)))))
+    (should (string= "/usr/bin/sh -c /usr…" (ship-mate-dinghy--print-command)))))
 
 (ert-deftest ship-mate-dinghy--reset-header-line-format ()
   (bydi ((:mock ship-mate-dinghy--print-variables :return "test")

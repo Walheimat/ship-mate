@@ -25,6 +25,12 @@
   "The max char length of the cmd string in the header."
   :group 'ship-mate
   :type 'integer)
+
+(defcustom ship-mate-dinghy-max-env-len 50
+  "The max char length of the history string in the header."
+  :group 'ship-mate
+  :type 'integer)
+
 ;;;; Variables
 
 (defvar-local ship-mate-dinghy--command nil)
@@ -75,19 +81,27 @@ If PROCESS is passed, set the name."
 
 (defun ship-mate-dinghy--print-variables ()
   "Pretty-print environment variables."
-  (if compilation-environment
-      (if (> (length compilation-environment) 3)
-          (propertize "active"
-                      'face 'mode-line-emphasis
-                      'help-echo (string-join compilation-environment "; "))
-        (propertize (mapconcat
-                     (lambda (it)
-                       (string-match ship-mate-environment--regex it)
-                       (propertize (match-string 1 it) 'help-echo (format "Variable set to: %s" (match-string 2 it))))
-                     compilation-environment
-                     " ")
-                    'face 'mode-line-emphasis))
-    (propertize "none" 'face 'mode-line-inactive)))
+  (if (not compilation-environment)
+
+      (propertize "none" 'face 'mode-line-inactive)
+
+    (let* ((max-len ship-mate-dinghy-max-env-len)
+           (full (propertize (mapconcat
+                              (lambda (it)
+                                (string-match ship-mate-environment--regex it)
+                                (propertize (match-string 1 it) 'help-echo (format "Variable set to: %s" (match-string 2 it))))
+                              compilation-environment
+                              " ")
+                             'face 'mode-line-emphasis))
+           (truncated (if (> (length full) max-len)
+                          ;; Account for the three chars we're adding.
+                          (concat (substring full 0 (- max-len 3))
+                                  "… "
+                                  (propertize "+"
+                                              'help-echo (string-join compilation-environment "\n")
+                                              'face 'mode-line-emphasis))
+                        full)))
+      truncated)))
 
 ;;;; Local mode
 

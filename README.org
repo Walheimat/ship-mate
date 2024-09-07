@@ -108,6 +108,9 @@ Here's a =use-package= configuration example.
   ;; The max char length of the command name displayed in the header.
   (ship-mate-dinghy-max-cmd-len 20)
 
+  ;; The max char length of the environment bindings displayed in the header.
+  (ship-mate-dinghy-max-env-len 50)
+
   :bind-keymap
   ;; All commands created above are bound in this map automatically.
   (("C-c p" . ship-mate-command-map)))
