@@ -19,6 +19,12 @@
 
 (require 'ship-mate)
 
+;;;; Customization
+
+(defcustom ship-mate-dinghy-max-cmd-len 20
+  "The max char length of the cmd string in the header."
+  :group 'ship-mate
+  :type 'integer)
 ;;;; Variables
 
 (defvar-local ship-mate-dinghy--command nil)
@@ -55,9 +61,9 @@ If PROCESS is passed, set the name."
              (full-command (string-join ship-mate-dinghy--command " "))
              (likely-command (or (car-safe rest) full-command))
 
-             (max-len 20)
+             (max-len ship-mate-dinghy-max-cmd-len)
              (likely-command (if (> (length likely-command) max-len)
-                                 (concat (substring likely-command 0 max-len)
+                                 (concat (substring likely-command 0 (- max-len 1))
                                          "…")
                                likely-command)))
 
