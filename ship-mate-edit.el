@@ -119,7 +119,7 @@ Sets MODE unless already set."
 
 (defun ship-mate-edit-environment-apply ()
   "Apply the edited environment."
-  (interactive)
+  (interactive nil ship-mate-edit-environment-mode)
 
   (when-let ((warnings (ship-mate-edit-environment--validate)))
     (user-error (string-join warnings ", ")))
@@ -135,13 +135,13 @@ Sets MODE unless already set."
 
 (defun ship-mate-edit-environment-abort ()
   "Abort editing."
-  (interactive)
+  (interactive nil ship-mate-edit-environment-mode)
 
   (ship-mate-edit-environment--quit))
 
 (defun ship-mate-edit-environment-clear ()
   "Clear the environment."
-  (interactive)
+  (interactive nil ship-mate-edit-environment-mode)
 
   (ship-mate-edit-environment--set-environment nil)
   (ship-mate-edit-environment--quit))
@@ -187,20 +187,21 @@ This is set in buffer `ship-mate-edit-environment-buffer-name'."
 
 (defun ship-mate-edit-history-apply ()
   "Apply the edited history."
-  (interactive)
+  (interactive nil ship-mate-edit-history-mode)
+
   (ship-mate-edit-history--set-history (ship-mate-edit-history--listify))
   (ship-mate-edit-history--quit))
 
 (defun ship-mate-edit-history-clear ()
   "Clear the history."
-  (interactive)
+  (interactive nil ship-mate-edit-history-mode)
 
   (ship-mate-edit-history--set-history nil)
   (ship-mate-edit-history--quit))
 
 (defun ship-mate-edit-history-abort ()
   "Abort editing history."
-  (interactive)
+  (interactive nil ship-mate-edit-history-mode)
 
   (ship-mate-edit-history--quit))
 
