@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.7.0](https://github.com/Walheimat/ship-mate/compare/v0.6.2...v0.7.0) (2024-10-13)
+
+
+### Features
+
+* **commands:** commands with multiple buffers ([5d1a7b4](https://github.com/Walheimat/ship-mate/commit/5d1a7b43f6e2a671567ecf1fb23e23651baf523f))
+
+
+### Bug Fixes
+
+* **edit:** make edit commands available only in compatible modes ([e28afb9](https://github.com/Walheimat/ship-mate/commit/e28afb9aa808d4d32be4d6d3193683f887fbb8f6))
+
+
+### Changes
+
+* **dinghy:** allow customizing max cmd len ([5bc5184](https://github.com/Walheimat/ship-mate/commit/5bc5184896c342fea47dbce99ea72f3be7f847d8))
+* **dinghy:** better/customizable max env len ([24f380c](https://github.com/Walheimat/ship-mate/commit/24f380c1201d25fd037bc9e71a3d04cde8fa62ba))
+* **env:** allow setting empty var ([fc13de6](https://github.com/Walheimat/ship-mate/commit/fc13de6db5e9b9f9773784f6d8288b31c1040070))
+
 ## [0.6.2](https://github.com/Walheimat/ship-mate/compare/v0.6.1...v0.6.2) (2024-08-24)
 
 
