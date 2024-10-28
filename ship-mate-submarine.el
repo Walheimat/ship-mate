@@ -14,6 +14,7 @@
 
 ;;; Code:
 
+(require 'advice)
 (require 'ship-mate)
 (require 'ship-mate-dinghy)
 
@@ -72,6 +73,12 @@ the executor of `ship-mate-command--compile'."
 
     (with-current-buffer buffer
       (setq ship-mate--hidden t))
+
+    ;; Ensure that clicking the lighter shows a hidden buffer.
+    (unless (ad-is-advised #'ship-mate-lighter-click)
+      (advice-add
+       'ship-mate-lighter-click :override
+       #'ship-mate-submarine-show-hidden))
 
     buffer))
 
@@ -168,7 +175,8 @@ If this was the final process, stops the timer.."
   (when (and process (memq process ship-mate-submarine--processes))
     (setq ship-mate-submarine--processes (delete process ship-mate-submarine--processes)))
 
-  (ship-mate-submarine--clear-timer))
+  (ship-mate-submarine--clear-timer)
+  (ship-mate-submarine--clear-advice))
 
 (defun ship-mate-submarine--clear-timer ()
   "Clear the timer if there are no more processes."
@@ -176,6 +184,11 @@ If this was the final process, stops the timer.."
     (unless (ship-mate-submarine--in-progress)
       (cancel-timer ship-mate-submarine--timer)
       (setq ship-mate-submarine--timer nil))))
+
+(defun ship-mate-submarine--clear-advice ()
+  "Clear the advice if there are no more processes."
+  (unless (ship-mate-submarine--in-progress)
+    (advice-remove 'ship-mate-lighter-click #'ship-mate-submarine-show-hidden)))
 
 (defun ship-mate-submarine--surface (process)
   "Surface hidden compilation PROCESS.

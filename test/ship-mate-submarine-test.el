@@ -211,6 +211,16 @@
       (ship-mate-submarine--clear-process 'a)
       (bydi-was-set ship-mate-submarine--processes))))
 
+(ert-deftest ship-mate-submarine--clear-advice ()
+  :tags '(submarine)
+
+  (bydi ((:ignore ship-mate-submarine--in-progress)
+         (:risky-mock advice-remove :with ignore))
+
+    (ship-mate-submarine--clear-advice)
+
+    (bydi-was-called-with advice-remove '(ship-mate-lighter-click ship-mate-submarine-show-hidden))))
+
 (ert-deftest ship-mate-submarine--clear-timer ()
   :tags '(submarine)
 

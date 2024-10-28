@@ -854,11 +854,18 @@ is passed."
 (defvar ship-mate-mode-lighter--map
   (let ((map (make-sparse-keymap)))
 
-    (define-key map [mode-line mouse-3] 'ship-mate-mode-lighter--menu)
-    (define-key map [mode-line mouse-1] 'ship-mate-show-hidden)
+    (define-key map [mode-line mouse-3] #'ship-mate-mode-lighter--menu)
+    (define-key map [mode-line mouse-1] #'ship-mate-lighter-click)
 
     map)
   "Map used in mode line construct.")
+
+(defun ship-mate-lighter-click ()
+  "Handle a click on the lighter.
+
+This is a no-op by default, but see `ship-mate-submarine--capture-click'."
+  (interactive)
+  (user-error "There's nothing to do"))
 
 (defun ship-mate-mode-lighter--menu ()
   "Menu for mode-line lighter."

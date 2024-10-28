@@ -950,6 +950,11 @@
 
   (should (ship-mate-mode-lighter--title)))
 
+(ert-deftest ship-mate-lighter-click ()
+  :tags '(lighter)
+
+  (should-error (ship-mate-lighter-click)))
+
 (ert-deftest ship-mate-mode-lighter--menu ()
   :tags '(lighter)
 
