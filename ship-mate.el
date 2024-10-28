@@ -77,6 +77,14 @@ can be set to."
   :group 'ship-mate
   :type 'boolean)
 
+(defcustom ship-mate-prefix-read-command nil
+  "Whether completing a command should be prefixed with a caret.
+
+This only makes sense if your completion function uses regular
+expressions."
+  :group 'ship-mate
+  :type 'bolean)
+
 ;;;; Variables
 
 (defvar ship-mate-command-map
@@ -762,7 +770,8 @@ Optionally the PROJECT may be passed directly."
   (completing-read prompt
                    (ship-mate--plist-keys ship-mate-commands)
                    nil
-                   t))
+                   t
+                   (and ship-mate-prefix-read-command "^")))
 
 (defun ship-mate--command-buffer-p (&optional buffer)
   "Check if BUFFER is a `ship-mate-command' buffer."

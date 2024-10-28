@@ -787,12 +787,20 @@
 (ert-deftest ship-mate--read-command ()
   :tags '(utility)
 
-  (bydi ((:always completing-read)
-         (:mock ship-mate--plist-keys :return '("one" "two")))
+  (let ((ship-mate-prefix-read-command nil))
 
-    (ship-mate--read-command "Test: ")
+    (bydi ((:always completing-read)
+           (:mock ship-mate--plist-keys :return '("one" "two")))
 
-    (bydi-was-called-with completing-read '("Test: " ("one" "two") nil t))))
+      (ship-mate--read-command "Test: ")
+
+      (bydi-was-called-with completing-read '("Test: " ("one" "two") nil t nil) :clear t)
+
+      (setq ship-mate-prefix-read-command t)
+
+      (ship-mate--read-command "Test: ")
+
+      (bydi-was-called-with completing-read '("Test: " ("one" "two") nil t "^")))))
 
 (ert-deftest ship-mate-mode--setup ()
   :tags '(mode-setup)
