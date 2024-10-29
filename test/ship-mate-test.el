@@ -579,7 +579,9 @@
                  (interactive "P")
                  (ship-mate-command 'test arg))
           (setq ship-mate-commands (plist-put ship-mate-commands 'test hash-table))
-          (define-key ship-mate-command-map "t" 'ship-mate-test)
+          (progn
+            (define-key ship-mate-command-map "t" 'ship-mate-test)
+            (add-to-list 'ship-mate-command-keys '(test . "t")))
           (put 'ship-mate-test-default-cmd 'safe-local-variable #'ship-mate-command--valid-default-p)))
 
       (bydi-match-expansion
@@ -591,7 +593,9 @@
                  (interactive "P")
                  (ship-mate-command 'test arg))
           (setq ship-mate-commands (plist-put ship-mate-commands 'test hash-table))
-          (define-key ship-mate-command-map "t" 'ship-mate-test)
+          (progn
+            (define-key ship-mate-command-map "t" 'ship-mate-test)
+            (add-to-list 'ship-mate-command-keys '(test . "t")))
           (put 'ship-mate-test-default-cmd 'safe-local-variable #'ship-mate-command--valid-default-p)))
 
       (bydi-match-expansion
@@ -604,7 +608,9 @@
                  (ship-mate-command 'test arg))
           (setq ship-mate-commands (plist-put ship-mate-commands 'test hash-table))
           (push "test" ship-mate-multiple)
-          (define-key ship-mate-command-map "t" 'ship-mate-test)
+          (progn
+            (define-key ship-mate-command-map "t" 'ship-mate-test)
+            (add-to-list 'ship-mate-command-keys '(test . "t")))
           (put 'ship-mate-test-default-cmd 'safe-local-variable #'ship-mate-command--valid-default-p)))
 
       (setq key nil)

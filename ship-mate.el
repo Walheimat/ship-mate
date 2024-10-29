@@ -111,6 +111,12 @@ Each command created by `ship-mate-create-command' will
 history. The general structure is ([COMMAND-SYMBOL] .
 HASH-MAP<PROJECT-ROOT, HISTORY>).")
 
+(defvar ship-mate-command-keys nil
+  "List of commands and their associated keys.
+
+Each command created by `ship-mate-create-command' will add a new entry
+in the form of ([COMMAND-SYMBOL] . KEY) if a key could be found.")
+
 (defvar ship-mate-environment nil
   "The project environment.
 
@@ -1003,7 +1009,9 @@ command."
                `(push ,(symbol-name name) ship-mate-multiple))
 
             ,(if key
-                 `(define-key ship-mate-command-map ,key ',function-name)
+                 `(progn
+                    (define-key ship-mate-command-map ,key ',function-name)
+                    (add-to-list 'ship-mate-command-keys ',(cons name key)))
                `(ship-mate--warn ,(format "Failed to find eligible key for `%s'" name)))
 
             (put ',default-var 'safe-local-variable #'ship-mate-command--valid-default-p))))))
