@@ -989,7 +989,7 @@ command."
          (prompt-var (intern (format "ship-mate-%s-prompt" name)))
          (key (ship-mate-command--key-for-command name key)))
 
-    `(progn
+    `(unless (memq ',name (ship-mate--plist-keys ship-mate-commands))
        ,@(delq
           nil
           `((defvar-local ,default-var ,default ,(format "Default for `%s'." function-name))

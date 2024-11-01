@@ -572,7 +572,7 @@
            (:mock ship-mate-command--key-for-command :return key))
       (bydi-match-expansion
        (ship-mate-create-command test)
-       '(progn
+       '(unless (memq 'test (ship-mate--plist-keys ship-mate-commands))
           (defvar-local ship-mate-test-default-cmd nil "Default for `ship-mate-test'.")
           (defvar-local ship-mate-test-prompt nil "Whether `ship-mate-test' should prompt.")
           (defun ship-mate-test (&optional arg) "Test the current project.\n\nSee `ship-mate-command' for behavior of ARG."
@@ -587,7 +587,7 @@
 
       (bydi-match-expansion
        (ship-mate-create-command test :key "C-o" :default "make all" :prompt t)
-       '(progn
+       '(unless (memq 'test (ship-mate--plist-keys ship-mate-commands))
           (defvar-local ship-mate-test-default-cmd "make all" "Default for `ship-mate-test'.")
           (defvar-local ship-mate-test-prompt t "Whether `ship-mate-test' should prompt.")
           (defun ship-mate-test (&optional arg) "Test the current project.\n\nSee `ship-mate-command' for behavior of ARG."
@@ -602,7 +602,7 @@
 
       (bydi-match-expansion
        (ship-mate-create-command test :multiple t)
-       '(progn
+       '(unless (memq 'test (ship-mate--plist-keys ship-mate-commands))
           (defvar-local ship-mate-test-default-cmd nil "Default for `ship-mate-test'.")
           (defvar-local ship-mate-test-prompt nil "Whether `ship-mate-test' should prompt.")
           (defun ship-mate-test (&optional arg) "Test the current project.\n\nSee `ship-mate-command' for behavior of ARG."
@@ -619,7 +619,7 @@
       (setq key nil)
       (bydi-match-expansion
        (ship-mate-create-command test)
-       '(progn
+       '(unless (memq 'test (ship-mate--plist-keys ship-mate-commands))
           (defvar-local ship-mate-test-default-cmd nil "Default for `ship-mate-test'.")
           (defvar-local ship-mate-test-prompt nil "Whether `ship-mate-test' should prompt.")
           (defun ship-mate-test (&optional arg) "Test the current project.\n\nSee `ship-mate-command' for behavior of ARG."
