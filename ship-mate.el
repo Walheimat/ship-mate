@@ -103,6 +103,9 @@ expressions."
 Commands created by `ship-mate-create-command' are automatically
 bound here using an uppercase letter.")
 
+(defvar ship-mate-quick-command-map (make-sparse-keymap)
+  "Command map only containing created commands.")
+
 (defvar ship-mate-commands nil
   "List of commands and their per-project histories.
 
@@ -1011,6 +1014,7 @@ command."
             ,(if key
                  `(progn
                     (define-key ship-mate-command-map ,key ',function-name)
+                    (define-key ship-mate-quick-command-map ,key ',function-name)
                     (add-to-list 'ship-mate-command-keys ',(cons name key)))
                `(ship-mate--warn ,(format "Failed to find eligible key for `%s'" name)))
 
